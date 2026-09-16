@@ -1,26 +1,41 @@
 # 12_export.R -- final CSV (spec section 7 column order) and GeoPackage.
 
-# Declared explicitly rather than derived, so the published schema is stable
-# and a missing upstream column fails loudly instead of vanishing.
+# Census counts published after the headline indicators, for re-aggregation to
+# other geographies. The six excluded here already appear earlier in the schema.
+CENSUS_COUNT_COLS <- setdiff(
+  names(CENSUS_VARS),
+  c("POB_TOTAL", "POB_HOMBRES", "POB_MUJERES", "VIV_PART_HAB", "VIV_DRENAJE",
+    "VIV_ELECTRICIDAD"))
+
+# Declared in order rather than derived from the data, so the published schema
+# is stable and a missing upstream column fails loudly instead of vanishing.
+# The census catalogs it draws on live in 04_census_urban.R and 10_build.R.
 CSV_COLUMNS <- c(
   "ID_AGEB", "AMBITO", "CVE_ENT", "NOM_ENT", "CVE_MUN", "NOM_MUN",
   "CVE_LOC", "NOM_LOC", "CVE_AGEB", "AREA_KM2", "CENTROIDE_LON", "CENTROIDE_LAT",
-  "POB_TOTAL", "POB_HOMBRES", "POB_MUJERES", "PCT_HOMBRES", "PCT_MUJERES",
+  "POB_TOTAL", "POB_REPORTADA", "PCT_POB_REPORTADA", "N_CELDAS_IMPUTADAS",
+  "POB_HOMBRES", "POB_MUJERES", "PCT_HOMBRES", "PCT_MUJERES",
   "DENS_POB_KM2", "POB_POR_VIV",
-  "VIV_PART_HAB", "VIV_DRENAJE", "VIV_ELECTRICIDAD", "PCT_DRENAJE", "PCT_ELECTRIC",
+  "VIV_PART_HAB", "VIV_CARACT", "VIV_DRENAJE", "VIV_ELECTRICIDAD",
+  "PCT_DRENAJE", "PCT_ELECTRIC",
+  CENSUS_SHARE_COLS, CENSUS_AVG_COLS,
   "GRS_GRADO", "GRS_NUM", RZ_NAMES,
   "DENUE_TOT", "DEN_MANUF", "DEN_COM", "DEN_SERV", "DEN_EDU", "DEN_GOB", "SCHOOL_TOT",
   "WATER_AREA", "WATER_PCT", "HAS_WATER",
   "USO_DOM", "USO_PCT", "PCT_URB",
+  CENSUS_COUNT_COLS,
   "YEAR_GEOMETRY", "YEAR_CENSUS", "YEAR_CONEVAL", "YEAR_DENUE", "YEAR_HIDRO", "YEAR_USV"
 )
 
 # Rounded on export only; the interim tables keep full precision.
 ROUND_DIGITS <- c(
   AREA_KM2 = 6, CENTROIDE_LON = 6, CENTROIDE_LAT = 6,
-  PCT_HOMBRES = 2, PCT_MUJERES = 2, DENS_POB_KM2 = 2, POB_POR_VIV = 2,
+  PCT_POB_REPORTADA = 2, PCT_HOMBRES = 2, PCT_MUJERES = 2,
+  DENS_POB_KM2 = 2, POB_POR_VIV = 2,
   PCT_DRENAJE = 2, PCT_ELECTRIC = 2,
-  WATER_AREA = 6, WATER_PCT = 2, USO_PCT = 2, PCT_URB = 2
+  WATER_AREA = 6, WATER_PCT = 2, USO_PCT = 2, PCT_URB = 2,
+  setNames(rep(2, length(CENSUS_SHARE_COLS) + length(CENSUS_AVG_COLS)),
+           c(CENSUS_SHARE_COLS, CENSUS_AVG_COLS))
 )
 
 export_entity <- function(ent) {
