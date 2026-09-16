@@ -23,12 +23,17 @@ SCIAN_SECTORS <- list(
 
 build_denue <- function(ent) {
   log_step("DENUE ", ent)
-  # Explicitly the conjunto_de_datos file: the dictionary CSV sits in a sibling
-  # folder and matches a looser pattern.
-  path <- find_file(file.path(DIR_RAW, ent, "denue"),
-                    "conjunto_de_datos/denue_.*\\.csv$")
+  # Explicitly the conjunto_de_datos files: the dictionary CSV sits in a sibling
+  # folder and matches a looser pattern. Large entities ship in several parts
+  # (entity 15), each extracted under denue/partN/, so every match is read and
+  # stacked.
+  root <- file.path(DIR_RAW, ent, "denue")
+  rel <- list.files(root, recursive = TRUE)
+  rel <- rel[grepl("conjunto_de_datos/denue_.*\\.csv$", rel, ignore.case = TRUE)]
+  if (length(rel) == 0) stop("no DENUE data file under ", root, call. = FALSE)
+  if (length(rel) > 1) log_msg("  reading ", length(rel), " DENUE parts")
 
-  raw <- read_latin1_csv(path)
+  raw <- map_dfr(file.path(root, rel), read_latin1_csv)
 
   spine_all <- readRDS(interim_path("ageb_attrs", ent))
   urban_spine <- spine_all$ID_AGEB[spine_all$AMBITO == "Urbana"]

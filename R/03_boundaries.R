@@ -64,8 +64,9 @@ build_boundaries <- function(ent) {
 
   # point_on_surface, not centroid: guarantees the published coordinate falls
   # inside its own AGEB even for concave or multipart rural polygons.
-  pts <- ageb |>
-    st_point_on_surface() |>
+  # Warning suppressed knowingly: sf notes that attributes are assumed constant
+  # over geometries, which is exactly the intent -- only the point is wanted.
+  pts <- suppressWarnings(st_point_on_surface(ageb)) |>
     st_transform(CRS_OUTPUT) |>
     st_coordinates()
 

@@ -22,15 +22,43 @@ build_qc <- function(ent) {
     left_join(mun, by = "CVE_MUN_FULL") |>
     mutate(DIFF_KM2 = AGEB_AREA - MUN_AREA_KM2,
            DIFF_PCT = 100 * DIFF_KM2 / MUN_AREA_KM2)
-  bad_cov <- cov |> filter(abs(DIFF_PCT) > COVERAGE_TOL_PCT,
+  # Two distinct failure modes hide behind "coverage", and conflating them
+  # makes the check either useless or permanently red:
+  #
+  #  * a real GAP -- territory covered by no AGEB at all;
+  #  * BOUNDARY ATTRIBUTION -- territory fully tiled, but the AGEB layer and the
+  #    municipal layer of the same marco disagree on which municipality owns a
+  #    strip. INEGI's own layers do this (Puebla: Coronango -0.6568 km2 against
+  #    Cuautlancingo +0.6568 km2, the same strip counted once either way).
+  #
+  # Only the first is a defect in this database. A municipality whose shortfall
+  # is matched, to within a hair, by a surplus somewhere else in the entity is
+  # classified as attribution and reported rather than failed.
+  flagged <- cov |> filter(abs(DIFF_PCT) > COVERAGE_TOL_PCT,
                            abs(DIFF_KM2) > COVERAGE_TOL_KM2)
+
+  offset_match <- function(d) {
+    any(abs(cov$DIFF_KM2 + d) < max(1e-4, abs(d) * 0.01))
+  }
+  flagged <- flagged |>
+    mutate(KIND = vapply(DIFF_KM2,
+                         \(d) if (offset_match(d)) "attribution" else "gap",
+                         character(1)))
+
+  gaps <- flagged |> filter(KIND == "gap")
+  attrib <- flagged |> filter(KIND == "attribution")
+
+  net_km2 <- sum(cov$AGEB_AREA) - sum(cov$MUN_AREA_KM2)
   res[[length(res) + 1]] <- qc_check(
-    "municipal_coverage_100pct", nrow(bad_cov) == 0,
-    sprintf("%d of %d municipalities breach both %.1f%% and %.2f km2 (max |diff| %.4f%% / %.4f km2; state total %.2f vs %.2f km2)",
-            nrow(bad_cov), nrow(cov), COVERAGE_TOL_PCT, COVERAGE_TOL_KM2,
-            max(abs(cov$DIFF_PCT), na.rm = TRUE),
-            max(abs(cov$DIFF_KM2), na.rm = TRUE),
-            sum(cov$AGEB_AREA), sum(cov$MUN_AREA_KM2)))
+    "entity_coverage_no_net_gap", abs(net_km2) <= COVERAGE_TOL_KM2,
+    sprintf("AGEB %.2f vs municipal %.2f km2 (net %+.4f km2)",
+            sum(cov$AGEB_AREA), sum(cov$MUN_AREA_KM2), net_km2))
+
+  res[[length(res) + 1]] <- qc_check(
+    "municipal_coverage_100pct", nrow(gaps) == 0,
+    sprintf("%d of %d municipalities with an unexplained gap; %d differ only by boundary attribution (max |diff| %.4f km2)",
+            nrow(gaps), nrow(cov), nrow(attrib),
+            max(c(0, abs(flagged$DIFF_KM2)))))
 
   res[[length(res) + 1]] <- qc_check(
     "all_municipalities_present", nrow(cov) == nrow(mun),
@@ -120,6 +148,7 @@ build_qc <- function(ent) {
     }
   }
   # Municipal detail, so a coverage failure can be traced to the municipality.
+  cov <- cov |> left_join(flagged |> select(CVE_MUN_FULL, KIND), by = "CVE_MUN_FULL")
   write_csv(cov, file.path(DIR_PROCESSED,
                            sprintf("qc_municipal_coverage_%s.csv", ent)), na = "")
   invisible(report)

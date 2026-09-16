@@ -111,8 +111,18 @@ url_iter <- function(ent) sprintf(
   paste0("https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/",
          "iter/iter_%s_cpv2020_csv.zip"), ent)
 
-url_denue <- function(ent) sprintf(
-  "https://www.inegi.org.mx/contenidos/masiva/denue/denue_%s_csv.zip", ent)
+DENUE_BASE <- "https://www.inegi.org.mx/contenidos/masiva/denue"
+
+url_denue <- function(ent) sprintf("%s/denue_%s_csv.zip", DENUE_BASE, ent)
+
+# INEGI splits the largest entities across numbered files: entity 15 ships as
+# denue_15_1_csv.zip + denue_15_2_csv.zip and the unsuffixed name 404s. Probing
+# is cheap and keeps the split states from being special-cased downstream.
+url_denue_part <- function(ent, part) {
+  sprintf("%s/denue_%s_%d_csv.zip", DENUE_BASE, ent, part)
+}
+
+DENUE_MAX_PARTS <- 6L
 
 # National, downloaded once and read per-entity with a bbox filter.
 URL_CONEVAL_GRS <- paste0("https://www.coneval.org.mx/Medicion/Documents/",

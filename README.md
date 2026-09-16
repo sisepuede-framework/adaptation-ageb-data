@@ -99,11 +99,33 @@ readr::read_csv("ageb_indicadores_20.csv",
    ser un hueco, así que el control exige rebasar **ambos** umbrales, relativo y
    absoluto (`COVERAGE_TOL_PCT`, `COVERAGE_TOL_KM2`).
 
-## Validación (Oaxaca)
+## Validación
 
-- 4,071 AGEB = 2,658 urbanas + 1,413 rurales, en los 570 municipios.
-- `sum(POB_TOTAL)` = **4,132,148**, idéntico al Censo 2020.
-- 17/17 controles de calidad en PASS.
+Corrida nacional completa (32 entidades, ~29 min, ~19 GB de fuentes en caché):
+
+| | |
+|---|---|
+| AGEB | **81,451** = 63,982 urbanas + 17,469 rurales |
+| Municipios | 2,469 |
+| `sum(POB_TOTAL)` | **126,014,024** — idéntico al Censo 2020 (diferencia 0) |
+| Superficie | 1,956,075 km² |
+| Controles de calidad | **576 / 576 PASS** (18 por entidad) |
+| DENUE | 6,117,578 unidades, 150,067 escuelas |
+| Con GRS | 61,430 de 63,982 urbanas (96 %) |
+
+La población cuadra exacto también por entidad: Oaxaca 4,132,148; CDMX 9,209,944;
+Estado de México 16,992,418.
+
+### Sobre la cobertura municipal
+
+El control distingue dos cosas que suelen confundirse:
+
+- **Hueco real:** territorio que ninguna AGEB cubre. No hay ninguno.
+- **Atribución de frontera:** el territorio está completo, pero la capa de AGEB y
+  la capa municipal *del mismo marco* no coinciden en qué municipio se lleva una
+  franja. Ocurre en el propio dato del INEGI — en Puebla, Coronango aparece con
+  −0.6568 km² y Cuautlancingo con +0.6568 km²: la misma franja, contada una sola
+  vez. Se reporta, no se marca como falla.
 
 ## Limitaciones vigentes
 

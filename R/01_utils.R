@@ -44,8 +44,19 @@ download_cached <- function(url, dest, min_bytes = MIN_DOWNLOAD_BYTES,
 
   for (attempt in seq_len(max_tries)) {
     log_msg("downloading (try ", attempt, "): ", basename(dest))
+    # A bare curl_download has no timeout: INEGI transfers do sometimes stall
+    # mid-file and would then hang the whole national run forever (observed on
+    # a 200 MB entity, frozen for 15 minutes at the same byte count). The
+    # low-speed guard aborts anything under 1 KB/s for 60 s so the retry loop
+    # can do its job.
+    h <- curl::new_handle(
+      connecttimeout = 60L,
+      low_speed_limit = 1024L,
+      low_speed_time = 60L,
+      noprogress = TRUE
+    )
     ok <- tryCatch({
-      curl::curl_download(url, tmp, quiet = TRUE, mode = "wb")
+      curl::curl_download(url, tmp, quiet = TRUE, mode = "wb", handle = h)
       TRUE
     }, error = function(e) { log_msg("  transfer failed: ", conditionMessage(e)); FALSE })
 
@@ -63,6 +74,17 @@ download_cached <- function(url, dest, min_bytes = MIN_DOWNLOAD_BYTES,
     if (attempt < max_tries) Sys.sleep(2^attempt)
   }
   stop("could not download a valid file from: ", url, call. = FALSE)
+}
+
+# True when the URL serves real data. INEGI answers missing files with an HTTP
+# 200 HTML page, so the content type is what distinguishes them, not the status.
+url_is_data <- function(url) {
+  tryCatch({
+    h <- curl::new_handle(nobody = TRUE, connecttimeout = 30L, followlocation = TRUE)
+    resp <- curl::curl_fetch_memory(url, handle = h)
+    ct <- curl::parse_headers_list(resp$headers)[["content-type"]]
+    !is.null(ct) && !grepl("text/html", ct, fixed = TRUE)
+  }, error = function(e) FALSE)
 }
 
 # Unzips once into <dir>/<name>/ and returns that directory on later calls.
