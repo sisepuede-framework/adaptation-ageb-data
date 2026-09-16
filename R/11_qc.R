@@ -86,12 +86,37 @@ build_qc <- function(ent) {
               100 * mean(!is.na(sub$POB_TOTAL)), amb))
   }
 
-  # Rural AGEB with no inhabited locality are real uninhabited territory, not
-  # missing data; 10_build.R sets them to zero. Reported so the count is visible.
+  # Rural AGEB with no ITER locality are real uninhabited territory, not
+  # missing data; 10_build.R sets them to zero from the join, not from an NA.
+  # Every other rural AGEB must therefore carry a headcount.
+  rur_all <- df |> filter(AMBITO == "Rural")
   res[[length(res) + 1]] <- qc_check(
-    "uninhabited_rural_ageb_zeroed", TRUE,
-    sprintf("%d rural AGEB have no ITER locality and are recorded as population 0",
-            sum(df$AMBITO == "Rural" & df$POB_TOTAL == 0, na.rm = TRUE)))
+    "uninhabited_rural_ageb_zeroed",
+    all(rur_all$POB_TOTAL[rur_all$UNINHABITED] == 0) && !anyNA(rur_all$POB_TOTAL),
+    sprintf("%d rural AGEB have no ITER locality and are recorded as population 0; %d rural AGEB with NA population",
+            sum(rur_all$UNINHABITED), sum(is.na(rur_all$POB_TOTAL))))
+
+  # Suppression only hides hamlets of 1-2 dwellings, so most rural people live
+  # in localities that publish their characteristics: 88.7% (Baja California
+  # Sur, dispersed ranches) to 99.8% (Tabasco), each verified against a direct
+  # ITER count. When 05_census_rural.R summed without regard to suppression,
+  # this share fell to about 5%, so an 80% floor catches that regression
+  # without flagging the sparsely settled north.
+  rur_pop <- sum(rur_all$POB_TOTAL, na.rm = TRUE)
+  rur_rep <- sum(rur_all$POB_REPORTADA, na.rm = TRUE)
+  inhabited <- rur_all |> filter(POB_TOTAL > 0)
+  res[[length(res) + 1]] <- qc_check(
+    "rural_population_with_characteristics",
+    rur_pop == 0 || rur_rep / rur_pop >= 0.80,
+    sprintf("%.2f%% of rural population in reporting localities; %d of %d inhabited rural AGEB have no reporting locality",
+            if (rur_pop == 0) 100 else 100 * rur_rep / rur_pop,
+            sum(inhabited$POB_REPORTADA == 0), nrow(inhabited)))
+
+  pr <- df |> filter(!is.na(POB_REPORTADA), !is.na(POB_TOTAL))
+  res[[length(res) + 1]] <- qc_check(
+    "pob_reportada_le_total", all(pr$POB_REPORTADA <= pr$POB_TOTAL),
+    sprintf("%d of %d rows exceed POB_TOTAL",
+            sum(pr$POB_REPORTADA > pr$POB_TOTAL), nrow(pr)))
 
   # GRS is a urban-only product: present for urban, expected NA for rural.
   urb <- df |> filter(AMBITO == "Urbana")
@@ -104,13 +129,18 @@ build_qc <- function(ent) {
     sprintf("%d rural AGEB carry GRS (expected 0)", sum(!is.na(rur$GRS_GRADO))))
 
   # --- internal consistency, only where both sides exist ---
-  ps <- df |> filter(!is.na(POB_TOTAL), !is.na(POB_HOMBRES), !is.na(POB_MUJERES),
-                     POB_TOTAL > 0) |>
-    mutate(D = abs(POB_HOMBRES + POB_MUJERES - POB_TOTAL) / POB_TOTAL * 100)
+  # The sex split covers the localities that report it, so it must add up to
+  # their population, not to POB_TOTAL (identical for urban AGEB). An urban
+  # sex count of 1-2 is imputed as 1.5 (04_census_urban.R), so a tiny AGEB may
+  # be off by up to one person without being wrong.
+  ps <- df |> filter(!is.na(POB_DEN_SEXO), !is.na(POB_HOMBRES),
+                     !is.na(POB_MUJERES), POB_DEN_SEXO > 0) |>
+    mutate(ABS = abs(POB_HOMBRES + POB_MUJERES - POB_DEN_SEXO),
+           OFF = ABS > 1 & ABS / POB_DEN_SEXO * 100 > POP_SUM_TOL_PCT)
   res[[length(res) + 1]] <- qc_check(
-    "pob_sex_sum_matches_total", all(ps$D <= POP_SUM_TOL_PCT),
-    sprintf("%d of %d rows off by more than %.1f%%",
-            sum(ps$D > POP_SUM_TOL_PCT), nrow(ps), POP_SUM_TOL_PCT))
+    "pob_sex_sum_matches_total", !any(ps$OFF),
+    sprintf("%d of %d rows off POB_DEN_SEXO by more than %.1f%% and 1 person",
+            sum(ps$OFF), nrow(ps), POP_SUM_TOL_PCT))
 
   for (v in c("VIV_DRENAJE", "VIV_ELECTRICIDAD")) {
     sub <- df |> filter(!is.na(.data[[v]]), !is.na(VIV_PART_HAB), VIV_PART_HAB > 0)
@@ -128,6 +158,56 @@ build_qc <- function(ent) {
       length(vals) == 0 || (min(vals) >= 0 && max(vals) <= 100),
       sprintf("range [%.2f, %.2f]", min(vals), max(vals)))
   }
+
+  # Every census share. Composite and differenced shares are bounded in
+  # 10_build.R; anything else above 100 means a numerator and universe drifted
+  # into different sets of localities or dwellings.
+  share_cols <- CENSUS_SHARE_COLS[CENSUS_SHARE_COLS %in% names(df)]
+  over <- vapply(share_cols, \(v) sum(df[[v]] < 0 | df[[v]] > 100 + VIV_TOL_PCT,
+                                      na.rm = TRUE), numeric(1))
+  res[[length(res) + 1]] <- qc_check(
+    "census_shares_in_0_100", all(over == 0),
+    if (all(over == 0)) sprintf("%d census shares within [0, 100]", length(share_cols))
+    else paste("out of range:", paste(sprintf("%s (%d)", names(over)[over > 0],
+                                              over[over > 0]), collapse = ", ")))
+
+  res[[length(res) + 1]] <- qc_check(
+    "imputed_cells_urban_only",
+    all(df$N_CELDAS_IMPUTADAS[df$AMBITO == "Rural"] == 0, na.rm = TRUE),
+    sprintf("%s urban cells imputed as %s in %d of %d urban AGEB",
+            format(sum(urb$N_CELDAS_IMPUTADAS, na.rm = TRUE), big.mark = ","),
+            URBAN_SUPPRESSED_VALUE, sum(urb$N_CELDAS_IMPUTADAS > 0, na.rm = TRUE),
+            nrow(urb)))
+
+  # External validation: CONEVAL computed its urban rezago indicators from the
+  # same census, so each census-derived share must land close to its RZ_*
+  # counterpart. Measured as the population-weighted mean absolute gap, against
+  # a per-indicator ceiling (CONEVAL_MAX_WMAE, 10_build.R). Not correlation:
+  # where an indicator barely varies (mobile phones in CDMX) a few noisy tiny
+  # AGEB swing r without anything being wrong. Not a share of AGEB within a
+  # fixed band either: at 5 points it missed a wrong universe and a wrong
+  # literacy denominator, since most urban deprivation rates sit near 1-2%.
+  # Weighted by population because shares in AGEB with a handful of people
+  # are noise on both sides. Overcrowding is left out: RZ_HACIN is a share of
+  # dwellings, PRO_OCUP_C an average.
+  wmae <- vapply(names(CONEVAL_MAX_WMAE), \(k) {
+    ours <- urb[[CONEVAL_EQUIVALENTS[[k]]]]
+    if (k %in% CONEVAL_INVERTED) ours <- 100 - ours
+    ok <- !is.na(urb[[k]]) & !is.na(ours)
+    if (sum(ok) < 30) NA_real_
+    else weighted.mean(abs(ours[ok] - urb[[k]][ok]), urb$POB_TOTAL[ok])
+  }, numeric(1))
+  ratio <- wmae / CONEVAL_MAX_WMAE
+  over <- which(!is.na(ratio) & ratio > 1)
+  res[[length(res) + 1]] <- qc_check(
+    "census_shares_agree_with_coneval_rz", length(over) == 0,
+    if (all(is.na(ratio))) "too few urban AGEB with GRS to compare"
+    else paste0(
+      sprintf("closest to its ceiling: %s, weighted gap %.3f of %.2f pts (%d indicators)",
+              names(ratio)[which.max(ratio)], wmae[which.max(ratio)],
+              CONEVAL_MAX_WMAE[which.max(ratio)], sum(!is.na(ratio))),
+      if (length(over) > 0) paste0("; over ceiling: ", paste(sprintf("%s %.3f",
+        names(wmae)[over], wmae[over]), collapse = ", ")) else ""))
 
   res[[length(res) + 1]] <- qc_check(
     "centroids_within_entity_bbox",
