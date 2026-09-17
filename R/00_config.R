@@ -28,7 +28,8 @@ YEARS <- list(
   coneval  = 2020L,
   denue    = "2026-05",
   hidro    = 2018L,
-  usv      = 2021L
+  usv      = 2021L,
+  clues    = "2026-07"
 )
 
 # --- Entity catalog -------------------------------------------------------
@@ -131,6 +132,15 @@ URL_MUNICIPIOS  <- "http://www.conabio.gob.mx/informacion/gis/maps/geo/mun22gw.z
 URL_LANDUSE     <- "http://www.conabio.gob.mx/informacion/gis/maps/geo/usv250s7gw.zip"
 URL_WATER       <- "http://www.conabio.gob.mx/informacion/gis/maps/geo/catp50s3gw.zip"
 
+# CLUES, the Secretaria de Salud master catalog of health facilities. DGIS
+# republishes it monthly under a dated name and links only the latest from
+# http://www.dgis.salud.gob.mx/contenidos/intercambio/clues_gobmx.html, so the
+# snapshot is pinned here (and in YEARS$clues). When it 404s, take the current
+# link from that page and update both. Verified 2026-09-16.
+URL_CLUES  <- paste0("http://gobi.salud.gob.mx/gobi/catalogos/catalogosmaestros/",
+                     "ESTABLECIMIENTO_SALUD_202607.xlsx")
+CLUES_FILE <- "ESTABLECIMIENTO_SALUD_202607.xlsx"
+
 # --- Quality control tolerances (spec section 8) --------------------------
 COVERAGE_TOL_PCT <- 1.0   # municipal area vs. summed AGEB area
 # A purely relative tolerance is unusable for the smallest municipalities: a
@@ -140,6 +150,13 @@ COVERAGE_TOL_PCT <- 1.0   # municipal area vs. summed AGEB area
 COVERAGE_TOL_KM2 <- 0.5
 POP_SUM_TOL_PCT  <- 1.0   # POB_HOMBRES + POB_MUJERES vs. POB_TOTAL
 VIV_TOL_PCT      <- 1.0   # VPH_* vs. TVIVPARHAB rounding slack
+
+# A CLUES facility whose coordinates fall farther than this outside its own
+# declared entity is a geocoding error (swapped signs, another state's
+# coordinates) and is discarded; within it, a border town is given the benefit
+# of the doubt. 97.4% of operating facilities fall inside their entity and 2.4%
+# lie more than 5 km out, most of those hundreds of km away.
+CLUES_ENTITY_TOL_KM <- 5
 
 # Any download smaller than this is assumed to be an error page, not data.
 MIN_DOWNLOAD_BYTES <- 10000L

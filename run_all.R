@@ -35,6 +35,7 @@ process_entity <- function(ent) {
   run_block("denue",        interim_path("denue", ent),                 build_denue,        ent)
   run_block("hydrology",    interim_path("hydrology", ent),             build_hydrology,    ent)
   run_block("landuse",      interim_path("landuse", ent),               build_landuse,      ent)
+  run_block("health",       interim_path("health", ent),                build_health,       ent)
   build_complete(ent)
   build_qc(ent)
   export_entity(ent)

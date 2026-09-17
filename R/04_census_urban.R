@@ -23,8 +23,8 @@
 # and ITER) carry every one of them under the same name. Selected for a climate
 # vulnerability index: demographic sensitivity (age, disability, language), the
 # census equivalents of CONEVAL's rezago indicators -- which CONEVAL publishes
-# for urban AGEB only -- and housing traits tied to heat, flooding, water stress
-# and the reach of early warnings. Shares are derived in 10_build.R.
+# for urban AGEB only -- economic activity, and housing traits tied to heat,
+# flooding, water stress and the reach of early warnings. Shares are derived in 10_build.R.
 CENSUS_VARS <- c(
   POB_TOTAL           = "POBTOT",
   POB_HOMBRES         = "POBMAS",
@@ -53,6 +53,13 @@ CENSUS_VARS <- c(
   POB_18A24           = "P_18A24",
   POB_15A17_ASIS      = "P15A17A",
   POB_18A24_ASIS      = "P18A24A",
+  # Employment, population 12+. Income is not in the census, so economic
+  # activity is the closest recovery-capacity signal it offers.
+  POB_PEA             = "PEA",
+  POB_PEA_F           = "PEA_F",
+  POB_INAC            = "PE_INAC",
+  POB_INAC_F          = "PE_INAC_F",
+  POB_DESOCUP         = "PDESOCUP",
   # Households
   HOGARES             = "TOTHOG",
   HOGARES_JEFA        = "HOGJEF_F",
@@ -109,7 +116,8 @@ CENSUS_GROUPS <- list(
            "POB_15YMAS_ANALF", "POB_15YMAS_SIN_ESC", "POB_15YMAS_PRIM_INC",
            "POB_15YMAS_PRIM_COM", "POB_15YMAS_SEC_INC", "POB_6A11", "POB_12A14",
            "POB_6A11_NOASIS", "POB_12A14_NOASIS", "POB_15A17", "POB_18A24",
-           "POB_15A17_ASIS", "POB_18A24_ASIS", "ESC_ANIOS_TOT"),
+           "POB_15A17_ASIS", "POB_18A24_ASIS", "POB_PEA", "POB_PEA_F",
+           "POB_INAC", "POB_INAC_F", "POB_DESOCUP", "ESC_ANIOS_TOT"),
   VIV  = c("HOGARES", "HOGARES_JEFA", "VIV_PART_HAB", "VIV_OCUPANTES",
            "VIV_DRENAJE", "VIV_ELECTRICIDAD", "VIV_SIN_DRENAJE",
            "VIV_SIN_ELECTRICIDAD", "VIV_SIN_AGUA", "VIV_PISO_TIERRA",
