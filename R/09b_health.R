@@ -134,23 +134,8 @@ build_health <- function(ent) {
   attrs <- readRDS(interim_path("ageb_attrs", ent))
   rural_ids <- attrs$ID_AGEB[attrs$AMBITO == "Rural"]
 
-  # Rural origins: inhabited localities, weighted by their headcount. POBTOT is
-  # never suppressed in the ITER (05_census_rural.R enforces it).
-  iter_pop <- read_utf8_csv(
-    find_file(file.path(DIR_RAW, ent, "iter"), "conjunto_de_datos_iter_.*\\.csv$")) |>
-    rename_with(~ sub("^﻿", "", .x)) |>
-    filter(LOC != "0000", as.integer(LOC) < 9998) |>
-    transmute(ID_LOC = build_loc_id(ENTIDAD, MUN, LOC),
-              W = to_num_suppressed(POBTOT))
-
-  loc_pts <- read_mg_layer(ent, "lpr") |>
-    transmute(ID_LOC = build_loc_id(CVE_ENT, CVE_MUN, CVE_LOC),
-              ID_AGEB = build_ageb_id(CVE_ENT, CVE_MUN, "0000", CVE_AGEB)) |>
-    distinct(ID_LOC, .keep_all = TRUE) |>
-    inner_join(iter_pop, by = "ID_LOC") |>
-    filter(ID_AGEB %in% rural_ids, W > 0) |>
-    mutate(DIST_ORIGEN = "Localidades") |>
-    select(ID_AGEB, W, DIST_ORIGEN)
+  loc_pts <- inhabited_locality_points(ent, rural_ids) |>
+    mutate(DIST_ORIGEN = "Localidades")
 
   # Everything else -- urban AGEB and uninhabited rural ones -- from the
   # interior point, which always falls inside its own polygon.
@@ -158,7 +143,6 @@ build_health <- function(ent) {
     filter(!ID_AGEB %in% loc_pts$ID_AGEB) |>
     transmute(ID_AGEB, W = 1, DIST_ORIGEN = "Punto interior")
   st_geometry(interior) <- "geometry"
-  st_geometry(loc_pts) <- "geometry"
 
   origins <- rbind(loc_pts, interior)
   for (col in names(HEALTH_DIST_COLS)) {

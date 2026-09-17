@@ -29,7 +29,11 @@ YEARS <- list(
   denue    = "2026-05",
   hidro    = 2018L,
   usv      = 2021L,
-  clues    = "2026-07"
+  clues    = "2026-07",
+  cem      = 2024L,  # CEM 4.0 publication; ALOS PALSAR radar of 2006-2011
+  red_hidro = 2010L,
+  costa    = 2018L,  # CONABIO coastline, RapidEye imagery of 2011-2014
+  cenapred = 2023L
 )
 
 # --- Entity catalog -------------------------------------------------------
@@ -150,6 +154,88 @@ COVERAGE_TOL_PCT <- 1.0   # municipal area vs. summed AGEB area
 COVERAGE_TOL_KM2 <- 0.5
 POP_SUM_TOL_PCT  <- 1.0   # POB_HOMBRES + POB_MUJERES vs. POB_TOTAL
 VIV_TOL_PCT      <- 1.0   # VPH_* vs. TVIVPARHAB rounding slack
+
+# CEM 4.0, INEGI's 15 m elevation model, one GeoTIFF per entity. The download
+# endpoint is what the viewer at https://www.inegi.org.mx/app/geo2/elevacionesmex/
+# calls (its api/archivo?version=2&opcion=15&clave=NN lists the file); the
+# entidad parameter is ignored by the server. ~7.5 GB for the 32 entities.
+# Verified 2026-09-16.
+url_cem <- function(ent) sprintf(paste0(
+  "https://www.inegi.org.mx/app/geo2/elevacionesmex/DownloadFile.do?",
+  "file=e%s_cem_r15_v4_tif.zip&res=15&entidad=%s"), ent, ent)
+
+# Red Hidrografica 1:50 000 edicion 2.0, one archive per hydrological region.
+# The 37 regional products carry consecutive UPCs in the INEGI library
+# (702825006976 Baja California Noroeste ... 702825007012 El Salado); each
+# unpacks into subcuenca folders with {SUBC}_hl.shp flow lines. ~3.5 GB.
+# Verified 2026-09-16.
+RED_HIDRO_BASE <- paste0(
+  "https://www.inegi.org.mx/contenidos/productos/prod_serv/contenidos/espanol/",
+  "bvinegi/productos/geografia/hidrogeolo/region_hidrografica")
+RED_HIDRO_UPCS <- paste0("70282500", 6976:7012)
+url_red_hidro <- function(upc) sprintf("%s/%s_s.zip", RED_HIDRO_BASE, upc)
+
+# CONABIO coastline 1:25 000 (2011-2014). Segments described as "Frontera" are
+# the land borders and are dropped. Verified 2026-09-16.
+URL_COAST <- "http://www.conabio.gob.mx/informacion/gis/maps/geo/lc2018gw.zip"
+
+# SEDATU republishes CENAPRED's municipal indicator system through the GeoNode
+# behind situ.sedatu.gob.mx/descargas/?tema=riesgo. Each hazard is a separate
+# "layer" whose GeoPackage weighs ~38 MB, but all of them carry the same
+# municipal table and differ in a single column, so 13_hazard.R asks WFS for
+# just that column (~80 KB per layer) instead of downloading 17 copies of the
+# same polygons. Verified 2026-09-17.
+URL_SEDATU_WFS <- "https://ide.sedatu.gob.mx/geoserver/ows"
+
+# Output column -> the SEDATU layer it comes from, kept here rather than in
+# 13_hazard.R because 12_export.R needs the column list while building the
+# published schema and R sources the blocks in name order. How each field is
+# read and coded lives in 13_hazard.R.
+#
+# Layer and field names are the ones GeoServer publishes;
+# they are inconsistent upstream (pelig_ciclores, def_asoc_tarnsp) and are
+# copied verbatim on purpose, typos included.
+#
+# The 13 AMZ_* columns are hazards. The last two are CENAPRED's own municipal
+# judgements about the population, kept as external validation in the same
+# spirit as the CONEVAL GRS (D-23): useful to contrast against what this
+# database computes, never as an input to it.
+HAZARD_SOURCES <- list(
+  AMZ_INUND      = c(layer = "pel_inund",             field = "gp_inundac", scale = "grado"),
+  AMZ_SEQUIA     = c(layer = "pelig_seq",             field = "gp_sequia2", scale = "grado"),
+  AMZ_ONDA_CAL   = c(layer = "mun_ondas_calidas",     field = "gp_ondasca", scale = "grado"),
+  AMZ_CICLON     = c(layer = "pelig_ciclores",        field = "gp_ciclnes", scale = "grado"),
+  AMZ_DESLIZ     = c(layer = "suscept_lad_cenapred",  field = "susceplad",  scale = "grado"),
+  AMZ_TORM_ELEC  = c(layer = "mun_tormentaselec",     field = "gp_tormele", scale = "grado"),
+  AMZ_GRANIZO    = c(layer = "mun_peligro_gra",       field = "gp_granizo", scale = "grado"),
+  AMZ_TEMP_BAJA  = c(layer = "pelig_temp_baja",       field = "gp_bajaste", scale = "grado"),
+  AMZ_NEVADA     = c(layer = "peligro_neva_cenapred", field = "gp_nevadas", scale = "grado"),
+  AMZ_SISMO      = c(layer = "pel_sismico",           field = "gp_sismico", scale = "grado"),
+  AMZ_VOLCAN     = c(layer = "peligro_volcanico",     field = "volcanes",   scale = "grado"),
+  AMZ_SUS_TOX    = c(layer = "mun_pel_tox_cenapred",  field = "gp_sustox",  scale = "grado"),
+  AMZ_SUS_INFLA  = c(layer = "pel_sus_infla",         field = "gp_susinfl", scale = "grado"),
+  CEN_RESIL      = c(layer = "mun_grado_resil",       field = "g_resilien", scale = "grado"),
+  CEN_VULN_CC    = c(layer = "vulne_comb_clima",      field = "v_cc",       scale = "si_no")
+)
+
+HAZARD_COLS <- names(HAZARD_SOURCES)
+
+url_sedatu_wfs <- function(layer, field) sprintf(
+  paste0("%s?service=WFS&version=2.0.0&request=GetFeature&typeNames=geonode:%s",
+         "&outputFormat=csv&propertyName=cve_munc,%s"),
+  URL_SEDATU_WFS, layer, field)
+
+# Terrain and flood-exposure parameters (09c_terrain.R).
+# At 1:50 000 almost any point lies a few hundred metres from some first-order
+# gully, so only streams of Strahler order >= 3 count as flood sources.
+STREAM_MIN_ORDER  <- 3L
+# Rural localities are points; slope and elevation are read over this radius,
+# roughly a village core.
+TERRAIN_BUFFER_M  <- 150
+SLOPE_THRESHOLDS  <- c(15, 30)  # degrees
+# The 1:50 000 flow lines and the 15 m DEM are not co-registered, so the
+# stream's elevation is the lowest cell within this radius of the nearest point.
+STREAM_BED_RADIUS_M <- 45
 
 # A CLUES facility whose coordinates fall farther than this outside its own
 # declared entity is a geocoding error (swapped signs, another state's

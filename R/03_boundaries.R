@@ -118,6 +118,30 @@ build_locality_bridge <- function(ent) {
   invisible(lpr)
 }
 
+# Where the people of each rural AGEB live: its inhabited ITER localities as
+# MG {ENT}lpr.shp points, in EPSG:6372, with the headcount as weight W. POBTOT
+# is never suppressed in the ITER (05_census_rural.R enforces it). Rural AGEB
+# absent from the result are uninhabited. Shared by 09b_health.R and
+# 09c_terrain.R so both measure from the same places.
+inhabited_locality_points <- function(ent, rural_ids) {
+  iter_pop <- read_utf8_csv(
+    find_file(file.path(DIR_RAW, ent, "iter"), "conjunto_de_datos_iter_.*\\.csv$")) |>
+    rename_with(~ sub("^\ufeff", "", .x)) |>
+    filter(LOC != "0000", as.integer(LOC) < 9998) |>
+    transmute(ID_LOC = build_loc_id(ENTIDAD, MUN, LOC),
+              W = to_num_suppressed(POBTOT))
+
+  pts <- read_mg_layer(ent, "lpr") |>
+    transmute(ID_LOC = build_loc_id(CVE_ENT, CVE_MUN, CVE_LOC),
+              ID_AGEB = build_ageb_id(CVE_ENT, CVE_MUN, "0000", CVE_AGEB)) |>
+    distinct(ID_LOC, .keep_all = TRUE) |>
+    inner_join(iter_pop, by = "ID_LOC") |>
+    filter(ID_AGEB %in% rural_ids, W > 0) |>
+    select(ID_AGEB, W)
+  st_geometry(pts) <- "geometry"
+  pts
+}
+
 run_boundaries <- function(ent) {
   build_boundaries(ent)
   build_municipios(ent)

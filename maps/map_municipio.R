@@ -9,6 +9,10 @@ suppressPackageStartupMessages({
 })
 source("R/00_config.R"); source("R/01_utils.R"); source("R/03_boundaries.R")
 
+# Figures live in maps/png/; the folder may not exist in a fresh clone.
+DIR_MAPS <- file.path("maps", "png")
+dir.create(DIR_MAPS, recursive = TRUE, showWarnings = FALSE)
+
 args <- commandArgs(trailingOnly = TRUE)
 ent <- if (length(args) >= 1) args[[1]] else "20"
 mun <- if (length(args) >= 2) args[[2]] else "057"
@@ -63,7 +67,7 @@ p1 <- ggplot() +
                        "algún hueco dentro del municipio.")) +
   base_theme
 
-ggsave(sprintf("maps/ageb_%s%s_ambito.png", ent, mun), p1,
+ggsave(file.path(DIR_MAPS, sprintf("ageb_%s%s_ambito.png", ent, mun)), p1,
        width = 8, height = 8.6, dpi = 200, bg = "white")
 
 # --- panel 2: population density, main urban locality ---------------------
@@ -100,7 +104,7 @@ p2 <- ggplot() +
   base_theme +
   theme(plot.subtitle = element_text(size = 9.5))
 
-ggsave(sprintf("maps/ageb_%s%s_densidad.png", ent, mun), p2,
+ggsave(file.path(DIR_MAPS, sprintf("ageb_%s%s_densidad.png", ent, mun)), p2,
        width = 8, height = 8.2, dpi = 200, bg = "white")
 
 cat(sprintf("%s: %d AGEB (%d urb / %d rur), %.1f km2, %s hab\n",

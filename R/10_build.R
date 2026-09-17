@@ -75,6 +75,8 @@ build_complete <- function(ent) {
   hydro    <- readRDS(interim_path("hydrology", ent))
   landuse  <- readRDS(interim_path("landuse", ent))
   health   <- readRDS(interim_path("health", ent))
+  terrain  <- readRDS(interim_path("terrain", ent))
+  hazard   <- readRDS(interim_path("hazard", ent))
 
   census <- bind_rows(census_u, census_r)
   if (anyDuplicated(census$ID_AGEB)) {
@@ -90,6 +92,8 @@ build_complete <- function(ent) {
     left_join(hydro, by = "ID_AGEB") |>
     left_join(landuse, by = "ID_AGEB") |>
     left_join(health, by = "ID_AGEB") |>
+    left_join(terrain, by = "ID_AGEB") |>
+    left_join(hazard, by = "ID_AGEB") |>
     mutate(
       NOM_ENT = unname(ENTITY_NAMES[ent]),
       NOM_LOC = NOM_LOC_CENSUS,
@@ -228,7 +232,11 @@ build_complete <- function(ent) {
       YEAR_DENUE    = YEARS$denue,
       YEAR_HIDRO    = YEARS$hidro,
       YEAR_USV      = YEARS$usv,
-      YEAR_CLUES    = YEARS$clues
+      YEAR_CLUES    = YEARS$clues,
+      YEAR_CEM      = YEARS$cem,
+      YEAR_RED_HIDRO = YEARS$red_hidro,
+      YEAR_COSTA    = YEARS$costa,
+      YEAR_CENAPRED = YEARS$cenapred
     )
   # UNINHABITED stays in the interim table for 11_qc.R; the export drops it.
 

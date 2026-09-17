@@ -93,16 +93,24 @@ unzip_cached <- function(zip_path, out_dir) {
   if (file.exists(marker)) return(invisible(out_dir))
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   log_msg("unzipping: ", basename(zip_path))
-  # INEGI archives carry latin-1 file names ("l\u00e9eme.pdf"). R's internal unzip
-  # aborts on them and the system `unzip` hangs on a prompt it cannot show, so
-  # bsdtar is used instead. It skips only the offending readme files and exits
-  # non-zero for them, which is why the status is not treated as fatal; the
-  # caller-visible contract is checked by verifying that files were extracted.
+  # INEGI archives carry non-UTF-8 file names ("l\u00e9eme.pdf",
+  # "15_M\u00e9xico_r15m_v4.tif"). R's internal unzip aborts on them and the
+  # system `unzip` hangs on a prompt it cannot show, so bsdtar is used. Left to
+  # guess the encoding, bsdtar silently skips those entries -- which once
+  # dropped the elevation model of every entity with an accent in its name --
+  # so the names are decoded as CP850, the DOS code page the archives use.
+  opts <- c("--options", "zip:hdrcharset=CP850")
   suppressWarnings(system2("tar",
-    c("-xf", shQuote(zip_path), "-C", shQuote(out_dir)),
+    c("-xf", shQuote(zip_path), opts, "-C", shQuote(out_dir)),
     stdout = FALSE, stderr = FALSE))
-  if (length(list.files(out_dir, recursive = TRUE)) == 0) {
-    stop("extraction produced no files from ", basename(zip_path), call. = FALSE)
+  # Every file entry must land on disk; a count is enough to catch a skip.
+  listed <- suppressWarnings(system2("tar", c("-tf", shQuote(zip_path), opts),
+                                     stdout = TRUE, stderr = FALSE))
+  n_listed <- sum(!grepl("/$", listed))
+  n_found <- length(list.files(out_dir, recursive = TRUE, all.files = TRUE))
+  if (n_found == 0 || n_found < n_listed) {
+    stop("extracted ", n_found, " of ", n_listed, " files from ",
+         basename(zip_path), call. = FALSE)
   }
   writeLines(format(Sys.time()), marker)
   invisible(out_dir)

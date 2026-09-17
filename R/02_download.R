@@ -17,6 +17,28 @@ download_national <- function() {
   }
   # A bare workbook, not an archive.
   download_cached(URL_CLUES, file.path(DIR_RAW, "national", "clues", CLUES_FILE))
+
+  coast_zip <- file.path(DIR_RAW, "national", "lc2018gw.zip")
+  download_cached(URL_COAST, coast_zip)
+  unzip_cached(coast_zip, file.path(DIR_RAW, "national", "coast"))
+
+  for (upc in RED_HIDRO_UPCS) {
+    zip_path <- file.path(DIR_RAW, "national", "red_hidro", sprintf("%s_s.zip", upc))
+    download_cached(url_red_hidro(upc), zip_path)
+    unzip_cached(zip_path, file.path(DIR_RAW, "national", "red_hidro", upc))
+  }
+
+  # Every entity's elevation model, not just the one being processed: slope
+  # and stream-bed elevations near a state line read the neighbour's cells.
+  for (ent in ENTITIES) {
+    zip_path <- file.path(DIR_RAW, ent, sprintf("cem_%s.zip", ent))
+    download_cached(url_cem(ent), zip_path)
+    unzip_cached(zip_path, file.path(DIR_RAW, ent, "cem"))
+  }
+
+  # One small WFS query per CENAPRED hazard layer instead of 15 GeoPackages
+  # that would differ in a single column; 13_hazard.R explains why.
+  download_hazard()
   invisible(TRUE)
 }
 

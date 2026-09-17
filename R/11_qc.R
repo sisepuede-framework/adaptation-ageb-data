@@ -197,6 +197,54 @@ build_qc <- function(ent) {
     sprintf("%.2f%% of %d inhabited rural AGEB measured from their localities",
             100 * from_loc, nrow(rur_inh)))
 
+  # --- terrain and flood exposure (09c_terrain.R) ---
+  # The CEM covers the continent completely and islands only partly, so an
+  # inhabited AGEB without elevation can only be a small island.
+  inh <- df |> filter(POB_TOTAL > 0 | AMBITO == "Urbana")
+  no_relief <- sum(is.na(inh$ELEV_M) | is.na(inh$PEND_MEDIA_GRAD))
+  res[[length(res) + 1]] <- qc_check(
+    "terrain_relief_inhabited", no_relief <= max(2, 0.001 * nrow(inh)),
+    sprintf("%d of %d inhabited AGEB without elevation or slope", no_relief, nrow(inh)))
+
+  pend_bad <- sum(df$PCT_PEND_15 < 0 | df$PCT_PEND_15 > 100 |
+                    df$PCT_PEND_30 > df$PCT_PEND_15 + 1e-9 |
+                    df$PEND_MEDIA_GRAD < 0 | df$PEND_MEDIA_GRAD > 90, na.rm = TRUE)
+  res[[length(res) + 1]] <- qc_check(
+    "terrain_slope_consistent", pend_bad == 0,
+    sprintf("%d AGEB with a slope share out of [0, 100], above 30 deg exceeding above 15 deg, or a mean slope out of [0, 90]",
+            pend_bad))
+
+  dist_bad <- sum(is.na(df$DIST_CAUCE_KM) | is.na(df$DIST_COSTA_KM) |
+                    df$DIST_CAUCE_KM < 0 | df$DIST_COSTA_KM < 0)
+  res[[length(res) + 1]] <- qc_check(
+    "terrain_distances_complete", dist_bad == 0,
+    sprintf("%d AGEB missing or negative; median km to stream %.2f, max %.1f",
+            dist_bad, median(inh$DIST_CAUCE_KM, na.rm = TRUE),
+            max(df$DIST_CAUCE_KM, na.rm = TRUE)))
+
+  # --- hazard (13_hazard.R) ---
+  # CENAPRED publishes a row for every municipality of the 2020 marco, so a
+  # missing value means the municipal key did not match, not that the
+  # municipality is hazard-free. The grades themselves are never absent.
+  amz_cols <- HAZARD_COLS[HAZARD_COLS %in% names(df)]
+  n_unmatched <- sum(is.na(df$AMZ_INUND))
+  res[[length(res) + 1]] <- qc_check(
+    "hazard_municipal_match", n_unmatched == 0,
+    sprintf("%d of %d AGEB without a CENAPRED row (%d municipalities)",
+            n_unmatched, nrow(df),
+            length(unique(df$CVE_MUN_FULL[is.na(df$AMZ_INUND)]))))
+
+  # 0 only exists for volcanic hazard ("Sin Peligro") and for the binary
+  # CEN_VULN_CC; everything else is a grade in 1..5.
+  bad_range <- vapply(amz_cols, \(v) sum(df[[v]] < 0 | df[[v]] > 5, na.rm = TRUE),
+                      numeric(1))
+  res[[length(res) + 1]] <- qc_check(
+    "hazard_grades_in_range", all(bad_range == 0),
+    if (all(bad_range == 0))
+      sprintf("%d hazard columns coded within their scale; AGEB with flood hazard Alto or Muy alto: %.1f%%",
+              length(amz_cols), 100 * mean(df$AMZ_INUND >= 4, na.rm = TRUE))
+    else paste("out of range:", paste(names(bad_range)[bad_range > 0], collapse = ", ")))
+
   res[[length(res) + 1]] <- qc_check(
     "imputed_cells_urban_only",
     all(df$N_CELDAS_IMPUTADAS[df$AMBITO == "Rural"] == 0, na.rm = TRUE),
