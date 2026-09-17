@@ -31,11 +31,13 @@ build_landuse <- function(ent) {
 
   inter <- suppressWarnings(st_intersection(ageb, usv))
 
-  detail <- inter |>
-    mutate(A = area_km2(inter)) |>
-    st_drop_geometry() |>
+  detail_sf <- inter |>
     group_by(ID_AGEB, USO_CLASE) |>
-    summarise(CLASS_AREA_KM2 = sum(A), .groups = "drop") |>
+    summarise(.groups = "drop")
+
+  detail <- detail_sf |>
+    mutate(CLASS_AREA_KM2 = area_km2(detail_sf)) |>
+    st_drop_geometry() |>
     left_join(attrs |> select(ID_AGEB, AREA_KM2), by = "ID_AGEB") |>
     mutate(CLASS_PCT = pmin(100, safe_pct(CLASS_AREA_KM2, AREA_KM2)))
 

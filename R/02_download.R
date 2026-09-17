@@ -15,6 +15,8 @@ download_national <- function() {
     download_cached(nat[[nm]]$url, zip_path)
     unzip_cached(zip_path, file.path(DIR_RAW, "national", nm))
   }
+  # A bare workbook, not an archive.
+  download_cached(URL_CLUES, file.path(DIR_RAW, "national", "clues", CLUES_FILE))
   invisible(TRUE)
 }
 

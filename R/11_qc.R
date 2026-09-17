@@ -171,6 +171,32 @@ build_qc <- function(ent) {
     else paste("out of range:", paste(sprintf("%s (%d)", names(over)[over > 0],
                                               over[over > 0]), collapse = ", ")))
 
+  # --- health access (09b_health.R) ---
+  dist_cols <- names(HEALTH_DIST_COLS)
+  n_bad <- sum(!complete.cases(df[dist_cols]) |
+                 rowSums(df[dist_cols] < 0, na.rm = TRUE) > 0)
+  res[[length(res) + 1]] <- qc_check(
+    "health_distances_complete", n_bad == 0,
+    sprintf("%d of %d AGEB missing or negative; max km to hospital %.1f, to public first level %.1f",
+            n_bad, nrow(df), max(df$DIST_HOSP_KM, na.rm = TRUE),
+            max(df$DIST_1NIVEL_PUB_KM, na.rm = TRUE)))
+
+  # Public hospitals are a subset of all hospitals, so for every origin point
+  # the nearest public one can only be as far or farther.
+  nearer <- sum(df$DIST_HOSP_PUB_KM < df$DIST_HOSP_KM - 1e-6, na.rm = TRUE)
+  res[[length(res) + 1]] <- qc_check(
+    "health_public_hospital_not_nearer", nearer == 0,
+    sprintf("%d AGEB closer to a public hospital than to any hospital", nearer))
+
+  # Inhabited rural AGEB must be measured from their localities; the interior
+  # point is only a fallback for territory with nobody in it.
+  rur_inh <- df |> filter(AMBITO == "Rural", POB_TOTAL > 0)
+  from_loc <- mean(rur_inh$DIST_ORIGEN == "Localidades")
+  res[[length(res) + 1]] <- qc_check(
+    "health_rural_from_localities", nrow(rur_inh) == 0 || from_loc >= 0.99,
+    sprintf("%.2f%% of %d inhabited rural AGEB measured from their localities",
+            100 * from_loc, nrow(rur_inh)))
+
   res[[length(res) + 1]] <- qc_check(
     "imputed_cells_urban_only",
     all(df$N_CELDAS_IMPUTADAS[df$AMBITO == "Rural"] == 0, na.rm = TRUE),

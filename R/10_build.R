@@ -17,6 +17,8 @@ CENSUS_SHARE_COLS <- c(
   # CONEVAL rezago equivalents
   "PCT_POB_SIN_SALUD", "PCT_ANALF", "PCT_EDU_BAS_INC", "PCT_NOASIS_6A14",
   "PCT_NOASIS_15A24",
+  # Employment
+  "PCT_PEA", "PCT_PEA_F", "PCT_DESOCUP",
   # Housing
   "PCT_VIV_SIN_DRENAJE", "PCT_VIV_SIN_ELECTRIC", "PCT_VIV_SIN_AGUA",
   "PCT_VIV_PISO_TIERRA", "PCT_VIV_1CUARTO", "PCT_VIV_SIN_SANITARIO",
@@ -72,6 +74,7 @@ build_complete <- function(ent) {
   denue    <- readRDS(interim_path("denue", ent))
   hydro    <- readRDS(interim_path("hydrology", ent))
   landuse  <- readRDS(interim_path("landuse", ent))
+  health   <- readRDS(interim_path("health", ent))
 
   census <- bind_rows(census_u, census_r)
   if (anyDuplicated(census$ID_AGEB)) {
@@ -86,6 +89,7 @@ build_complete <- function(ent) {
     left_join(denue, by = "ID_AGEB") |>
     left_join(hydro, by = "ID_AGEB") |>
     left_join(landuse, by = "ID_AGEB") |>
+    left_join(health, by = "ID_AGEB") |>
     mutate(
       NOM_ENT = unname(ENTITY_NAMES[ent]),
       NOM_LOC = NOM_LOC_CENSUS,
@@ -173,7 +177,19 @@ build_complete <- function(ent) {
                                              POB_15A17_ASIS - POB_18A24_ASIS,
                                            POB_15A17 + POB_18A24)),
       GRAPROES          = safe_ratio(ESC_ANIOS_TOT, POB_15YMAS),
-      PRO_OCUP_C        = safe_ratio(OCUP_CON_CUARTOS, CUARTOS_TOT),
+      PRO_OCUP_C       = safe_ratio(OCUP_CON_CUARTOS, CUARTOS_TOT),
+
+      # --- Employment. The universe is the population 12+ whose activity
+      # condition was captured (PEA + PE_INAC), not P_12YMAS, for the same
+      # reason housing divides by VIV_CARACT: the unspecified answers are
+      # small nationally (0.2-0.5% of P_12YMAS) but concentrated in a few
+      # AGEB, up to 27% in Oaxaca. PDESOCUP is the unemployed over the
+      # economically active (PEA = POCUPADA + PDESOCUP exactly). The census
+      # rate runs low -- 2.3% in CDMX, 1.7% in Oaxaca -- because informal work
+      # counts as occupied, so participation carries most of the signal.
+      PCT_PEA     = safe_pct(POB_PEA, POB_PEA + POB_INAC),
+      PCT_PEA_F   = safe_pct(POB_PEA_F, POB_PEA_F + POB_INAC_F),
+      PCT_DESOCUP = safe_pct(POB_DESOCUP, POB_PEA),
 
       # --- Housing, over VIV_CARACT like PCT_DRENAJE and PCT_ELECTRIC.
       #
@@ -211,7 +227,8 @@ build_complete <- function(ent) {
       YEAR_CONEVAL  = YEARS$coneval,
       YEAR_DENUE    = YEARS$denue,
       YEAR_HIDRO    = YEARS$hidro,
-      YEAR_USV      = YEARS$usv
+      YEAR_USV      = YEARS$usv,
+      YEAR_CLUES    = YEARS$clues
     )
   # UNINHABITED stays in the interim table for 11_qc.R; the export drops it.
 
