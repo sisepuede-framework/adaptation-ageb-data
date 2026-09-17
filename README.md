@@ -4,8 +4,8 @@ Pipeline en R que construye una tabla con **una fila por AGEB**, urbanas *y*
 rurales, para las 32 entidades, de forma reproducible e idempotente. Es la base
 para un **índice de vulnerabilidad climática**: reúne población, rezago social,
 vivienda, servicios, empleo, acceso a salud, actividad económica, cuerpos de
-agua y uso de suelo sobre
-la geometría oficial del INEGI.
+agua y uso de suelo sobre la geometría oficial del INEGI, junto con la
+exposición física (relieve, cauces y costa) que se cruza aparte.
 
 Convención: prosa en español; nombres de archivos, variables y comentarios de
 código en inglés. CSV en UTF-8, separador coma.
@@ -16,6 +16,7 @@ código en inglés. CSV en UTF-8, separador coma.
 |---|---|
 | [docs/DICCIONARIO_DATOS.md](docs/DICCIONARIO_DATOS.md) | Qué es cada columna: descripción, unidad, fórmula, universo, fuente, cobertura y qué significa un vacío |
 | [docs/diccionario_datos.csv](docs/diccionario_datos.csv) | Lo mismo en formato tabular, para leer desde R o Python. Es la fuente única del diccionario |
+| [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md), [docs/data_dictionary.csv](docs/data_dictionary.csv) | Versión en inglés del diccionario, fila por fila igual a la española |
 | [docs/DECISIONES.md](docs/DECISIONES.md) | Por qué la base es como es: 30 decisiones con evidencia, controles de calidad, problemas conocidos y pendientes |
 | [docs/FUENTES.md](docs/FUENTES.md) | Fuentes, URL, años, codificaciones, licencias y cómo citarlas |
 
@@ -58,19 +59,22 @@ Rscript run_all.R
 ```
 
 Sin argumentos procesa las 32 entidades y consolida el nacional; con
-argumentos, solo esas entidades. Las descargas se cachean en `data/raw/` (~19 GB)
+argumentos, solo esas entidades. Las descargas se cachean en `data/raw/` (~30 GB)
 y cada bloque intermedio en `data/interim/`. Volver a correr reutiliza lo que ya
 existe; para recalcular un bloque, borra su `.rds` en `data/interim/`. Una
-corrida nacional desde cero tarda ~29 min.
+corrida nacional desde cero tarda bastante más que antes: el relieve de las 32
+entidades toma ~70 min, más la construcción única de la capa nacional de cauces
+(1.6 millones de segmentos) y la descarga de ~11 GB de elevación e hidrografía.
 
-Después de cambiar `docs/diccionario_datos.csv`, regenera el diccionario legible:
+Después de cambiar el diccionario, edita **los dos** CSV (`docs/diccionario_datos.csv`
+y `docs/data_dictionary.csv`, en inglés) y regenera ambos documentos legibles:
 
 ```bash
 Rscript docs/build_diccionario.R
 ```
 
-La exportación **falla** si una columna del CSV no está en el diccionario, o si
-el diccionario tiene columnas de más o en otro orden.
+La exportación **falla** si una columna del CSV no está en alguno de los dos
+diccionarios, o si alguno tiene columnas de más o en otro orden.
 
 ## Estructura
 
@@ -87,19 +91,21 @@ el diccionario tiene columnas de más o en otro orden.
 | `R/08_hydrology.R` | Cuerpos de agua por AGEB | `hydrology` |
 | `R/09_landuse.R` | Uso de suelo y vegetación por AGEB | `landuse*` |
 | `R/09b_health.R` | Distancia a hospitales y unidades de primer nivel (CLUES) | `health`, `clues_facilities_MX` |
+| `R/09c_terrain.R` | Elevación, pendiente, cauces y costa (CEM 4.0, Red Hidrográfica, CONABIO) | `terrain`, `streams_MX`, `coast_MX` |
 | `R/10_build.R` | Ensambla todo y calcula los indicadores | `complete` |
-| `R/11_qc.R` | 26 controles de calidad por entidad | `quality_control_report_*` |
+| `R/11_qc.R` | 31 controles de calidad por entidad | `quality_control_report_*` |
 | `R/12_export.R` | CSV, GeoPackage y consolidado nacional | `data/processed/` |
+| `R/13_hazard.R` | Grados municipales de peligro de CENAPRED, vía SEDATU | `hazard`, `hazard_national` |
 | `maps/map_municipio.R` | Mapa de control visual de la malla de un municipio | `maps/*.png` |
 
 ## Salidas (`data/processed/`)
 
 | Archivo | Contenido |
 |---|---|
-| `ageb_indicadores_{ENT}.csv` | 158 columnas, una fila por AGEB |
+| `ageb_indicadores_{ENT}.csv` | 184 columnas, una fila por AGEB |
 | `ageb_indicadores_MX.csv` | Concatenado nacional |
 | `ageb_geom_{ENT}.gpkg` | Geometría AGEB en EPSG:4326 con el bloque de identificación |
-| `quality_control_report_{ENT}.csv`, `_MX.csv` | 26 controles por entidad |
+| `quality_control_report_{ENT}.csv`, `_MX.csv` | 31 controles por entidad |
 | `qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
 | `denue_establishments_{ENT}.csv`, `denue_ageb_sector_{ENT}.csv`, `ageb_landuse_detail_{ENT}.csv` | Tablas de detalle |
 
@@ -129,12 +135,14 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
 | Actividad económica | `DENUE_TOT`, `DEN_MANUF`, `DEN_COM`, `DEN_SERV`, `DEN_EDU`, `DEN_GOB`, `SCHOOL_TOT` | Ambos |
 | Agua y uso de suelo | `WATER_AREA`, `WATER_PCT`, `HAS_WATER`, `USO_DOM`, `USO_PCT`, `PCT_URB` | Ambos |
 | Acceso a salud | `DIST_HOSP_KM`, `DIST_HOSP_PUB_KM`, `DIST_1NIVEL_PUB_KM`, `DIST_ORIGEN` | Ambos |
+| Relieve y exposición | `ELEV_M`, `PEND_MEDIA_GRAD`, `PCT_PEND_15`, `PCT_PEND_30`, `DIST_CAUCE_KM`, `DIST_COSTA_KM`, `DESNIVEL_CAUCE_M` | Ambos |
+| Amenaza (municipal) | 13 `AMZ_*` de peligro CENAPRED, más `CEN_RESIL` y `CEN_VULN_CC` | Ambos |
 | Conteos censales | 51 conteos, para reagregar a otras geografías | Ambos |
 | Metadatos | `YEAR_*` | Ambos |
 
 ## Validación
 
-Corrida nacional completa (32 entidades, 2026-09-16):
+Corrida nacional completa (32 entidades, 2026-09-17):
 
 | | |
 |---|---|
@@ -142,7 +150,7 @@ Corrida nacional completa (32 entidades, 2026-09-16):
 | Municipios | 2,469 |
 | `sum(POB_TOTAL)` | **126,014,024**, idéntico al Censo 2020 (diferencia 0) |
 | Superficie | 1,956,075 km² |
-| Controles de calidad | **832 / 832 PASS** (26 por entidad) |
+| Controles de calidad | **992 / 992 PASS** (31 por entidad) |
 | DENUE | 6,117,578 unidades, 150,067 escuelas |
 | Con GRS | 61,430 de 63,982 urbanas (96 %) |
 | Población con indicadores censales | 99.97 % urbana, 99.93 % rural |
@@ -150,6 +158,8 @@ Corrida nacional completa (32 entidades, 2026-09-16):
 | Empleo | participación 62.2 %, femenina 49.1 %, desocupación 1.9 % (sumado desde las AGEB) |
 | Acceso a salud | mediana a hospital público: 3.3 km urbana, 21.6 km rural; 2.8 % de la población a más de 30 km |
 | CLUES | 41,225 unidades en operación; 940 descartadas por geocodificación fuera de su entidad |
+| Relieve y exposición | 0 AGEB habitadas sin elevación; 17.6 % de la población a < 1 km de un cauce de orden ≥ 3 y < 5 m sobre el agua; 2.4 % a < 10 km de la costa y < 10 m de altitud |
+| Amenaza (CENAPRED) | 2,469 de 2,469 municipios empatados; 0 AGEB sin grado. Población en peligro Alto o Muy alto: inundación 64.1 %, deslizamientos 57.3 %, ondas cálidas 23.3 %, sequía 12.0 %, ciclones 6.9 % |
 
 La población cuadra exacta también por entidad: Oaxaca 4,132,148; CDMX 9,209,944;
 Estado de México 16,992,418.
@@ -181,7 +191,14 @@ El detalle y la evidencia de cada una están en [docs/DECISIONES.md](docs/DECISI
   polígono. Se descartan las unidades CLUES geocodificadas a más de 5 km de su
   entidad.
 - **La amenaza queda fuera del índice de vulnerabilidad** (D-30), siguiendo el
-  marco del IPCC AR6.
+  marco del IPCC AR6. Las columnas de relieve y exposición se publican por tipo
+  de amenaza para cruzarse después.
+- **El relieve se lee donde vive la gente**: en AGEB rurales, en discos de
+  150 m alrededor de cada localidad habitada, no sobre toda la sierra que
+  cubre el polígono.
+- **Solo cuentan cauces de orden de Strahler ≥ 3**; a escala 1:50 000 casi
+  cualquier punto está junto a un arroyo de orden 1. El desnivel se mide contra
+  el agua más cercana, cauce o mar.
 
 ## Limitaciones y pendientes
 
@@ -195,8 +212,15 @@ Ver [problemas conocidos](docs/DECISIONES.md#problemas-conocidos) y
 - **No hay índice continuo de rezago (IRS) por AGEB**, solo el grado.
 - **Entorno urbano** (banqueta, recubrimiento, drenaje pluvial, árboles):
   pendiente. Es otro producto del INEGI, no viene en el CSV del censo.
-- **Amenaza climática** (calor, inundación, sequía): pendiente, en un módulo
-  aparte.
+- **Amenaza climática:** hay exposición por relieve, cauces y costa, y los
+  grados municipales de CENAPRED (`13_hazard.R`), cuya resolución es el
+  municipio: todas las AGEB de uno comparten valor y las clases son ordinales,
+  no magnitudes. Faltan calor (temperatura superficial, días extremos) y lluvia
+  extrema con resolución intraurbana.
+- **`DESNIVEL_CAUCE_M` aproxima HAND** con el cauce más cercano en planta, no
+  con la trayectoria real del agua: puede ser negativo en laderas cuyo cauce más
+  cercano corre en el valle vecino, y no considera bordos ni capacidad del
+  cauce.
 - **El índice de vulnerabilidad todavía no existe**: esta base es su insumo.
 - **Acceso a salud en línea recta:** `DIST_*_KM` ordena el acceso pero no es
   tiempo de traslado; lo subestima en la sierra.

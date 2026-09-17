@@ -24,9 +24,11 @@ CSV_COLUMNS <- c(
   "WATER_AREA", "WATER_PCT", "HAS_WATER",
   "USO_DOM", "USO_PCT", "PCT_URB",
   names(HEALTH_DIST_COLS), "DIST_ORIGEN",
+  TERRAIN_COLS,
+  HAZARD_COLS,
   CENSUS_COUNT_COLS,
   "YEAR_GEOMETRY", "YEAR_CENSUS", "YEAR_CONEVAL", "YEAR_DENUE", "YEAR_HIDRO", "YEAR_USV",
-  "YEAR_CLUES"
+  "YEAR_CLUES", "YEAR_CEM", "YEAR_RED_HIDRO", "YEAR_COSTA", "YEAR_CENAPRED"
 )
 
 # Rounded on export only; the interim tables keep full precision.
@@ -37,30 +39,40 @@ ROUND_DIGITS <- c(
   PCT_DRENAJE = 2, PCT_ELECTRIC = 2,
   WATER_AREA = 6, WATER_PCT = 2, USO_PCT = 2, PCT_URB = 2,
   setNames(rep(3, length(HEALTH_DIST_COLS)), names(HEALTH_DIST_COLS)),
+  ELEV_M = 1, PEND_MEDIA_GRAD = 2, PCT_PEND_15 = 2, PCT_PEND_30 = 2,
+  DIST_CAUCE_KM = 3, DESNIVEL_CAUCE_M = 1, DIST_COSTA_KM = 3,
   setNames(rep(2, length(CENSUS_SHARE_COLS) + length(CENSUS_AVG_COLS)),
            c(CENSUS_SHARE_COLS, CENSUS_AVG_COLS))
 )
 
-# docs/diccionario_datos.csv documents every published column. A column added
-# here without its dictionary row, or a row left behind after a column is
-# dropped, stops the export, so the dictionary cannot drift from the schema.
+# docs/diccionario_datos.csv (Spanish) and docs/data_dictionary.csv (English)
+# document every published column. A column added here without its dictionary
+# row, or a row left behind after a column is dropped, stops the export, so
+# neither dictionary can drift from the schema.
 check_dictionary <- function() {
-  path <- file.path(PROJECT_ROOT, "docs", "diccionario_datos.csv")
-  if (!file.exists(path)) stop("data dictionary not found: ", path, call. = FALSE)
-  dict <- read_csv(path, col_types = cols(.default = col_character()),
-                   progress = FALSE)
-  documented <- dict$VARIABLE[dict$TABLA == "ageb_indicadores"]
-  undocumented <- setdiff(CSV_COLUMNS, documented)
-  stale <- setdiff(documented, CSV_COLUMNS)
-  if (length(undocumented) > 0 || length(stale) > 0) {
-    stop("docs/diccionario_datos.csv is out of sync with CSV_COLUMNS",
-         if (length(undocumented) > 0) paste0("; undocumented: ", paste(undocumented, collapse = ", ")),
-         if (length(stale) > 0) paste0("; no longer exported: ", paste(stale, collapse = ", ")),
-         call. = FALSE)
-  }
-  if (!identical(documented, CSV_COLUMNS)) {
-    stop("docs/diccionario_datos.csv lists the columns in a different order than CSV_COLUMNS",
-         call. = FALSE)
+  # Spanish and English versions, same rows in the same order; the English one
+  # names its key columns TABLE and VARIABLE.
+  dicts <- list(
+    list(file = "diccionario_datos.csv", table = "TABLA"),
+    list(file = "data_dictionary.csv", table = "TABLE"))
+  for (d in dicts) {
+    path <- file.path(PROJECT_ROOT, "docs", d$file)
+    if (!file.exists(path)) stop("data dictionary not found: ", path, call. = FALSE)
+    dict <- read_csv(path, col_types = cols(.default = col_character()),
+                     progress = FALSE)
+    documented <- dict$VARIABLE[dict[[d$table]] == "ageb_indicadores"]
+    undocumented <- setdiff(CSV_COLUMNS, documented)
+    stale <- setdiff(documented, CSV_COLUMNS)
+    if (length(undocumented) > 0 || length(stale) > 0) {
+      stop("docs/", d$file, " is out of sync with CSV_COLUMNS",
+           if (length(undocumented) > 0) paste0("; undocumented: ", paste(undocumented, collapse = ", ")),
+           if (length(stale) > 0) paste0("; no longer exported: ", paste(stale, collapse = ", ")),
+           call. = FALSE)
+    }
+    if (!identical(documented, CSV_COLUMNS)) {
+      stop("docs/", d$file, " lists the columns in a different order than CSV_COLUMNS",
+           call. = FALSE)
+    }
   }
   invisible(TRUE)
 }
