@@ -67,6 +67,14 @@ for (i in seq_along(ents)) {
 ok <- results$CVE_ENT[results$STATUS == "OK"]
 if (length(ok) > 1) export_national(ok)
 
+# One GeoPackage with every table, rebuilt from all entities on disk (not just
+# this run's), so a partial run refreshes its entities inside the national file.
+if (length(ok) > 0) {
+  tryCatch(build_integrated(), error = function(e) {
+    log_msg("!! integrated database failed: ", conditionMessage(e))
+  })
+}
+
 write_csv(results, file.path(DIR_LOGS, sprintf(
   "run_%s.csv", format(started, "%Y%m%d_%H%M%S"))), na = "")
 
