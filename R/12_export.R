@@ -77,9 +77,10 @@ check_dictionary <- function() {
   invisible(TRUE)
 }
 
-export_entity <- function(ent) {
-  log_step("exporting ", ent)
-  check_dictionary()
+# The published ageb_indicadores table of one entity: schema order, rounded.
+# Shared with 14_integrate.R so the integrated database carries exactly the
+# values of the CSV, not a second rounding of the interim table.
+published_table <- function(ent) {
   df <- readRDS(interim_path("complete", ent))
 
   missing <- setdiff(CSV_COLUMNS, names(df))
@@ -92,6 +93,13 @@ export_entity <- function(ent) {
   for (nm in intersect(names(ROUND_DIGITS), names(out))) {
     out[[nm]] <- round(out[[nm]], ROUND_DIGITS[[nm]])
   }
+  out
+}
+
+export_entity <- function(ent) {
+  log_step("exporting ", ent)
+  check_dictionary()
+  out <- published_table(ent)
 
   csv_path <- file.path(DIR_PROCESSED, sprintf("ageb_indicadores_%s.csv", ent))
   write_csv(out, csv_path, na = "")

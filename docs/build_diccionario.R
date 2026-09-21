@@ -119,6 +119,7 @@ TEXT <- list(
     cols_word = "Columnas",
     table_desc = c(
       ageb_indicadores       = "`data/processed/ageb_indicadores_{ENT}.csv` y `ageb_indicadores_MX.csv`. Una fila por AGEB urbana o rural.",
+      ageb_integrada         = "`data/processed/base_ageb_MX.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_MX.csv`. Una fila por AGEB con todas las columnas de ageb_indicadores más las que se listan aquí; `ORDEN` es su posición en esa tabla. El GeoPackage también trae, como capas, las demás tablas de este diccionario en versión nacional.",
       ageb_geom              = "`data/processed/ageb_geom_{ENT}.gpkg`, capa `ageb`, EPSG:4326. Una fila por AGEB.",
       denue_establishments   = "`data/processed/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE.",
       denue_ageb_sector      = "`data/processed/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN.",
@@ -205,6 +206,7 @@ TEXT <- list(
     cols_word = "Columns",
     table_desc = c(
       ageb_indicadores       = "`data/processed/ageb_indicadores_{ENT}.csv` and `ageb_indicadores_MX.csv`. One row per urban or rural AGEB.",
+      ageb_integrada         = "`data/processed/base_ageb_MX.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_MX.csv`. One row per AGEB with every ageb_indicadores column plus the ones listed here; `ORDER` is their position in that table. The GeoPackage also carries, as layers, the national version of the other tables in this dictionary.",
       ageb_geom              = "`data/processed/ageb_geom_{ENT}.gpkg`, layer `ageb`, EPSG:4326. One row per AGEB.",
       denue_establishments   = "`data/processed/denue_establishments_{ENT}.csv`. One row per DENUE establishment.",
       denue_ageb_sector      = "`data/processed/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector.",

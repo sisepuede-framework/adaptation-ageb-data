@@ -96,6 +96,7 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 | `R/11_qc.R` | 31 controles de calidad por entidad | `quality_control_report_*` |
 | `R/12_export.R` | CSV, GeoPackage y consolidado nacional | `data/processed/` |
 | `R/13_hazard.R` | Grados municipales de peligro de CENAPRED, vía SEDATU | `hazard`, `hazard_national` |
+| `R/14_integrate.R` | Integra todas las tablas y entidades en una sola base nacional | `data/processed/base_ageb_MX.gpkg` |
 | `maps/map_municipio.R` | Mapa de control visual de la malla de un municipio | `maps/*.png` |
 
 ## Salidas (`data/processed/`)
@@ -104,6 +105,8 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 |---|---|
 | `ageb_indicadores_{ENT}.csv` | 184 columnas, una fila por AGEB |
 | `ageb_indicadores_MX.csv` | Concatenado nacional |
+| `base_ageb_MX.gpkg` | **Base integrada**: todas las tablas en un solo GeoPackage nacional (ver abajo) |
+| `ageb_integrada_MX.csv` | La capa `ageb_integrada` sin geometría |
 | `ageb_geom_{ENT}.gpkg` | Geometría AGEB en EPSG:4326 con el bloque de identificación |
 | `quality_control_report_{ENT}.csv`, `_MX.csv` | 31 controles por entidad |
 | `qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
@@ -117,6 +120,29 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
                 col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
                                         CVE_MUN = "c", CVE_LOC = "c",
                                         CVE_AGEB = "c"))
+```
+
+## Base integrada
+
+`R/14_integrate.R` junta en `data/processed/base_ageb_MX.gpkg` todo lo que el
+pipeline produce por separado. Un GeoPackage es un archivo SQLite: lo abren
+QGIS, R (`sf`), Python (`geopandas`) o cualquier cliente SQL.
+
+| Capa | Geometría | Contenido |
+|---|---|---|
+| `ageb_integrada` | Polígono | Una fila por AGEB: las 184 columnas de `ageb_indicadores` más 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
+| `denue_establishments` | Punto | Un registro por establecimiento del DENUE |
+| `denue_ageb_sector` | — | AGEB × sector SCIAN, formato largo |
+| `ageb_landuse_detail` | — | AGEB × clase de uso de suelo, formato largo |
+| `quality_control_report` | — | Todos los controles de todas las entidades |
+| `diccionario_datos`, `data_dictionary` | — | Los diccionarios, para que el archivo se explique solo |
+
+Se reconstruye con todas las entidades que haya en disco, no solo las de la
+corrida, así que `Rscript run_all.R 20` actualiza Oaxaca dentro de la base
+nacional. Si ninguna entrada cambió desde la última vez, se omite.
+
+```r
+ageb <- sf::st_read("data/processed/base_ageb_MX.gpkg", layer = "ageb_integrada")
 ```
 
 ## Contenido del CSV
