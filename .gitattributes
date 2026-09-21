@@ -1,0 +1,4 @@
+# Keep LF on every platform: a Windows checkout with core.autocrlf would
+# otherwise rewrite the scripts, dictionaries and docs with CRLF.
+* text=auto eol=lf
+*.png binary
