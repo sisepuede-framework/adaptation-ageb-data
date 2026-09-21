@@ -87,6 +87,26 @@ url_is_data <- function(url) {
   }, error = function(e) FALSE)
 }
 
+# Archives are extracted with bsdtar (libarchive), the only tool that reads zip
+# and lets us set the file-name code page (see unzip_cached). macOS ships it as
+# `tar`; Windows 10+ as System32\tar.exe, which is called by full path because
+# Rtools and Git put a GNU tar, which cannot read zip, earlier on PATH; Linux
+# needs the libarchive-tools package, whose binary is `bsdtar`.
+bsdtar_cmd <- function() {
+  if (.Platform$OS.type == "windows") {
+    exe <- file.path(Sys.getenv("SystemRoot", "C:/Windows"), "System32", "tar.exe")
+    if (!file.exists(exe)) {
+      stop("bsdtar not found at ", exe, " (it ships with Windows 10 1803 and ",
+           "later)", call. = FALSE)
+    }
+    return(exe)
+  }
+  if (nzchar(Sys.which("bsdtar"))) return("bsdtar")
+  if (Sys.info()[["sysname"]] == "Darwin") return("tar")
+  stop("bsdtar not found: install libarchive-tools (apt) or libarchive (dnf)",
+       call. = FALSE)
+}
+
 # Unzips once into <dir>/<name>/ and returns that directory on later calls.
 unzip_cached <- function(zip_path, out_dir) {
   marker <- file.path(out_dir, ".unzipped")
@@ -100,11 +120,12 @@ unzip_cached <- function(zip_path, out_dir) {
   # dropped the elevation model of every entity with an accent in its name --
   # so the names are decoded as CP850, the DOS code page the archives use.
   opts <- c("--options", "zip:hdrcharset=CP850")
-  suppressWarnings(system2("tar",
+  tar <- bsdtar_cmd()
+  suppressWarnings(system2(tar,
     c("-xf", shQuote(zip_path), opts, "-C", shQuote(out_dir)),
     stdout = FALSE, stderr = FALSE))
   # Every file entry must land on disk; a count is enough to catch a skip.
-  listed <- suppressWarnings(system2("tar", c("-tf", shQuote(zip_path), opts),
+  listed <- suppressWarnings(system2(tar, c("-tf", shQuote(zip_path), opts),
                                      stdout = TRUE, stderr = FALSE))
   n_listed <- sum(!grepl("/$", listed))
   n_found <- length(list.files(out_dir, recursive = TRUE, all.files = TRUE))

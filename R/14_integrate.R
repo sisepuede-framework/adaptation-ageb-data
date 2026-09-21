@@ -278,7 +278,11 @@ build_integrated <- function() {
                 d)
   }
 
-  file.rename(tmp, INTEGRATED_GPKG)
+  # On Windows the rename fails while another program (QGIS) holds the file.
+  if (!file.rename(tmp, INTEGRATED_GPKG)) {
+    stop("could not replace ", INTEGRATED_GPKG, "; close any program that has ",
+         "it open. The new version is in ", tmp, call. = FALSE)
+  }
   write_csv(ageb, INTEGRATED_CSV, na = "")
 
   log_msg("  ", format(nrow(ageb), big.mark = ","), " AGEB x ",

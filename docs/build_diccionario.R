@@ -341,7 +341,11 @@ render <- function(lang) {
       "")
   }
 
-  writeLines(lines, T$out_path, useBytes = TRUE)
+  # Binary mode keeps LF line endings on Windows too, so the Markdown does not
+  # show up as changed in git after a regeneration there.
+  con <- file(T$out_path, "wb")
+  writeLines(lines, con, useBytes = TRUE)
+  close(con)
   message("wrote ", T$out_path, " (", nrow(dict), " columns documented",
           if (is.null(stats)) T$message_nostats else "", ")")
   dict

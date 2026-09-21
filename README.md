@@ -25,6 +25,47 @@ el pipeline, lee antes las decisiones.
 
 ## Requisitos
 
+Paquetes de CRAN: `sf`, `terra`, `units`, `classInt`, `s2`, `janitor`,
+`dplyr`, `readr`, `stringr`, `tidyr`, `purrr`, `curl`, `readxl`, `rlang` y,
+para los mapas, `ggplot2` y `scales`. Las descargas se descomprimen con
+`bsdtar`, porque los ZIP del INEGI traen nombres de archivo en CP850.
+
+### Windows
+
+1. Instala [R](https://cran.r-project.org/bin/windows/base/) 4.2 o posterior
+   (desde 4.2 R corre en UTF-8 en Windows, necesario para los acentos del INEGI).
+   No hace falta Rtools: CRAN publica binarios de todo el stack espacial.
+2. Instala los paquetes desde R:
+
+   ```r
+   install.packages(c("sf","terra","units","classInt","s2","janitor","dplyr",
+                      "readr","stringr","tidyr","purrr","curl","readxl","rlang",
+                      "ggplot2","scales"))
+   ```
+
+3. `bsdtar` viene con Windows 10 (1803) y posteriores como
+   `C:\Windows\System32\tar.exe`; el pipeline lo llama por esa ruta, así que da
+   igual que Git o Rtools pongan otro `tar` antes en el `PATH`.
+4. Clona el repositorio en una ruta corta (por ejemplo `C:\ageb`): los archivos
+   extraídos quedan hasta ~120 caracteres por debajo de la raíz, y Windows limita
+   las rutas a 260 salvo que se
+   [habiliten las rutas largas](https://learn.microsoft.com/es-es/windows/win32/fileio/maximum-file-path-limitation).
+5. Corre los comandos de [Ejecución](#ejecución) desde la raíz del proyecto (así
+   se carga `.Rprofile`) en PowerShell o `cmd`. Si `Rscript` no está en el
+   `PATH`, usa la ruta completa, por ejemplo
+   `& "C:\Program Files\R\R-4.6.0\bin\Rscript.exe" run_all.R 20`.
+
+Cierra QGIS u otro programa que tenga abierto `base_ageb_MX.gpkg` antes de
+correr el pipeline: Windows no deja reemplazar un archivo abierto.
+
+### Linux
+
+Instala las librerías de sistema (`libgdal-dev`, `libgeos-dev`, `libproj-dev`,
+`libudunits2-dev`) y `libarchive-tools`, que trae `bsdtar`; luego los mismos
+paquetes de CRAN.
+
+### macOS
+
 R 4.6 en macOS arm64 todavía no tiene binarios en CRAN, así que el stack
 espacial se compila desde fuente y necesita librerías de sistema:
 
@@ -36,8 +77,8 @@ brew install gdal geos proj udunits gcc cmake abseil
 Rscript -e 'install.packages(c("sf","terra","units","classInt","s2","janitor"), type="source")'
 ```
 
-Paquetes de CRAN adicionales: `dplyr`, `readr`, `stringr`, `tidyr`, `purrr`,
-`curl`, `readxl`, `rlang` y, para los mapas, `ggplot2` y `scales`.
+El resto de los paquetes se instala con `install.packages()` normal. El `tar`
+de macOS ya es `bsdtar`.
 
 `~/.R/Makevars` debe apuntar al `gfortran` de Homebrew, porque R espera
 `/opt/gfortran`, que no existe con esta instalación:
