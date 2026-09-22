@@ -54,7 +54,7 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
 
 | Tabla | Archivo | Columnas |
 |---|---|---|
-| [ageb_indicadores](#tabla-ageb-indicadores) | `data/processed/ageb_indicadores_{ENT}.csv` y `ageb_indicadores_MX.csv`. Una fila por AGEB urbana o rural. | 184 |
+| [ageb_indicadores](#tabla-ageb-indicadores) | `data/processed/ageb_indicadores_{ENT}.csv` y `ageb_indicadores_MX.csv`. Una fila por AGEB urbana o rural. | 189 |
 | [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_MX.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_MX.csv`. Una fila por AGEB con todas las columnas de ageb_indicadores más las que se listan aquí; `ORDEN` es su posición en esa tabla. El GeoPackage también trae, como capas, las demás tablas de este diccionario en versión nacional. | 32 |
 | [ageb_geom](#tabla-ageb-geom) | `data/processed/ageb_geom_{ENT}.gpkg`, capa `ageb`, EPSG:4326. Una fila por AGEB. | 10 |
 | [denue_establishments](#tabla-denue-establishments) | `data/processed/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE. | 7 |
@@ -68,7 +68,7 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
 
 `data/processed/ageb_indicadores_{ENT}.csv` y `ageb_indicadores_MX.csv`. Una fila por AGEB urbana o rural.
 
-Cobertura y mediana medidas sobre `data/processed/ageb_indicadores_MX.csv` (81,451 AGEB, generado el 2026-09-17). La cobertura se mide sobre AGEB **habitadas**, como % de AGEB con valor y como % de su población; la mediana y el rango también se miden sobre AGEB habitadas.
+Cobertura y mediana medidas sobre `data/processed/ageb_indicadores_MX.csv` (81,451 AGEB, generado el 2026-09-21). La cobertura se mide sobre AGEB **habitadas**, como % de AGEB con valor y como % de su población; la mediana y el rango también se miden sobre AGEB habitadas.
 
 ### Identificación
 
@@ -282,77 +282,87 @@ Cobertura y mediana medidas sobre `data/processed/ageb_indicadores_MX.csv` (81,4
 | 121 | [`CEN_RESIL`](#cen_resil) | Grado de resiliencia del municipio según CENAPRED. | grado (1–5) | Ambos | `g_resilien` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | − |
 | 122 | [`CEN_VULN_CC`](#cen_vuln_cc) | Municipio clasificado por CENAPRED como vulnerable al cambio climático. |  | Ambos | `v_cc` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | + |
 
+### Ingreso (municipal)
+
+| # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
+|---|---|---|---|---|---|---|---|---|---|
+| 123 | [`ING_MUN_HOG_TRIM`](#ing_mun_hog_trim) | Ingreso corriente promedio trimestral por hogar del municipio al que pertenece la AGEB. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 1)` | 100.0 / 100.0 | 100.0 / 100.0 | 57,083 | − |
+| 124 | [`ING_MUN_LIM_INF`](#ing_mun_lim_inf) | Límite inferior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 3)` | 100.0 / 100.0 | 100.0 / 100.0 | 50,308 | n/a |
+| 125 | [`ING_MUN_LIM_SUP`](#ing_mun_lim_sup) | Límite superior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 4)` | 100.0 / 100.0 | 100.0 / 100.0 | 64,345 | n/a |
+| 126 | [`ING_MUN_CV`](#ing_mun_cv) | Coeficiente de variación de ING_MUN_HOG_TRIM. | % | Ambos | `icpth (est = 5)` | 100.0 / 100.0 | 100.0 / 100.0 | 7.53 | n/a |
+
 ### Conteos censales
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 123 | [`POB_0A2`](#pob_0a2) | Población de 0 a 2 años. | personas | Ambos | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
-| 124 | [`POB_3A5`](#pob_3a5) | Población de 3 a 5 años. | personas | Ambos | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
-| 125 | [`POB_65YMAS`](#pob_65ymas) | Población de 65 años y más. | personas | Ambos | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
-| 126 | [`POB_DISC`](#pob_disc) | Población con discapacidad. | personas | Ambos | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
-| 127 | [`POB_3YMAS`](#pob_3ymas) | Población de 3 años y más. | personas | Ambos | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
-| 128 | [`POB_HLI`](#pob_hli) | Población de 3 años y más que habla alguna lengua indígena. | personas | Ambos | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
-| 129 | [`POB_HLI_NHE`](#pob_hli_nhe) | Población de 3 años y más que habla lengua indígena y no habla español. | personas | Ambos | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
-| 130 | [`POB_SIN_SALUD`](#pob_sin_salud) | Población sin afiliación a servicios de salud. | personas | Ambos | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
-| 131 | [`POB_15YMAS`](#pob_15ymas) | Población de 15 años y más. | personas | Ambos | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
-| 132 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Población de 15 años y más analfabeta. | personas | Ambos | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
-| 133 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Población de 15 años y más sin escolaridad (o solo preescolar). | personas | Ambos | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
-| 134 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Población de 15 años y más con primaria incompleta. | personas | Ambos | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
-| 135 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Población de 15 años y más con primaria completa (como máxima escolaridad). | personas | Ambos | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
-| 136 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Población de 15 años y más con secundaria incompleta. | personas | Ambos | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
-| 137 | [`POB_6A11`](#pob_6a11) | Población de 6 a 11 años. | personas | Ambos | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
-| 138 | [`POB_12A14`](#pob_12a14) | Población de 12 a 14 años. | personas | Ambos | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 139 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Población de 6 a 11 años que no asiste a la escuela. | personas | Ambos | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 140 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Población de 12 a 14 años que no asiste a la escuela. | personas | Ambos | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 141 | [`POB_15A17`](#pob_15a17) | Población de 15 a 17 años. | personas | Ambos | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 142 | [`POB_18A24`](#pob_18a24) | Población de 18 a 24 años. | personas | Ambos | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
-| 143 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Población de 15 a 17 años que asiste a la escuela. | personas | Ambos | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
-| 144 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Población de 18 a 24 años que asiste a la escuela. | personas | Ambos | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
-| 145 | [`POB_PEA`](#pob_pea) | Población económicamente activa de 12 años y más. | personas | Ambos | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
-| 146 | [`POB_PEA_F`](#pob_pea_f) | Mujeres de 12 años y más económicamente activas. | personas | Ambos | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
-| 147 | [`POB_INAC`](#pob_inac) | Población de 12 años y más no económicamente activa. | personas | Ambos | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
-| 148 | [`POB_INAC_F`](#pob_inac_f) | Mujeres de 12 años y más no económicamente activas. | personas | Ambos | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
-| 149 | [`POB_DESOCUP`](#pob_desocup) | Población de 12 años y más desocupada. | personas | Ambos | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
-| 150 | [`HOGARES`](#hogares) | Total de hogares censales. | hogares | Ambos | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
-| 151 | [`HOGARES_JEFA`](#hogares_jefa) | Hogares censales con persona de referencia mujer. | hogares | Ambos | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
-| 152 | [`VIV_OCUPANTES`](#viv_ocupantes) | Ocupantes en viviendas particulares habitadas. | personas | Ambos | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
-| 153 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Viviendas que no disponen de drenaje. | viviendas | Ambos | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 154 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Viviendas que no disponen de energía eléctrica. | viviendas | Ambos | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 155 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Viviendas sin agua entubada en el ámbito de la vivienda. | viviendas | Ambos | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 156 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Viviendas con piso de tierra. | viviendas | Ambos | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 157 | [`VIV_1CUARTO`](#viv_1cuarto) | Viviendas con un solo cuarto. | viviendas | Ambos | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
-| 158 | [`VIV_EXCUSADO`](#viv_excusado) | Viviendas que disponen de excusado o sanitario. | viviendas | Ambos | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
-| 159 | [`VIV_LETRINA`](#viv_letrina) | Viviendas que disponen de letrina (pozo u hoyo). | viviendas | Ambos | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 160 | [`VIV_TINACO`](#viv_tinaco) | Viviendas que disponen de tinaco. | viviendas | Ambos | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
-| 161 | [`VIV_CISTERNA`](#viv_cisterna) | Viviendas que disponen de cisterna o aljibe. | viviendas | Ambos | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
-| 162 | [`VIV_REFRI`](#viv_refri) | Viviendas que disponen de refrigerador. | viviendas | Ambos | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
-| 163 | [`VIV_LAVADORA`](#viv_lavadora) | Viviendas que disponen de lavadora. | viviendas | Ambos | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
-| 164 | [`VIV_AUTO`](#viv_auto) | Viviendas que disponen de automóvil o camioneta. | viviendas | Ambos | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
-| 165 | [`VIV_RADIO`](#viv_radio) | Viviendas que disponen de radio. | viviendas | Ambos | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
-| 166 | [`VIV_TELEFONO`](#viv_telefono) | Viviendas que disponen de línea telefónica fija. | viviendas | Ambos | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
-| 167 | [`VIV_CELULAR`](#viv_celular) | Viviendas que disponen de teléfono celular. | viviendas | Ambos | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
-| 168 | [`VIV_INTERNET`](#viv_internet) | Viviendas que disponen de internet. | viviendas | Ambos | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
-| 169 | [`VIV_COMPU`](#viv_compu) | Viviendas que disponen de computadora, laptop o tablet. | viviendas | Ambos | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
-| 170 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Viviendas sin radio ni televisor. | viviendas | Ambos | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
-| 171 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Viviendas sin línea telefónica fija ni teléfono celular. | viviendas | Ambos | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
-| 172 | [`VIV_SIN_TIC`](#viv_sin_tic) | Viviendas sin tecnologías de la información y la comunicación. | viviendas | Ambos | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
-| 173 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Viviendas sin ningún bien. | viviendas | Ambos | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 127 | [`POB_0A2`](#pob_0a2) | Población de 0 a 2 años. | personas | Ambos | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
+| 128 | [`POB_3A5`](#pob_3a5) | Población de 3 a 5 años. | personas | Ambos | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
+| 129 | [`POB_65YMAS`](#pob_65ymas) | Población de 65 años y más. | personas | Ambos | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
+| 130 | [`POB_DISC`](#pob_disc) | Población con discapacidad. | personas | Ambos | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
+| 131 | [`POB_3YMAS`](#pob_3ymas) | Población de 3 años y más. | personas | Ambos | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
+| 132 | [`POB_HLI`](#pob_hli) | Población de 3 años y más que habla alguna lengua indígena. | personas | Ambos | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
+| 133 | [`POB_HLI_NHE`](#pob_hli_nhe) | Población de 3 años y más que habla lengua indígena y no habla español. | personas | Ambos | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
+| 134 | [`POB_SIN_SALUD`](#pob_sin_salud) | Población sin afiliación a servicios de salud. | personas | Ambos | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
+| 135 | [`POB_15YMAS`](#pob_15ymas) | Población de 15 años y más. | personas | Ambos | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
+| 136 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Población de 15 años y más analfabeta. | personas | Ambos | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
+| 137 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Población de 15 años y más sin escolaridad (o solo preescolar). | personas | Ambos | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
+| 138 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Población de 15 años y más con primaria incompleta. | personas | Ambos | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
+| 139 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Población de 15 años y más con primaria completa (como máxima escolaridad). | personas | Ambos | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
+| 140 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Población de 15 años y más con secundaria incompleta. | personas | Ambos | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
+| 141 | [`POB_6A11`](#pob_6a11) | Población de 6 a 11 años. | personas | Ambos | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
+| 142 | [`POB_12A14`](#pob_12a14) | Población de 12 a 14 años. | personas | Ambos | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 143 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Población de 6 a 11 años que no asiste a la escuela. | personas | Ambos | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 144 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Población de 12 a 14 años que no asiste a la escuela. | personas | Ambos | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 145 | [`POB_15A17`](#pob_15a17) | Población de 15 a 17 años. | personas | Ambos | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 146 | [`POB_18A24`](#pob_18a24) | Población de 18 a 24 años. | personas | Ambos | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
+| 147 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Población de 15 a 17 años que asiste a la escuela. | personas | Ambos | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
+| 148 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Población de 18 a 24 años que asiste a la escuela. | personas | Ambos | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
+| 149 | [`POB_PEA`](#pob_pea) | Población económicamente activa de 12 años y más. | personas | Ambos | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
+| 150 | [`POB_PEA_F`](#pob_pea_f) | Mujeres de 12 años y más económicamente activas. | personas | Ambos | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
+| 151 | [`POB_INAC`](#pob_inac) | Población de 12 años y más no económicamente activa. | personas | Ambos | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
+| 152 | [`POB_INAC_F`](#pob_inac_f) | Mujeres de 12 años y más no económicamente activas. | personas | Ambos | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
+| 153 | [`POB_DESOCUP`](#pob_desocup) | Población de 12 años y más desocupada. | personas | Ambos | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
+| 154 | [`HOGARES`](#hogares) | Total de hogares censales. | hogares | Ambos | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
+| 155 | [`HOGARES_JEFA`](#hogares_jefa) | Hogares censales con persona de referencia mujer. | hogares | Ambos | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
+| 156 | [`VIV_OCUPANTES`](#viv_ocupantes) | Ocupantes en viviendas particulares habitadas. | personas | Ambos | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
+| 157 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Viviendas que no disponen de drenaje. | viviendas | Ambos | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 158 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Viviendas que no disponen de energía eléctrica. | viviendas | Ambos | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 159 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Viviendas sin agua entubada en el ámbito de la vivienda. | viviendas | Ambos | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 160 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Viviendas con piso de tierra. | viviendas | Ambos | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 161 | [`VIV_1CUARTO`](#viv_1cuarto) | Viviendas con un solo cuarto. | viviendas | Ambos | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
+| 162 | [`VIV_EXCUSADO`](#viv_excusado) | Viviendas que disponen de excusado o sanitario. | viviendas | Ambos | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
+| 163 | [`VIV_LETRINA`](#viv_letrina) | Viviendas que disponen de letrina (pozo u hoyo). | viviendas | Ambos | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 164 | [`VIV_TINACO`](#viv_tinaco) | Viviendas que disponen de tinaco. | viviendas | Ambos | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
+| 165 | [`VIV_CISTERNA`](#viv_cisterna) | Viviendas que disponen de cisterna o aljibe. | viviendas | Ambos | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
+| 166 | [`VIV_REFRI`](#viv_refri) | Viviendas que disponen de refrigerador. | viviendas | Ambos | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
+| 167 | [`VIV_LAVADORA`](#viv_lavadora) | Viviendas que disponen de lavadora. | viviendas | Ambos | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
+| 168 | [`VIV_AUTO`](#viv_auto) | Viviendas que disponen de automóvil o camioneta. | viviendas | Ambos | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
+| 169 | [`VIV_RADIO`](#viv_radio) | Viviendas que disponen de radio. | viviendas | Ambos | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
+| 170 | [`VIV_TELEFONO`](#viv_telefono) | Viviendas que disponen de línea telefónica fija. | viviendas | Ambos | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
+| 171 | [`VIV_CELULAR`](#viv_celular) | Viviendas que disponen de teléfono celular. | viviendas | Ambos | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
+| 172 | [`VIV_INTERNET`](#viv_internet) | Viviendas que disponen de internet. | viviendas | Ambos | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
+| 173 | [`VIV_COMPU`](#viv_compu) | Viviendas que disponen de computadora, laptop o tablet. | viviendas | Ambos | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
+| 174 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Viviendas sin radio ni televisor. | viviendas | Ambos | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
+| 175 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Viviendas sin línea telefónica fija ni teléfono celular. | viviendas | Ambos | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
+| 176 | [`VIV_SIN_TIC`](#viv_sin_tic) | Viviendas sin tecnologías de la información y la comunicación. | viviendas | Ambos | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
+| 177 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Viviendas sin ningún bien. | viviendas | Ambos | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
 
 ### Metadatos
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 174 | [`YEAR_GEOMETRY`](#year_geometry) | Año de referencia de la geometría. | año | Ambos | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 175 | [`YEAR_CENSUS`](#year_census) | Año de referencia del censo. | año | Ambos | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 176 | [`YEAR_CONEVAL`](#year_coneval) | Año de referencia del GRS de CONEVAL. | año | Ambos | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 177 | [`YEAR_DENUE`](#year_denue) | Versión del DENUE. | año-mes | Ambos | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 178 | [`YEAR_HIDRO`](#year_hidro) | Año de referencia de la capa de cuerpos de agua. | año | Ambos | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 179 | [`YEAR_USV`](#year_usv) | Año de referencia de la capa de uso de suelo y vegetación. | año | Ambos | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
-| 180 | [`YEAR_CLUES`](#year_clues) | Corte del catálogo CLUES de establecimientos de salud. | año-mes | Ambos | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 181 | [`YEAR_CEM`](#year_cem) | Año de publicación del Continuo de Elevaciones Mexicano 4.0. | año | Ambos | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
-| 182 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Año de la edición 2.0 de la Red Hidrográfica 1:50 000. | año | Ambos | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
-| 183 | [`YEAR_COSTA`](#year_costa) | Año de la capa de línea de costa de CONABIO. | año | Ambos | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 184 | [`YEAR_CENAPRED`](#year_cenapred) | Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos. | año | Ambos | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
+| 178 | [`YEAR_GEOMETRY`](#year_geometry) | Año de referencia de la geometría. | año | Ambos | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 179 | [`YEAR_CENSUS`](#year_census) | Año de referencia del censo. | año | Ambos | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 180 | [`YEAR_CONEVAL`](#year_coneval) | Año de referencia del GRS de CONEVAL. | año | Ambos | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 181 | [`YEAR_DENUE`](#year_denue) | Versión del DENUE. | año-mes | Ambos | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 182 | [`YEAR_HIDRO`](#year_hidro) | Año de referencia de la capa de cuerpos de agua. | año | Ambos | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 183 | [`YEAR_USV`](#year_usv) | Año de referencia de la capa de uso de suelo y vegetación. | año | Ambos | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
+| 184 | [`YEAR_CLUES`](#year_clues) | Corte del catálogo CLUES de establecimientos de salud. | año-mes | Ambos | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 185 | [`YEAR_CEM`](#year_cem) | Año de publicación del Continuo de Elevaciones Mexicano 4.0. | año | Ambos | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
+| 186 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Año de la edición 2.0 de la Red Hidrográfica 1:50 000. | año | Ambos | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
+| 187 | [`YEAR_COSTA`](#year_costa) | Año de la capa de línea de costa de CONABIO. | año | Ambos | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 188 | [`YEAR_CENAPRED`](#year_cenapred) | Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos. | año | Ambos | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
+| 189 | [`YEAR_ICMM`](#year_icmm) | Edición del Ingreso Corriente para los Municipios de México. | año | Ambos | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
 
 ## Fichas de ageb_indicadores
 
@@ -3360,8 +3370,112 @@ Municipio clasificado por CENAPRED como vulnerable al cambio climático.
 | Rango | 0 – 1 |
 | Notas | 319 municipios marcados Sí. CENAPRED no publica con esta capa el criterio de corte; úsese como contraste, no como insumo. |
 
+<a id="ing_mun_hog_trim"></a>
+#### 123. `ING_MUN_HOG_TRIM`
+
+Ingreso corriente promedio trimestral por hogar del municipio al que pertenece la AGEB.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Ingreso (municipal) |
+| Tipo | decimal |
+| Unidad | pesos de 2022 por hogar por trimestre |
+| Decimales | 0 |
+| Ámbito | Ambos |
+| Fuente | ICMM2022 |
+| Variable en la fuente | `icpth (est = 1)` |
+| Derivación | Estimación del INEGI en áreas pequeñas a partir de la ENIGH 2022, el censo 2020 y registros administrativos; se toma el valor tal cual. |
+| Universo | Hogares del municipio |
+| Valores vacíos | C: solo si el municipio no tiene fila en el ICMM |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 13b_income.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 57,083 |
+| Rango | 15,166 – 161,535 |
+| Notas | Resolución municipal: todas las AGEB del municipio comparten el valor y no hay variación intramunicipal. Es una media (la jalan los hogares de mayor ingreso), a precios corrientes de agosto–noviembre de 2022; divide entre 3 para el ingreso mensual. El censo no pregunta ingreso, así que es la única medida de ingreso de la base. |
+
+<a id="ing_mun_lim_inf"></a>
+#### 124. `ING_MUN_LIM_INF`
+
+Límite inferior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Ingreso (municipal) |
+| Tipo | decimal |
+| Unidad | pesos de 2022 por hogar por trimestre |
+| Decimales | 0 |
+| Ámbito | Ambos |
+| Fuente | ICMM2022 |
+| Variable en la fuente | `icpth (est = 3)` |
+| Derivación | Directo. |
+| Universo | Hogares del municipio |
+| Valores vacíos | C: solo si el municipio no tiene fila en el ICMM |
+| Dimensión sugerida | Confiabilidad |
+| Sentido sugerido | n/a |
+| Script | 13b_income.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 50,308 |
+| Rango | 14,047 – 140,299 |
+| Notas | Equivale a ING_MUN_HOG_TRIM − 1.645 × error estándar. Úsese para decidir si dos municipios difieren de verdad. |
+
+<a id="ing_mun_lim_sup"></a>
+#### 125. `ING_MUN_LIM_SUP`
+
+Límite superior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Ingreso (municipal) |
+| Tipo | decimal |
+| Unidad | pesos de 2022 por hogar por trimestre |
+| Decimales | 0 |
+| Ámbito | Ambos |
+| Fuente | ICMM2022 |
+| Variable en la fuente | `icpth (est = 4)` |
+| Derivación | Directo. |
+| Universo | Hogares del municipio |
+| Valores vacíos | C: solo si el municipio no tiene fila en el ICMM |
+| Dimensión sugerida | Confiabilidad |
+| Sentido sugerido | n/a |
+| Script | 13b_income.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 64,345 |
+| Rango | 16,285 – 182,771 |
+| Notas | Equivale a ING_MUN_HOG_TRIM + 1.645 × error estándar. |
+
+<a id="ing_mun_cv"></a>
+#### 126. `ING_MUN_CV`
+
+Coeficiente de variación de ING_MUN_HOG_TRIM.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Ingreso (municipal) |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | ICMM2022 |
+| Variable en la fuente | `icpth (est = 5)` |
+| Derivación | Directo (100 × error estándar / estimación). |
+| Universo | Hogares del municipio |
+| Valores vacíos | C: solo si el municipio no tiene fila en el ICMM |
+| Dimensión sugerida | Confiabilidad |
+| Sentido sugerido | n/a |
+| Script | 13b_income.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 7.53 |
+| Rango | 0.01 – 12.36 |
+| Notas | El INEGI califica la precisión como alta con CV < 15, moderada con 15–30 y baja con 30 o más. En la edición 2022 todos los municipios quedan por debajo de 12.4 (alta); los más altos son municipios pequeños de Oaxaca. |
+
 <a id="pob_0a2"></a>
-#### 123. `POB_0A2`
+#### 127. `POB_0A2`
 
 Población de 0 a 2 años.
 
@@ -3385,7 +3499,7 @@ Población de 0 a 2 años.
 | Notas | Los conteos se publican para reagregar a otras geografías: suma numeradores y denominadores, nunca porcentajes. |
 
 <a id="pob_3a5"></a>
-#### 124. `POB_3A5`
+#### 128. `POB_3A5`
 
 Población de 3 a 5 años.
 
@@ -3408,7 +3522,7 @@ Población de 3 a 5 años.
 | Rango | 0 – 3,516 |
 
 <a id="pob_65ymas"></a>
-#### 125. `POB_65YMAS`
+#### 129. `POB_65YMAS`
 
 Población de 65 años y más.
 
@@ -3431,7 +3545,7 @@ Población de 65 años y más.
 | Rango | 0 – 2,798 |
 
 <a id="pob_disc"></a>
-#### 126. `POB_DISC`
+#### 130. `POB_DISC`
 
 Población con discapacidad.
 
@@ -3454,7 +3568,7 @@ Población con discapacidad.
 | Rango | 0 – 2,027 |
 
 <a id="pob_3ymas"></a>
-#### 127. `POB_3YMAS`
+#### 131. `POB_3YMAS`
 
 Población de 3 años y más.
 
@@ -3477,7 +3591,7 @@ Población de 3 años y más.
 | Rango | 0 – 40,670 |
 
 <a id="pob_hli"></a>
-#### 128. `POB_HLI`
+#### 132. `POB_HLI`
 
 Población de 3 años y más que habla alguna lengua indígena.
 
@@ -3500,7 +3614,7 @@ Población de 3 años y más que habla alguna lengua indígena.
 | Rango | 0 – 40,047 |
 
 <a id="pob_hli_nhe"></a>
-#### 129. `POB_HLI_NHE`
+#### 133. `POB_HLI_NHE`
 
 Población de 3 años y más que habla lengua indígena y no habla español.
 
@@ -3523,7 +3637,7 @@ Población de 3 años y más que habla lengua indígena y no habla español.
 | Rango | 0 – 19,724 |
 
 <a id="pob_sin_salud"></a>
-#### 130. `POB_SIN_SALUD`
+#### 134. `POB_SIN_SALUD`
 
 Población sin afiliación a servicios de salud.
 
@@ -3546,7 +3660,7 @@ Población sin afiliación a servicios de salud.
 | Rango | 0 – 12,520 |
 
 <a id="pob_15ymas"></a>
-#### 131. `POB_15YMAS`
+#### 135. `POB_15YMAS`
 
 Población de 15 años y más.
 
@@ -3569,7 +3683,7 @@ Población de 15 años y más.
 | Rango | 0 – 26,914 |
 
 <a id="pob_15ymas_analf"></a>
-#### 132. `POB_15YMAS_ANALF`
+#### 136. `POB_15YMAS_ANALF`
 
 Población de 15 años y más analfabeta.
 
@@ -3592,7 +3706,7 @@ Población de 15 años y más analfabeta.
 | Rango | 0 – 8,748 |
 
 <a id="pob_15ymas_sin_esc"></a>
-#### 133. `POB_15YMAS_SIN_ESC`
+#### 137. `POB_15YMAS_SIN_ESC`
 
 Población de 15 años y más sin escolaridad (o solo preescolar).
 
@@ -3615,7 +3729,7 @@ Población de 15 años y más sin escolaridad (o solo preescolar).
 | Rango | 0 – 8,377 |
 
 <a id="pob_15ymas_prim_inc"></a>
-#### 134. `POB_15YMAS_PRIM_INC`
+#### 138. `POB_15YMAS_PRIM_INC`
 
 Población de 15 años y más con primaria incompleta.
 
@@ -3638,7 +3752,7 @@ Población de 15 años y más con primaria incompleta.
 | Rango | 0 – 4,023 |
 
 <a id="pob_15ymas_prim_com"></a>
-#### 135. `POB_15YMAS_PRIM_COM`
+#### 139. `POB_15YMAS_PRIM_COM`
 
 Población de 15 años y más con primaria completa (como máxima escolaridad).
 
@@ -3661,7 +3775,7 @@ Población de 15 años y más con primaria completa (como máxima escolaridad).
 | Rango | 0 – 12,855 |
 
 <a id="pob_15ymas_sec_inc"></a>
-#### 136. `POB_15YMAS_SEC_INC`
+#### 140. `POB_15YMAS_SEC_INC`
 
 Población de 15 años y más con secundaria incompleta.
 
@@ -3684,7 +3798,7 @@ Población de 15 años y más con secundaria incompleta.
 | Rango | 0 – 1,477 |
 
 <a id="pob_6a11"></a>
-#### 137. `POB_6A11`
+#### 141. `POB_6A11`
 
 Población de 6 a 11 años.
 
@@ -3707,7 +3821,7 @@ Población de 6 a 11 años.
 | Rango | 0 – 7,164 |
 
 <a id="pob_12a14"></a>
-#### 138. `POB_12A14`
+#### 142. `POB_12A14`
 
 Población de 12 a 14 años.
 
@@ -3730,7 +3844,7 @@ Población de 12 a 14 años.
 | Rango | 0 – 3,241 |
 
 <a id="pob_6a11_noasis"></a>
-#### 139. `POB_6A11_NOASIS`
+#### 143. `POB_6A11_NOASIS`
 
 Población de 6 a 11 años que no asiste a la escuela.
 
@@ -3753,7 +3867,7 @@ Población de 6 a 11 años que no asiste a la escuela.
 | Rango | 0 – 591 |
 
 <a id="pob_12a14_noasis"></a>
-#### 140. `POB_12A14_NOASIS`
+#### 144. `POB_12A14_NOASIS`
 
 Población de 12 a 14 años que no asiste a la escuela.
 
@@ -3776,7 +3890,7 @@ Población de 12 a 14 años que no asiste a la escuela.
 | Rango | 0 – 1,578 |
 
 <a id="pob_15a17"></a>
-#### 141. `POB_15A17`
+#### 145. `POB_15A17`
 
 Población de 15 a 17 años.
 
@@ -3799,7 +3913,7 @@ Población de 15 a 17 años.
 | Rango | 0 – 3,030 |
 
 <a id="pob_18a24"></a>
-#### 142. `POB_18A24`
+#### 146. `POB_18A24`
 
 Población de 18 a 24 años.
 
@@ -3822,7 +3936,7 @@ Población de 18 a 24 años.
 | Rango | 0 – 5,695 |
 
 <a id="pob_15a17_asis"></a>
-#### 143. `POB_15A17_ASIS`
+#### 147. `POB_15A17_ASIS`
 
 Población de 15 a 17 años que asiste a la escuela.
 
@@ -3845,7 +3959,7 @@ Población de 15 a 17 años que asiste a la escuela.
 | Rango | 0 – 1,865 |
 
 <a id="pob_18a24_asis"></a>
-#### 144. `POB_18A24_ASIS`
+#### 148. `POB_18A24_ASIS`
 
 Población de 18 a 24 años que asiste a la escuela.
 
@@ -3868,7 +3982,7 @@ Población de 18 a 24 años que asiste a la escuela.
 | Rango | 0 – 1,924 |
 
 <a id="pob_pea"></a>
-#### 145. `POB_PEA`
+#### 149. `POB_PEA`
 
 Población económicamente activa de 12 años y más.
 
@@ -3891,7 +4005,7 @@ Población económicamente activa de 12 años y más.
 | Rango | 0 – 17,516 |
 
 <a id="pob_pea_f"></a>
-#### 146. `POB_PEA_F`
+#### 150. `POB_PEA_F`
 
 Mujeres de 12 años y más económicamente activas.
 
@@ -3914,7 +4028,7 @@ Mujeres de 12 años y más económicamente activas.
 | Rango | 0 – 7,228 |
 
 <a id="pob_inac"></a>
-#### 147. `POB_INAC`
+#### 151. `POB_INAC`
 
 Población de 12 años y más no económicamente activa.
 
@@ -3937,7 +4051,7 @@ Población de 12 años y más no económicamente activa.
 | Rango | 0 – 16,310 |
 
 <a id="pob_inac_f"></a>
-#### 148. `POB_INAC_F`
+#### 152. `POB_INAC_F`
 
 Mujeres de 12 años y más no económicamente activas.
 
@@ -3960,7 +4074,7 @@ Mujeres de 12 años y más no económicamente activas.
 | Rango | 0 – 12,961 |
 
 <a id="pob_desocup"></a>
-#### 149. `POB_DESOCUP`
+#### 153. `POB_DESOCUP`
 
 Población de 12 años y más desocupada.
 
@@ -3983,7 +4097,7 @@ Población de 12 años y más desocupada.
 | Rango | 0 – 697 |
 
 <a id="hogares"></a>
-#### 150. `HOGARES`
+#### 154. `HOGARES`
 
 Total de hogares censales.
 
@@ -4007,7 +4121,7 @@ Total de hogares censales.
 | Notas | El censo considera un hogar por vivienda particular. |
 
 <a id="hogares_jefa"></a>
-#### 151. `HOGARES_JEFA`
+#### 155. `HOGARES_JEFA`
 
 Hogares censales con persona de referencia mujer.
 
@@ -4030,7 +4144,7 @@ Hogares censales con persona de referencia mujer.
 | Rango | 0 – 3,134 |
 
 <a id="viv_ocupantes"></a>
-#### 152. `VIV_OCUPANTES`
+#### 156. `VIV_OCUPANTES`
 
 Ocupantes en viviendas particulares habitadas.
 
@@ -4053,7 +4167,7 @@ Ocupantes en viviendas particulares habitadas.
 | Rango | 0 – 44,154 |
 
 <a id="viv_sin_drenaje"></a>
-#### 153. `VIV_SIN_DRENAJE`
+#### 157. `VIV_SIN_DRENAJE`
 
 Viviendas que no disponen de drenaje.
 
@@ -4077,7 +4191,7 @@ Viviendas que no disponen de drenaje.
 | Notas | Denominador para reagregar los porcentajes de vivienda: VIV_CARACT. |
 
 <a id="viv_sin_electricidad"></a>
-#### 154. `VIV_SIN_ELECTRICIDAD`
+#### 158. `VIV_SIN_ELECTRICIDAD`
 
 Viviendas que no disponen de energía eléctrica.
 
@@ -4100,7 +4214,7 @@ Viviendas que no disponen de energía eléctrica.
 | Rango | 0 – 1,877 |
 
 <a id="viv_sin_agua"></a>
-#### 155. `VIV_SIN_AGUA`
+#### 159. `VIV_SIN_AGUA`
 
 Viviendas sin agua entubada en el ámbito de la vivienda.
 
@@ -4123,7 +4237,7 @@ Viviendas sin agua entubada en el ámbito de la vivienda.
 | Rango | 0 – 3,068 |
 
 <a id="viv_piso_tierra"></a>
-#### 156. `VIV_PISO_TIERRA`
+#### 160. `VIV_PISO_TIERRA`
 
 Viviendas con piso de tierra.
 
@@ -4146,7 +4260,7 @@ Viviendas con piso de tierra.
 | Rango | 0 – 5,095 |
 
 <a id="viv_1cuarto"></a>
-#### 157. `VIV_1CUARTO`
+#### 161. `VIV_1CUARTO`
 
 Viviendas con un solo cuarto.
 
@@ -4169,7 +4283,7 @@ Viviendas con un solo cuarto.
 | Rango | 0 – 2,454 |
 
 <a id="viv_excusado"></a>
-#### 158. `VIV_EXCUSADO`
+#### 162. `VIV_EXCUSADO`
 
 Viviendas que disponen de excusado o sanitario.
 
@@ -4192,7 +4306,7 @@ Viviendas que disponen de excusado o sanitario.
 | Rango | 0 – 9,079 |
 
 <a id="viv_letrina"></a>
-#### 159. `VIV_LETRINA`
+#### 163. `VIV_LETRINA`
 
 Viviendas que disponen de letrina (pozo u hoyo).
 
@@ -4215,7 +4329,7 @@ Viviendas que disponen de letrina (pozo u hoyo).
 | Rango | 0 – 6,397 |
 
 <a id="viv_tinaco"></a>
-#### 160. `VIV_TINACO`
+#### 164. `VIV_TINACO`
 
 Viviendas que disponen de tinaco.
 
@@ -4238,7 +4352,7 @@ Viviendas que disponen de tinaco.
 | Rango | 0 – 6,969 |
 
 <a id="viv_cisterna"></a>
-#### 161. `VIV_CISTERNA`
+#### 165. `VIV_CISTERNA`
 
 Viviendas que disponen de cisterna o aljibe.
 
@@ -4261,7 +4375,7 @@ Viviendas que disponen de cisterna o aljibe.
 | Rango | 0 – 7,317 |
 
 <a id="viv_refri"></a>
-#### 162. `VIV_REFRI`
+#### 166. `VIV_REFRI`
 
 Viviendas que disponen de refrigerador.
 
@@ -4284,7 +4398,7 @@ Viviendas que disponen de refrigerador.
 | Rango | 0 – 8,813 |
 
 <a id="viv_lavadora"></a>
-#### 163. `VIV_LAVADORA`
+#### 167. `VIV_LAVADORA`
 
 Viviendas que disponen de lavadora.
 
@@ -4307,7 +4421,7 @@ Viviendas que disponen de lavadora.
 | Rango | 0 – 8,242 |
 
 <a id="viv_auto"></a>
-#### 164. `VIV_AUTO`
+#### 168. `VIV_AUTO`
 
 Viviendas que disponen de automóvil o camioneta.
 
@@ -4330,7 +4444,7 @@ Viviendas que disponen de automóvil o camioneta.
 | Rango | 0 – 6,072 |
 
 <a id="viv_radio"></a>
-#### 165. `VIV_RADIO`
+#### 169. `VIV_RADIO`
 
 Viviendas que disponen de radio.
 
@@ -4353,7 +4467,7 @@ Viviendas que disponen de radio.
 | Rango | 0 – 6,684 |
 
 <a id="viv_telefono"></a>
-#### 166. `VIV_TELEFONO`
+#### 170. `VIV_TELEFONO`
 
 Viviendas que disponen de línea telefónica fija.
 
@@ -4376,7 +4490,7 @@ Viviendas que disponen de línea telefónica fija.
 | Rango | 0 – 6,196 |
 
 <a id="viv_celular"></a>
-#### 167. `VIV_CELULAR`
+#### 171. `VIV_CELULAR`
 
 Viviendas que disponen de teléfono celular.
 
@@ -4399,7 +4513,7 @@ Viviendas que disponen de teléfono celular.
 | Rango | 0 – 8,715 |
 
 <a id="viv_internet"></a>
-#### 168. `VIV_INTERNET`
+#### 172. `VIV_INTERNET`
 
 Viviendas que disponen de internet.
 
@@ -4422,7 +4536,7 @@ Viviendas que disponen de internet.
 | Rango | 0 – 7,512 |
 
 <a id="viv_compu"></a>
-#### 169. `VIV_COMPU`
+#### 173. `VIV_COMPU`
 
 Viviendas que disponen de computadora, laptop o tablet.
 
@@ -4445,7 +4559,7 @@ Viviendas que disponen de computadora, laptop o tablet.
 | Rango | 0 – 6,919 |
 
 <a id="viv_sin_radio_tv"></a>
-#### 170. `VIV_SIN_RADIO_TV`
+#### 174. `VIV_SIN_RADIO_TV`
 
 Viviendas sin radio ni televisor.
 
@@ -4468,7 +4582,7 @@ Viviendas sin radio ni televisor.
 | Rango | 0 – 5,191 |
 
 <a id="viv_sin_tel_cel"></a>
-#### 171. `VIV_SIN_TEL_CEL`
+#### 175. `VIV_SIN_TEL_CEL`
 
 Viviendas sin línea telefónica fija ni teléfono celular.
 
@@ -4491,7 +4605,7 @@ Viviendas sin línea telefónica fija ni teléfono celular.
 | Rango | 0 – 6,762 |
 
 <a id="viv_sin_tic"></a>
-#### 172. `VIV_SIN_TIC`
+#### 176. `VIV_SIN_TIC`
 
 Viviendas sin tecnologías de la información y la comunicación.
 
@@ -4514,7 +4628,7 @@ Viviendas sin tecnologías de la información y la comunicación.
 | Rango | 0 – 4,695 |
 
 <a id="viv_sin_bienes"></a>
-#### 173. `VIV_SIN_BIENES`
+#### 177. `VIV_SIN_BIENES`
 
 Viviendas sin ningún bien.
 
@@ -4537,7 +4651,7 @@ Viviendas sin ningún bien.
 | Rango | 0 – 4,215 |
 
 <a id="year_geometry"></a>
-#### 174. `YEAR_GEOMETRY`
+#### 178. `YEAR_GEOMETRY`
 
 Año de referencia de la geometría.
 
@@ -4560,7 +4674,7 @@ Año de referencia de la geometría.
 | Rango | 2,020 – 2,020 |
 
 <a id="year_census"></a>
-#### 175. `YEAR_CENSUS`
+#### 179. `YEAR_CENSUS`
 
 Año de referencia del censo.
 
@@ -4583,7 +4697,7 @@ Año de referencia del censo.
 | Rango | 2,020 – 2,020 |
 
 <a id="year_coneval"></a>
-#### 176. `YEAR_CONEVAL`
+#### 180. `YEAR_CONEVAL`
 
 Año de referencia del GRS de CONEVAL.
 
@@ -4606,7 +4720,7 @@ Año de referencia del GRS de CONEVAL.
 | Rango | 2,020 – 2,020 |
 
 <a id="year_denue"></a>
-#### 177. `YEAR_DENUE`
+#### 181. `YEAR_DENUE`
 
 Versión del DENUE.
 
@@ -4628,7 +4742,7 @@ Versión del DENUE.
 | Notas | Se escribe a mano en 00_config.R: actualizarlo si se vuelve a descargar el DENUE. |
 
 <a id="year_hidro"></a>
-#### 178. `YEAR_HIDRO`
+#### 182. `YEAR_HIDRO`
 
 Año de referencia de la capa de cuerpos de agua.
 
@@ -4652,7 +4766,7 @@ Año de referencia de la capa de cuerpos de agua.
 | Notas | Continuo topográfico 1:50,000 serie III, levantamiento 2013–2018. |
 
 <a id="year_usv"></a>
-#### 179. `YEAR_USV`
+#### 183. `YEAR_USV`
 
 Año de referencia de la capa de uso de suelo y vegetación.
 
@@ -4676,7 +4790,7 @@ Año de referencia de la capa de uso de suelo y vegetación.
 | Notas | Serie VII, publicada en 2021 con imágenes de año base 2018. |
 
 <a id="year_clues"></a>
-#### 180. `YEAR_CLUES`
+#### 184. `YEAR_CLUES`
 
 Corte del catálogo CLUES de establecimientos de salud.
 
@@ -4698,7 +4812,7 @@ Corte del catálogo CLUES de establecimientos de salud.
 | Notas | Se escribe a mano en 00_config.R junto con URL_CLUES y CLUES_FILE: actualizar los tres si se descarga otro corte. |
 
 <a id="year_cem"></a>
-#### 181. `YEAR_CEM`
+#### 185. `YEAR_CEM`
 
 Año de publicación del Continuo de Elevaciones Mexicano 4.0.
 
@@ -4722,7 +4836,7 @@ Año de publicación del Continuo de Elevaciones Mexicano 4.0.
 | Notas | Imágenes de radar ALOS PALSAR de 2006–2011. |
 
 <a id="year_red_hidro"></a>
-#### 182. `YEAR_RED_HIDRO`
+#### 186. `YEAR_RED_HIDRO`
 
 Año de la edición 2.0 de la Red Hidrográfica 1:50 000.
 
@@ -4746,7 +4860,7 @@ Año de la edición 2.0 de la Red Hidrográfica 1:50 000.
 | Notas | Construida sobre cartas topográficas 1:50 000 de 1995–2002 según la subcuenca. |
 
 <a id="year_costa"></a>
-#### 183. `YEAR_COSTA`
+#### 187. `YEAR_COSTA`
 
 Año de la capa de línea de costa de CONABIO.
 
@@ -4770,7 +4884,7 @@ Año de la capa de línea de costa de CONABIO.
 | Notas | Imágenes RapidEye de 2011–2014. |
 
 <a id="year_cenapred"></a>
-#### 184. `YEAR_CENAPRED`
+#### 188. `YEAR_CENAPRED`
 
 Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos.
 
@@ -4792,6 +4906,30 @@ Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Ries
 | Mediana (AGEB habitadas) | 2,023 |
 | Rango | 2,023 – 2,023 |
 | Notas | Los indicadores sociodemográficos con los que CENAPRED construyó estos grados vienen del censo 2020; 2023 es el corte de publicación. |
+
+<a id="year_icmm"></a>
+#### 189. `YEAR_ICMM`
+
+Edición del Ingreso Corriente para los Municipios de México.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Metadatos |
+| Tipo | entero |
+| Unidad | año |
+| Ámbito | Ambos |
+| Fuente | ICMM2022 |
+| Variable en la fuente | `YEARS$icmm` |
+| Derivación | Constante (2022). |
+| Valores vacíos | Nunca |
+| Dimensión sugerida | Metadato |
+| Sentido sugerido | n/a |
+| Script | 13b_income.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 2,022 |
+| Rango | 2,022 – 2,022 |
+| Notas | Levantamiento de la ENIGH 2022: 21 de agosto a 28 de noviembre de 2022. Publicado por el INEGI el 2024-11-14. |
 
 <a id="tabla-ageb-integrada"></a>
 ## Tabla ageb_integrada
