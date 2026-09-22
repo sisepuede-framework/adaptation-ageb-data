@@ -160,7 +160,7 @@ build_census_urban <- function(ent) {
   path <- find_file(file.path(DIR_RAW, ent, "census_urban"),
                     "conjunto_de_datos_ageb_urbana_.*\\.csv$")
 
-  raw <- read_utf8_csv(path) |> rename_with(~ sub("^﻿", "", .x))
+  raw <- read_utf8_csv(path) |> rename_with(~ sub("^\ufeff", "", .x))
 
   count_cols <- unname(CENSUS_VARS)
 

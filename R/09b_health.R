@@ -35,7 +35,7 @@ CLUES_NON_CARE_PATTERN <- paste(
 CLUES_NON_PUBLIC_PATTERN <- "SERVICIOS MEDICOS PRIVADOS|CRUZ ROJA"
 
 # Mobile units and brigades have a registered base, not a fixed place of care.
-CLUES_MOBILE_PATTERN <- "M[OÓ]VIL|BRIGADA"
+CLUES_MOBILE_PATTERN <- "M[O\u00d3]VIL|BRIGADA"
 
 # Single-purpose hospitals that do not take general admissions.
 CLUES_SPECIALTY_HOSP_PATTERN <- "PSIQUI|ADICCIONES"

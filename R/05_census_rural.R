@@ -16,7 +16,7 @@ build_census_rural <- function(ent) {
   bridge <- readRDS(interim_path("locality_bridge", ent))$rural
 
   iter <- read_utf8_csv(path) |>
-    rename_with(~ sub("^﻿", "", .x)) |>
+    rename_with(~ sub("^\ufeff", "", .x)) |>
     # LOC 0000 is the municipal total; 9998/9999 are the "localidades de una
     # vivienda" and "no especificado" aggregates. All three would double count.
     filter(LOC != "0000", as.integer(LOC) < 9998) |>
