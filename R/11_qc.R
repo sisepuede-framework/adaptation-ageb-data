@@ -245,6 +245,26 @@ build_qc <- function(ent) {
               length(amz_cols), 100 * mean(df$AMZ_INUND >= 4, na.rm = TRUE))
     else paste("out of range:", paste(names(bad_range)[bad_range > 0], collapse = ", ")))
 
+  # --- municipal income (13b_income.R) ---
+  # The ICMM 2022 covers every municipality of the 2020 marco, so a gap is a
+  # key mismatch, never a municipality without an estimate.
+  n_no_income <- sum(is.na(df$ING_MUN_HOG_TRIM))
+  res[[length(res) + 1]] <- qc_check(
+    "income_municipal_match", n_no_income == 0,
+    sprintf("%d of %d AGEB without an ICMM estimate (%d municipalities)",
+            n_no_income, nrow(df),
+            length(unique(df$CVE_MUN_FULL[is.na(df$ING_MUN_HOG_TRIM)]))))
+
+  inc_bad <- sum(df$ING_MUN_HOG_TRIM <= 0 | df$ING_MUN_CV < 0 |
+                   df$ING_MUN_LIM_INF > df$ING_MUN_HOG_TRIM |
+                   df$ING_MUN_LIM_SUP < df$ING_MUN_HOG_TRIM, na.rm = TRUE)
+  res[[length(res) + 1]] <- qc_check(
+    "income_interval_consistent", inc_bad == 0,
+    sprintf("%d AGEB with a non-positive income, a negative CV or an interval not containing the estimate; population-weighted mean %s pesos/household/quarter",
+            inc_bad, with(df[!is.na(df$ING_MUN_HOG_TRIM) & !is.na(df$POB_TOTAL), ],
+                          format(round(weighted.mean(ING_MUN_HOG_TRIM, POB_TOTAL)),
+                                 big.mark = ","))))
+
   res[[length(res) + 1]] <- qc_check(
     "imputed_cells_urban_only",
     all(df$N_CELDAS_IMPUTADAS[df$AMBITO == "Rural"] == 0, na.rm = TRUE),

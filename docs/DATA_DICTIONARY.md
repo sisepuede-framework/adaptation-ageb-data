@@ -60,7 +60,7 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
 
 | Table | File | Columns |
 |---|---|---|
-| [ageb_indicadores](#tabla-ageb-indicadores) | `data/processed/ageb_indicadores_{ENT}.csv` and `ageb_indicadores_MX.csv`. One row per urban or rural AGEB. | 184 |
+| [ageb_indicadores](#tabla-ageb-indicadores) | `data/processed/ageb_indicadores_{ENT}.csv` and `ageb_indicadores_MX.csv`. One row per urban or rural AGEB. | 189 |
 | [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_MX.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_MX.csv`. One row per AGEB with every ageb_indicadores column plus the ones listed here; `ORDER` is their position in that table. The GeoPackage also carries, as layers, the national version of the other tables in this dictionary. | 32 |
 | [ageb_geom](#tabla-ageb-geom) | `data/processed/ageb_geom_{ENT}.gpkg`, layer `ageb`, EPSG:4326. One row per AGEB. | 10 |
 | [denue_establishments](#tabla-denue-establishments) | `data/processed/denue_establishments_{ENT}.csv`. One row per DENUE establishment. | 7 |
@@ -74,7 +74,7 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
 
 `data/processed/ageb_indicadores_{ENT}.csv` and `ageb_indicadores_MX.csv`. One row per urban or rural AGEB.
 
-Coverage and median measured on `data/processed/ageb_indicadores_MX.csv` (81,451 AGEB, generated on 2026-09-17). Coverage is measured on **inhabited** AGEB, as the % of AGEB with a value and as the % of their population; the median and range are also measured on inhabited AGEB.
+Coverage and median measured on `data/processed/ageb_indicadores_MX.csv` (81,451 AGEB, generated on 2026-09-21). Coverage is measured on **inhabited** AGEB, as the % of AGEB with a value and as the % of their population; the median and range are also measured on inhabited AGEB.
 
 ### Identification
 
@@ -288,77 +288,87 @@ Coverage and median measured on `data/processed/ageb_indicadores_MX.csv` (81,451
 | 121 | [`CEN_RESIL`](#cen_resil) | Resilience grade of the municipality according to CENAPRED. | grade (1–5) | Both | `g_resilien` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | − |
 | 122 | [`CEN_VULN_CC`](#cen_vuln_cc) | Municipality classified by CENAPRED as vulnerable to climate change. |  | Both | `v_cc` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | + |
 
+### Income (municipal)
+
+| # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
+|---|---|---|---|---|---|---|---|---|---|
+| 123 | [`ING_MUN_HOG_TRIM`](#ing_mun_hog_trim) | Mean quarterly current income per household of the municipality the AGEB belongs to. | 2022 pesos per household per quarter | Both | `icpth (est = 1)` | 100.0 / 100.0 | 100.0 / 100.0 | 57,083 | − |
+| 124 | [`ING_MUN_LIM_INF`](#ing_mun_lim_inf) | Lower bound of the 90% confidence interval of ING_MUN_HOG_TRIM. | 2022 pesos per household per quarter | Both | `icpth (est = 3)` | 100.0 / 100.0 | 100.0 / 100.0 | 50,308 | n/a |
+| 125 | [`ING_MUN_LIM_SUP`](#ing_mun_lim_sup) | Upper bound of the 90% confidence interval of ING_MUN_HOG_TRIM. | 2022 pesos per household per quarter | Both | `icpth (est = 4)` | 100.0 / 100.0 | 100.0 / 100.0 | 64,345 | n/a |
+| 126 | [`ING_MUN_CV`](#ing_mun_cv) | Coefficient of variation of ING_MUN_HOG_TRIM. | % | Both | `icpth (est = 5)` | 100.0 / 100.0 | 100.0 / 100.0 | 7.53 | n/a |
+
 ### Census counts
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 123 | [`POB_0A2`](#pob_0a2) | Population aged 0 to 2. | persons | Both | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
-| 124 | [`POB_3A5`](#pob_3a5) | Population aged 3 to 5. | persons | Both | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
-| 125 | [`POB_65YMAS`](#pob_65ymas) | Population aged 65 and over. | persons | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
-| 126 | [`POB_DISC`](#pob_disc) | Population with a disability. | persons | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
-| 127 | [`POB_3YMAS`](#pob_3ymas) | Population aged 3 and over. | persons | Both | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
-| 128 | [`POB_HLI`](#pob_hli) | Population aged 3 and over who speak an indigenous language. | persons | Both | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
-| 129 | [`POB_HLI_NHE`](#pob_hli_nhe) | Population aged 3 and over who speak an indigenous language and do not speak Spanish. | persons | Both | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
-| 130 | [`POB_SIN_SALUD`](#pob_sin_salud) | Population without health service affiliation. | persons | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
-| 131 | [`POB_15YMAS`](#pob_15ymas) | Population aged 15 and over. | persons | Both | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
-| 132 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Illiterate population aged 15 and over. | persons | Both | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
-| 133 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Population aged 15 and over with no schooling (or preschool only). | persons | Both | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
-| 134 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Population aged 15 and over with incomplete primary education. | persons | Both | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
-| 135 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Population aged 15 and over with complete primary education (as highest level). | persons | Both | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
-| 136 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Population aged 15 and over with incomplete lower secondary education. | persons | Both | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
-| 137 | [`POB_6A11`](#pob_6a11) | Population aged 6 to 11. | persons | Both | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
-| 138 | [`POB_12A14`](#pob_12a14) | Population aged 12 to 14. | persons | Both | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 139 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Population aged 6 to 11 not attending school. | persons | Both | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 140 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Population aged 12 to 14 not attending school. | persons | Both | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 141 | [`POB_15A17`](#pob_15a17) | Population aged 15 to 17. | persons | Both | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 142 | [`POB_18A24`](#pob_18a24) | Population aged 18 to 24. | persons | Both | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
-| 143 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Population aged 15 to 17 attending school. | persons | Both | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
-| 144 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Population aged 18 to 24 attending school. | persons | Both | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
-| 145 | [`POB_PEA`](#pob_pea) | Economically active population aged 12 and over. | persons | Both | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
-| 146 | [`POB_PEA_F`](#pob_pea_f) | Economically active women aged 12 and over. | persons | Both | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
-| 147 | [`POB_INAC`](#pob_inac) | Economically inactive population aged 12 and over. | persons | Both | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
-| 148 | [`POB_INAC_F`](#pob_inac_f) | Economically inactive women aged 12 and over. | persons | Both | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
-| 149 | [`POB_DESOCUP`](#pob_desocup) | Unemployed population aged 12 and over. | persons | Both | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
-| 150 | [`HOGARES`](#hogares) | Total census households. | households | Both | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
-| 151 | [`HOGARES_JEFA`](#hogares_jefa) | Census households whose reference person is a woman. | households | Both | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
-| 152 | [`VIV_OCUPANTES`](#viv_ocupantes) | Occupants of inhabited private dwellings. | persons | Both | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
-| 153 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Dwellings without drainage. | dwellings | Both | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 154 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Dwellings without electricity. | dwellings | Both | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 155 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Dwellings without piped water inside the dwelling or its plot. | dwellings | Both | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 156 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Dwellings with a dirt floor. | dwellings | Both | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 157 | [`VIV_1CUARTO`](#viv_1cuarto) | Dwellings with a single room. | dwellings | Both | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
-| 158 | [`VIV_EXCUSADO`](#viv_excusado) | Dwellings with a toilet or sanitary facility. | dwellings | Both | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
-| 159 | [`VIV_LETRINA`](#viv_letrina) | Dwellings with a latrine (pit or hole). | dwellings | Both | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 160 | [`VIV_TINACO`](#viv_tinaco) | Dwellings with a rooftop water tank (tinaco). | dwellings | Both | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
-| 161 | [`VIV_CISTERNA`](#viv_cisterna) | Dwellings with a cistern. | dwellings | Both | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
-| 162 | [`VIV_REFRI`](#viv_refri) | Dwellings with a refrigerator. | dwellings | Both | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
-| 163 | [`VIV_LAVADORA`](#viv_lavadora) | Dwellings with a washing machine. | dwellings | Both | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
-| 164 | [`VIV_AUTO`](#viv_auto) | Dwellings with a car or pickup truck. | dwellings | Both | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
-| 165 | [`VIV_RADIO`](#viv_radio) | Dwellings with a radio. | dwellings | Both | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
-| 166 | [`VIV_TELEFONO`](#viv_telefono) | Dwellings with a landline telephone. | dwellings | Both | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
-| 167 | [`VIV_CELULAR`](#viv_celular) | Dwellings with a mobile phone. | dwellings | Both | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
-| 168 | [`VIV_INTERNET`](#viv_internet) | Dwellings with internet. | dwellings | Both | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
-| 169 | [`VIV_COMPU`](#viv_compu) | Dwellings with a computer, laptop or tablet. | dwellings | Both | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
-| 170 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Dwellings with neither radio nor television. | dwellings | Both | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
-| 171 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Dwellings with neither landline nor mobile phone. | dwellings | Both | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
-| 172 | [`VIV_SIN_TIC`](#viv_sin_tic) | Dwellings without information and communication technologies. | dwellings | Both | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
-| 173 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Dwellings with no goods at all. | dwellings | Both | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 127 | [`POB_0A2`](#pob_0a2) | Population aged 0 to 2. | persons | Both | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
+| 128 | [`POB_3A5`](#pob_3a5) | Population aged 3 to 5. | persons | Both | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
+| 129 | [`POB_65YMAS`](#pob_65ymas) | Population aged 65 and over. | persons | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
+| 130 | [`POB_DISC`](#pob_disc) | Population with a disability. | persons | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
+| 131 | [`POB_3YMAS`](#pob_3ymas) | Population aged 3 and over. | persons | Both | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
+| 132 | [`POB_HLI`](#pob_hli) | Population aged 3 and over who speak an indigenous language. | persons | Both | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
+| 133 | [`POB_HLI_NHE`](#pob_hli_nhe) | Population aged 3 and over who speak an indigenous language and do not speak Spanish. | persons | Both | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
+| 134 | [`POB_SIN_SALUD`](#pob_sin_salud) | Population without health service affiliation. | persons | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
+| 135 | [`POB_15YMAS`](#pob_15ymas) | Population aged 15 and over. | persons | Both | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
+| 136 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Illiterate population aged 15 and over. | persons | Both | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
+| 137 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Population aged 15 and over with no schooling (or preschool only). | persons | Both | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
+| 138 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Population aged 15 and over with incomplete primary education. | persons | Both | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
+| 139 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Population aged 15 and over with complete primary education (as highest level). | persons | Both | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
+| 140 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Population aged 15 and over with incomplete lower secondary education. | persons | Both | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
+| 141 | [`POB_6A11`](#pob_6a11) | Population aged 6 to 11. | persons | Both | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
+| 142 | [`POB_12A14`](#pob_12a14) | Population aged 12 to 14. | persons | Both | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 143 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Population aged 6 to 11 not attending school. | persons | Both | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 144 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Population aged 12 to 14 not attending school. | persons | Both | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 145 | [`POB_15A17`](#pob_15a17) | Population aged 15 to 17. | persons | Both | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 146 | [`POB_18A24`](#pob_18a24) | Population aged 18 to 24. | persons | Both | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
+| 147 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Population aged 15 to 17 attending school. | persons | Both | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
+| 148 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Population aged 18 to 24 attending school. | persons | Both | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
+| 149 | [`POB_PEA`](#pob_pea) | Economically active population aged 12 and over. | persons | Both | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
+| 150 | [`POB_PEA_F`](#pob_pea_f) | Economically active women aged 12 and over. | persons | Both | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
+| 151 | [`POB_INAC`](#pob_inac) | Economically inactive population aged 12 and over. | persons | Both | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
+| 152 | [`POB_INAC_F`](#pob_inac_f) | Economically inactive women aged 12 and over. | persons | Both | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
+| 153 | [`POB_DESOCUP`](#pob_desocup) | Unemployed population aged 12 and over. | persons | Both | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
+| 154 | [`HOGARES`](#hogares) | Total census households. | households | Both | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
+| 155 | [`HOGARES_JEFA`](#hogares_jefa) | Census households whose reference person is a woman. | households | Both | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
+| 156 | [`VIV_OCUPANTES`](#viv_ocupantes) | Occupants of inhabited private dwellings. | persons | Both | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
+| 157 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Dwellings without drainage. | dwellings | Both | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 158 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Dwellings without electricity. | dwellings | Both | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 159 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Dwellings without piped water inside the dwelling or its plot. | dwellings | Both | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 160 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Dwellings with a dirt floor. | dwellings | Both | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 161 | [`VIV_1CUARTO`](#viv_1cuarto) | Dwellings with a single room. | dwellings | Both | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
+| 162 | [`VIV_EXCUSADO`](#viv_excusado) | Dwellings with a toilet or sanitary facility. | dwellings | Both | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
+| 163 | [`VIV_LETRINA`](#viv_letrina) | Dwellings with a latrine (pit or hole). | dwellings | Both | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 164 | [`VIV_TINACO`](#viv_tinaco) | Dwellings with a rooftop water tank (tinaco). | dwellings | Both | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
+| 165 | [`VIV_CISTERNA`](#viv_cisterna) | Dwellings with a cistern. | dwellings | Both | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
+| 166 | [`VIV_REFRI`](#viv_refri) | Dwellings with a refrigerator. | dwellings | Both | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
+| 167 | [`VIV_LAVADORA`](#viv_lavadora) | Dwellings with a washing machine. | dwellings | Both | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
+| 168 | [`VIV_AUTO`](#viv_auto) | Dwellings with a car or pickup truck. | dwellings | Both | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
+| 169 | [`VIV_RADIO`](#viv_radio) | Dwellings with a radio. | dwellings | Both | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
+| 170 | [`VIV_TELEFONO`](#viv_telefono) | Dwellings with a landline telephone. | dwellings | Both | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
+| 171 | [`VIV_CELULAR`](#viv_celular) | Dwellings with a mobile phone. | dwellings | Both | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
+| 172 | [`VIV_INTERNET`](#viv_internet) | Dwellings with internet. | dwellings | Both | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
+| 173 | [`VIV_COMPU`](#viv_compu) | Dwellings with a computer, laptop or tablet. | dwellings | Both | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
+| 174 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Dwellings with neither radio nor television. | dwellings | Both | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
+| 175 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Dwellings with neither landline nor mobile phone. | dwellings | Both | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
+| 176 | [`VIV_SIN_TIC`](#viv_sin_tic) | Dwellings without information and communication technologies. | dwellings | Both | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
+| 177 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Dwellings with no goods at all. | dwellings | Both | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
 
 ### Metadata
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 174 | [`YEAR_GEOMETRY`](#year_geometry) | Reference year of the geometry. | year | Both | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 175 | [`YEAR_CENSUS`](#year_census) | Reference year of the census. | year | Both | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 176 | [`YEAR_CONEVAL`](#year_coneval) | Reference year of CONEVAL's GRS. | year | Both | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 177 | [`YEAR_DENUE`](#year_denue) | DENUE version. | year-month | Both | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 178 | [`YEAR_HIDRO`](#year_hidro) | Reference year of the water body layer. | year | Both | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 179 | [`YEAR_USV`](#year_usv) | Reference year of the land use and vegetation layer. | year | Both | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
-| 180 | [`YEAR_CLUES`](#year_clues) | Cut-off of the CLUES catalog of health facilities. | year-month | Both | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 181 | [`YEAR_CEM`](#year_cem) | Publication year of the Continuo de Elevaciones Mexicano 4.0. | year | Both | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
-| 182 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Year of edition 2.0 of the 1:50,000 Hydrographic Network. | year | Both | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
-| 183 | [`YEAR_COSTA`](#year_costa) | Year of the CONABIO coastline layer. | year | Both | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 184 | [`YEAR_CENAPRED`](#year_cenapred) | Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos. | year | Both | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
+| 178 | [`YEAR_GEOMETRY`](#year_geometry) | Reference year of the geometry. | year | Both | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 179 | [`YEAR_CENSUS`](#year_census) | Reference year of the census. | year | Both | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 180 | [`YEAR_CONEVAL`](#year_coneval) | Reference year of CONEVAL's GRS. | year | Both | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 181 | [`YEAR_DENUE`](#year_denue) | DENUE version. | year-month | Both | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 182 | [`YEAR_HIDRO`](#year_hidro) | Reference year of the water body layer. | year | Both | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 183 | [`YEAR_USV`](#year_usv) | Reference year of the land use and vegetation layer. | year | Both | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
+| 184 | [`YEAR_CLUES`](#year_clues) | Cut-off of the CLUES catalog of health facilities. | year-month | Both | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 185 | [`YEAR_CEM`](#year_cem) | Publication year of the Continuo de Elevaciones Mexicano 4.0. | year | Both | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
+| 186 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Year of edition 2.0 of the 1:50,000 Hydrographic Network. | year | Both | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
+| 187 | [`YEAR_COSTA`](#year_costa) | Year of the CONABIO coastline layer. | year | Both | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 188 | [`YEAR_CENAPRED`](#year_cenapred) | Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos. | year | Both | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
+| 189 | [`YEAR_ICMM`](#year_icmm) | Edition of the Ingreso Corriente para los Municipios de México. | year | Both | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
 
 ## ageb_indicadores column cards
 
@@ -3366,8 +3376,112 @@ Municipality classified by CENAPRED as vulnerable to climate change.
 | Range | 0 – 1 |
 | Notes | 319 municipalities marked Sí. CENAPRED does not publish the cut-off criterion with this layer; use it as a contrast, not as an input. |
 
+<a id="ing_mun_hog_trim"></a>
+#### 123. `ING_MUN_HOG_TRIM`
+
+Mean quarterly current income per household of the municipality the AGEB belongs to.
+
+| Field | Value |
+|---|---|
+| Block | Income (municipal) |
+| Type | decimal |
+| Unit | 2022 pesos per household per quarter |
+| Decimals | 0 |
+| Scope | Both |
+| Source | ICMM2022 |
+| Source variable | `icpth (est = 1)` |
+| Derivation | INEGI small-area estimate from the ENIGH 2022, the 2020 census and administrative records; taken as published. |
+| Universe | Households of the municipality |
+| Empty values | C: only if the municipality has no row in the ICMM |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 13b_income.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 57,083 |
+| Range | 15,166 – 161,535 |
+| Notes | Municipal resolution: every AGEB in the municipality shares the value and there is no within-municipality variation. It is a mean (pulled up by the highest-income households), at current prices of August–November 2022; divide by 3 for monthly income. The census asks no income question, so this is the only income measure in the database. |
+
+<a id="ing_mun_lim_inf"></a>
+#### 124. `ING_MUN_LIM_INF`
+
+Lower bound of the 90% confidence interval of ING_MUN_HOG_TRIM.
+
+| Field | Value |
+|---|---|
+| Block | Income (municipal) |
+| Type | decimal |
+| Unit | 2022 pesos per household per quarter |
+| Decimals | 0 |
+| Scope | Both |
+| Source | ICMM2022 |
+| Source variable | `icpth (est = 3)` |
+| Derivation | Direct. |
+| Universe | Households of the municipality |
+| Empty values | C: only if the municipality has no row in the ICMM |
+| Suggested dimension | Reliability |
+| Suggested direction | n/a |
+| Script | 13b_income.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 50,308 |
+| Range | 14,047 – 140,299 |
+| Notes | Equals ING_MUN_HOG_TRIM − 1.645 × standard error. Use it to decide whether two municipalities really differ. |
+
+<a id="ing_mun_lim_sup"></a>
+#### 125. `ING_MUN_LIM_SUP`
+
+Upper bound of the 90% confidence interval of ING_MUN_HOG_TRIM.
+
+| Field | Value |
+|---|---|
+| Block | Income (municipal) |
+| Type | decimal |
+| Unit | 2022 pesos per household per quarter |
+| Decimals | 0 |
+| Scope | Both |
+| Source | ICMM2022 |
+| Source variable | `icpth (est = 4)` |
+| Derivation | Direct. |
+| Universe | Households of the municipality |
+| Empty values | C: only if the municipality has no row in the ICMM |
+| Suggested dimension | Reliability |
+| Suggested direction | n/a |
+| Script | 13b_income.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 64,345 |
+| Range | 16,285 – 182,771 |
+| Notes | Equals ING_MUN_HOG_TRIM + 1.645 × standard error. |
+
+<a id="ing_mun_cv"></a>
+#### 126. `ING_MUN_CV`
+
+Coefficient of variation of ING_MUN_HOG_TRIM.
+
+| Field | Value |
+|---|---|
+| Block | Income (municipal) |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | ICMM2022 |
+| Source variable | `icpth (est = 5)` |
+| Derivation | Direct (100 × standard error / estimate). |
+| Universe | Households of the municipality |
+| Empty values | C: only if the municipality has no row in the ICMM |
+| Suggested dimension | Reliability |
+| Suggested direction | n/a |
+| Script | 13b_income.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 7.53 |
+| Range | 0.01 – 12.36 |
+| Notes | INEGI rates precision as high with CV < 15, moderate with 15–30 and low with 30 or more. In the 2022 edition every municipality stays below 12.4 (high); the highest are small Oaxaca municipalities. |
+
 <a id="pob_0a2"></a>
-#### 123. `POB_0A2`
+#### 127. `POB_0A2`
 
 Population aged 0 to 2.
 
@@ -3391,7 +3505,7 @@ Population aged 0 to 2.
 | Notes | Counts are published for re-aggregation to other geographies: sum numerators and denominators, never shares. |
 
 <a id="pob_3a5"></a>
-#### 124. `POB_3A5`
+#### 128. `POB_3A5`
 
 Population aged 3 to 5.
 
@@ -3414,7 +3528,7 @@ Population aged 3 to 5.
 | Range | 0 – 3,516 |
 
 <a id="pob_65ymas"></a>
-#### 125. `POB_65YMAS`
+#### 129. `POB_65YMAS`
 
 Population aged 65 and over.
 
@@ -3437,7 +3551,7 @@ Population aged 65 and over.
 | Range | 0 – 2,798 |
 
 <a id="pob_disc"></a>
-#### 126. `POB_DISC`
+#### 130. `POB_DISC`
 
 Population with a disability.
 
@@ -3460,7 +3574,7 @@ Population with a disability.
 | Range | 0 – 2,027 |
 
 <a id="pob_3ymas"></a>
-#### 127. `POB_3YMAS`
+#### 131. `POB_3YMAS`
 
 Population aged 3 and over.
 
@@ -3483,7 +3597,7 @@ Population aged 3 and over.
 | Range | 0 – 40,670 |
 
 <a id="pob_hli"></a>
-#### 128. `POB_HLI`
+#### 132. `POB_HLI`
 
 Population aged 3 and over who speak an indigenous language.
 
@@ -3506,7 +3620,7 @@ Population aged 3 and over who speak an indigenous language.
 | Range | 0 – 40,047 |
 
 <a id="pob_hli_nhe"></a>
-#### 129. `POB_HLI_NHE`
+#### 133. `POB_HLI_NHE`
 
 Population aged 3 and over who speak an indigenous language and do not speak Spanish.
 
@@ -3529,7 +3643,7 @@ Population aged 3 and over who speak an indigenous language and do not speak Spa
 | Range | 0 – 19,724 |
 
 <a id="pob_sin_salud"></a>
-#### 130. `POB_SIN_SALUD`
+#### 134. `POB_SIN_SALUD`
 
 Population without health service affiliation.
 
@@ -3552,7 +3666,7 @@ Population without health service affiliation.
 | Range | 0 – 12,520 |
 
 <a id="pob_15ymas"></a>
-#### 131. `POB_15YMAS`
+#### 135. `POB_15YMAS`
 
 Population aged 15 and over.
 
@@ -3575,7 +3689,7 @@ Population aged 15 and over.
 | Range | 0 – 26,914 |
 
 <a id="pob_15ymas_analf"></a>
-#### 132. `POB_15YMAS_ANALF`
+#### 136. `POB_15YMAS_ANALF`
 
 Illiterate population aged 15 and over.
 
@@ -3598,7 +3712,7 @@ Illiterate population aged 15 and over.
 | Range | 0 – 8,748 |
 
 <a id="pob_15ymas_sin_esc"></a>
-#### 133. `POB_15YMAS_SIN_ESC`
+#### 137. `POB_15YMAS_SIN_ESC`
 
 Population aged 15 and over with no schooling (or preschool only).
 
@@ -3621,7 +3735,7 @@ Population aged 15 and over with no schooling (or preschool only).
 | Range | 0 – 8,377 |
 
 <a id="pob_15ymas_prim_inc"></a>
-#### 134. `POB_15YMAS_PRIM_INC`
+#### 138. `POB_15YMAS_PRIM_INC`
 
 Population aged 15 and over with incomplete primary education.
 
@@ -3644,7 +3758,7 @@ Population aged 15 and over with incomplete primary education.
 | Range | 0 – 4,023 |
 
 <a id="pob_15ymas_prim_com"></a>
-#### 135. `POB_15YMAS_PRIM_COM`
+#### 139. `POB_15YMAS_PRIM_COM`
 
 Population aged 15 and over with complete primary education (as highest level).
 
@@ -3667,7 +3781,7 @@ Population aged 15 and over with complete primary education (as highest level).
 | Range | 0 – 12,855 |
 
 <a id="pob_15ymas_sec_inc"></a>
-#### 136. `POB_15YMAS_SEC_INC`
+#### 140. `POB_15YMAS_SEC_INC`
 
 Population aged 15 and over with incomplete lower secondary education.
 
@@ -3690,7 +3804,7 @@ Population aged 15 and over with incomplete lower secondary education.
 | Range | 0 – 1,477 |
 
 <a id="pob_6a11"></a>
-#### 137. `POB_6A11`
+#### 141. `POB_6A11`
 
 Population aged 6 to 11.
 
@@ -3713,7 +3827,7 @@ Population aged 6 to 11.
 | Range | 0 – 7,164 |
 
 <a id="pob_12a14"></a>
-#### 138. `POB_12A14`
+#### 142. `POB_12A14`
 
 Population aged 12 to 14.
 
@@ -3736,7 +3850,7 @@ Population aged 12 to 14.
 | Range | 0 – 3,241 |
 
 <a id="pob_6a11_noasis"></a>
-#### 139. `POB_6A11_NOASIS`
+#### 143. `POB_6A11_NOASIS`
 
 Population aged 6 to 11 not attending school.
 
@@ -3759,7 +3873,7 @@ Population aged 6 to 11 not attending school.
 | Range | 0 – 591 |
 
 <a id="pob_12a14_noasis"></a>
-#### 140. `POB_12A14_NOASIS`
+#### 144. `POB_12A14_NOASIS`
 
 Population aged 12 to 14 not attending school.
 
@@ -3782,7 +3896,7 @@ Population aged 12 to 14 not attending school.
 | Range | 0 – 1,578 |
 
 <a id="pob_15a17"></a>
-#### 141. `POB_15A17`
+#### 145. `POB_15A17`
 
 Population aged 15 to 17.
 
@@ -3805,7 +3919,7 @@ Population aged 15 to 17.
 | Range | 0 – 3,030 |
 
 <a id="pob_18a24"></a>
-#### 142. `POB_18A24`
+#### 146. `POB_18A24`
 
 Population aged 18 to 24.
 
@@ -3828,7 +3942,7 @@ Population aged 18 to 24.
 | Range | 0 – 5,695 |
 
 <a id="pob_15a17_asis"></a>
-#### 143. `POB_15A17_ASIS`
+#### 147. `POB_15A17_ASIS`
 
 Population aged 15 to 17 attending school.
 
@@ -3851,7 +3965,7 @@ Population aged 15 to 17 attending school.
 | Range | 0 – 1,865 |
 
 <a id="pob_18a24_asis"></a>
-#### 144. `POB_18A24_ASIS`
+#### 148. `POB_18A24_ASIS`
 
 Population aged 18 to 24 attending school.
 
@@ -3874,7 +3988,7 @@ Population aged 18 to 24 attending school.
 | Range | 0 – 1,924 |
 
 <a id="pob_pea"></a>
-#### 145. `POB_PEA`
+#### 149. `POB_PEA`
 
 Economically active population aged 12 and over.
 
@@ -3897,7 +4011,7 @@ Economically active population aged 12 and over.
 | Range | 0 – 17,516 |
 
 <a id="pob_pea_f"></a>
-#### 146. `POB_PEA_F`
+#### 150. `POB_PEA_F`
 
 Economically active women aged 12 and over.
 
@@ -3920,7 +4034,7 @@ Economically active women aged 12 and over.
 | Range | 0 – 7,228 |
 
 <a id="pob_inac"></a>
-#### 147. `POB_INAC`
+#### 151. `POB_INAC`
 
 Economically inactive population aged 12 and over.
 
@@ -3943,7 +4057,7 @@ Economically inactive population aged 12 and over.
 | Range | 0 – 16,310 |
 
 <a id="pob_inac_f"></a>
-#### 148. `POB_INAC_F`
+#### 152. `POB_INAC_F`
 
 Economically inactive women aged 12 and over.
 
@@ -3966,7 +4080,7 @@ Economically inactive women aged 12 and over.
 | Range | 0 – 12,961 |
 
 <a id="pob_desocup"></a>
-#### 149. `POB_DESOCUP`
+#### 153. `POB_DESOCUP`
 
 Unemployed population aged 12 and over.
 
@@ -3989,7 +4103,7 @@ Unemployed population aged 12 and over.
 | Range | 0 – 697 |
 
 <a id="hogares"></a>
-#### 150. `HOGARES`
+#### 154. `HOGARES`
 
 Total census households.
 
@@ -4013,7 +4127,7 @@ Total census households.
 | Notes | The census counts one household per private dwelling. |
 
 <a id="hogares_jefa"></a>
-#### 151. `HOGARES_JEFA`
+#### 155. `HOGARES_JEFA`
 
 Census households whose reference person is a woman.
 
@@ -4036,7 +4150,7 @@ Census households whose reference person is a woman.
 | Range | 0 – 3,134 |
 
 <a id="viv_ocupantes"></a>
-#### 152. `VIV_OCUPANTES`
+#### 156. `VIV_OCUPANTES`
 
 Occupants of inhabited private dwellings.
 
@@ -4059,7 +4173,7 @@ Occupants of inhabited private dwellings.
 | Range | 0 – 44,154 |
 
 <a id="viv_sin_drenaje"></a>
-#### 153. `VIV_SIN_DRENAJE`
+#### 157. `VIV_SIN_DRENAJE`
 
 Dwellings without drainage.
 
@@ -4083,7 +4197,7 @@ Dwellings without drainage.
 | Notes | Denominator for re-aggregating housing shares: VIV_CARACT. |
 
 <a id="viv_sin_electricidad"></a>
-#### 154. `VIV_SIN_ELECTRICIDAD`
+#### 158. `VIV_SIN_ELECTRICIDAD`
 
 Dwellings without electricity.
 
@@ -4106,7 +4220,7 @@ Dwellings without electricity.
 | Range | 0 – 1,877 |
 
 <a id="viv_sin_agua"></a>
-#### 155. `VIV_SIN_AGUA`
+#### 159. `VIV_SIN_AGUA`
 
 Dwellings without piped water inside the dwelling or its plot.
 
@@ -4129,7 +4243,7 @@ Dwellings without piped water inside the dwelling or its plot.
 | Range | 0 – 3,068 |
 
 <a id="viv_piso_tierra"></a>
-#### 156. `VIV_PISO_TIERRA`
+#### 160. `VIV_PISO_TIERRA`
 
 Dwellings with a dirt floor.
 
@@ -4152,7 +4266,7 @@ Dwellings with a dirt floor.
 | Range | 0 – 5,095 |
 
 <a id="viv_1cuarto"></a>
-#### 157. `VIV_1CUARTO`
+#### 161. `VIV_1CUARTO`
 
 Dwellings with a single room.
 
@@ -4175,7 +4289,7 @@ Dwellings with a single room.
 | Range | 0 – 2,454 |
 
 <a id="viv_excusado"></a>
-#### 158. `VIV_EXCUSADO`
+#### 162. `VIV_EXCUSADO`
 
 Dwellings with a toilet or sanitary facility.
 
@@ -4198,7 +4312,7 @@ Dwellings with a toilet or sanitary facility.
 | Range | 0 – 9,079 |
 
 <a id="viv_letrina"></a>
-#### 159. `VIV_LETRINA`
+#### 163. `VIV_LETRINA`
 
 Dwellings with a latrine (pit or hole).
 
@@ -4221,7 +4335,7 @@ Dwellings with a latrine (pit or hole).
 | Range | 0 – 6,397 |
 
 <a id="viv_tinaco"></a>
-#### 160. `VIV_TINACO`
+#### 164. `VIV_TINACO`
 
 Dwellings with a rooftop water tank (tinaco).
 
@@ -4244,7 +4358,7 @@ Dwellings with a rooftop water tank (tinaco).
 | Range | 0 – 6,969 |
 
 <a id="viv_cisterna"></a>
-#### 161. `VIV_CISTERNA`
+#### 165. `VIV_CISTERNA`
 
 Dwellings with a cistern.
 
@@ -4267,7 +4381,7 @@ Dwellings with a cistern.
 | Range | 0 – 7,317 |
 
 <a id="viv_refri"></a>
-#### 162. `VIV_REFRI`
+#### 166. `VIV_REFRI`
 
 Dwellings with a refrigerator.
 
@@ -4290,7 +4404,7 @@ Dwellings with a refrigerator.
 | Range | 0 – 8,813 |
 
 <a id="viv_lavadora"></a>
-#### 163. `VIV_LAVADORA`
+#### 167. `VIV_LAVADORA`
 
 Dwellings with a washing machine.
 
@@ -4313,7 +4427,7 @@ Dwellings with a washing machine.
 | Range | 0 – 8,242 |
 
 <a id="viv_auto"></a>
-#### 164. `VIV_AUTO`
+#### 168. `VIV_AUTO`
 
 Dwellings with a car or pickup truck.
 
@@ -4336,7 +4450,7 @@ Dwellings with a car or pickup truck.
 | Range | 0 – 6,072 |
 
 <a id="viv_radio"></a>
-#### 165. `VIV_RADIO`
+#### 169. `VIV_RADIO`
 
 Dwellings with a radio.
 
@@ -4359,7 +4473,7 @@ Dwellings with a radio.
 | Range | 0 – 6,684 |
 
 <a id="viv_telefono"></a>
-#### 166. `VIV_TELEFONO`
+#### 170. `VIV_TELEFONO`
 
 Dwellings with a landline telephone.
 
@@ -4382,7 +4496,7 @@ Dwellings with a landline telephone.
 | Range | 0 – 6,196 |
 
 <a id="viv_celular"></a>
-#### 167. `VIV_CELULAR`
+#### 171. `VIV_CELULAR`
 
 Dwellings with a mobile phone.
 
@@ -4405,7 +4519,7 @@ Dwellings with a mobile phone.
 | Range | 0 – 8,715 |
 
 <a id="viv_internet"></a>
-#### 168. `VIV_INTERNET`
+#### 172. `VIV_INTERNET`
 
 Dwellings with internet.
 
@@ -4428,7 +4542,7 @@ Dwellings with internet.
 | Range | 0 – 7,512 |
 
 <a id="viv_compu"></a>
-#### 169. `VIV_COMPU`
+#### 173. `VIV_COMPU`
 
 Dwellings with a computer, laptop or tablet.
 
@@ -4451,7 +4565,7 @@ Dwellings with a computer, laptop or tablet.
 | Range | 0 – 6,919 |
 
 <a id="viv_sin_radio_tv"></a>
-#### 170. `VIV_SIN_RADIO_TV`
+#### 174. `VIV_SIN_RADIO_TV`
 
 Dwellings with neither radio nor television.
 
@@ -4474,7 +4588,7 @@ Dwellings with neither radio nor television.
 | Range | 0 – 5,191 |
 
 <a id="viv_sin_tel_cel"></a>
-#### 171. `VIV_SIN_TEL_CEL`
+#### 175. `VIV_SIN_TEL_CEL`
 
 Dwellings with neither landline nor mobile phone.
 
@@ -4497,7 +4611,7 @@ Dwellings with neither landline nor mobile phone.
 | Range | 0 – 6,762 |
 
 <a id="viv_sin_tic"></a>
-#### 172. `VIV_SIN_TIC`
+#### 176. `VIV_SIN_TIC`
 
 Dwellings without information and communication technologies.
 
@@ -4520,7 +4634,7 @@ Dwellings without information and communication technologies.
 | Range | 0 – 4,695 |
 
 <a id="viv_sin_bienes"></a>
-#### 173. `VIV_SIN_BIENES`
+#### 177. `VIV_SIN_BIENES`
 
 Dwellings with no goods at all.
 
@@ -4543,7 +4657,7 @@ Dwellings with no goods at all.
 | Range | 0 – 4,215 |
 
 <a id="year_geometry"></a>
-#### 174. `YEAR_GEOMETRY`
+#### 178. `YEAR_GEOMETRY`
 
 Reference year of the geometry.
 
@@ -4566,7 +4680,7 @@ Reference year of the geometry.
 | Range | 2,020 – 2,020 |
 
 <a id="year_census"></a>
-#### 175. `YEAR_CENSUS`
+#### 179. `YEAR_CENSUS`
 
 Reference year of the census.
 
@@ -4589,7 +4703,7 @@ Reference year of the census.
 | Range | 2,020 – 2,020 |
 
 <a id="year_coneval"></a>
-#### 176. `YEAR_CONEVAL`
+#### 180. `YEAR_CONEVAL`
 
 Reference year of CONEVAL's GRS.
 
@@ -4612,7 +4726,7 @@ Reference year of CONEVAL's GRS.
 | Range | 2,020 – 2,020 |
 
 <a id="year_denue"></a>
-#### 177. `YEAR_DENUE`
+#### 181. `YEAR_DENUE`
 
 DENUE version.
 
@@ -4634,7 +4748,7 @@ DENUE version.
 | Notes | Set by hand in 00_config.R: update it if DENUE is downloaded again. |
 
 <a id="year_hidro"></a>
-#### 178. `YEAR_HIDRO`
+#### 182. `YEAR_HIDRO`
 
 Reference year of the water body layer.
 
@@ -4658,7 +4772,7 @@ Reference year of the water body layer.
 | Notes | 1:50,000 topographic series III, surveyed 2013–2018. |
 
 <a id="year_usv"></a>
-#### 179. `YEAR_USV`
+#### 183. `YEAR_USV`
 
 Reference year of the land use and vegetation layer.
 
@@ -4682,7 +4796,7 @@ Reference year of the land use and vegetation layer.
 | Notes | Series VII, published in 2021 with base-year 2018 imagery. |
 
 <a id="year_clues"></a>
-#### 180. `YEAR_CLUES`
+#### 184. `YEAR_CLUES`
 
 Cut-off of the CLUES catalog of health facilities.
 
@@ -4704,7 +4818,7 @@ Cut-off of the CLUES catalog of health facilities.
 | Notes | Set by hand in 00_config.R together with URL_CLUES and CLUES_FILE: update all three if another cut-off is downloaded. |
 
 <a id="year_cem"></a>
-#### 181. `YEAR_CEM`
+#### 185. `YEAR_CEM`
 
 Publication year of the Continuo de Elevaciones Mexicano 4.0.
 
@@ -4728,7 +4842,7 @@ Publication year of the Continuo de Elevaciones Mexicano 4.0.
 | Notes | ALOS PALSAR radar imagery from 2006–2011. |
 
 <a id="year_red_hidro"></a>
-#### 182. `YEAR_RED_HIDRO`
+#### 186. `YEAR_RED_HIDRO`
 
 Year of edition 2.0 of the 1:50,000 Hydrographic Network.
 
@@ -4752,7 +4866,7 @@ Year of edition 2.0 of the 1:50,000 Hydrographic Network.
 | Notes | Built on 1:50,000 topographic sheets from 1995–2002 depending on the sub-basin. |
 
 <a id="year_costa"></a>
-#### 183. `YEAR_COSTA`
+#### 187. `YEAR_COSTA`
 
 Year of the CONABIO coastline layer.
 
@@ -4776,7 +4890,7 @@ Year of the CONABIO coastline layer.
 | Notes | RapidEye imagery from 2011–2014. |
 
 <a id="year_cenapred"></a>
-#### 184. `YEAR_CENAPRED`
+#### 188. `YEAR_CENAPRED`
 
 Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos.
 
@@ -4798,6 +4912,30 @@ Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgo
 | Median (inhabited AGEB) | 2,023 |
 | Range | 2,023 – 2,023 |
 | Notes | The sociodemographic indicators CENAPRED built these grades from come from the 2020 census; 2023 is the publication cut-off. |
+
+<a id="year_icmm"></a>
+#### 189. `YEAR_ICMM`
+
+Edition of the Ingreso Corriente para los Municipios de México.
+
+| Field | Value |
+|---|---|
+| Block | Metadata |
+| Type | integer |
+| Unit | year |
+| Scope | Both |
+| Source | ICMM2022 |
+| Source variable | `YEARS$icmm` |
+| Derivation | Constant (2022). |
+| Empty values | Never |
+| Suggested dimension | Metadata |
+| Suggested direction | n/a |
+| Script | 13b_income.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 2,022 |
+| Range | 2,022 – 2,022 |
+| Notes | ENIGH 2022 fieldwork: 21 August to 28 November 2022. Published by INEGI on 2024-11-14. |
 
 <a id="tabla-ageb-integrada"></a>
 ## Table ageb_integrada

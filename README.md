@@ -3,7 +3,7 @@
 Pipeline en R que construye una tabla con **una fila por AGEB**, urbanas *y*
 rurales, para las 32 entidades, de forma reproducible e idempotente. Es la base
 para un **índice de vulnerabilidad climática**: reúne población, rezago social,
-vivienda, servicios, empleo, acceso a salud, actividad económica, cuerpos de
+vivienda, servicios, empleo, ingreso municipal, acceso a salud, actividad económica, cuerpos de
 agua y uso de suelo sobre la geometría oficial del INEGI, junto con la
 exposición física (relieve, cauces y costa) que se cruza aparte.
 
@@ -134,9 +134,10 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 | `R/09b_health.R` | Distancia a hospitales y unidades de primer nivel (CLUES) | `health`, `clues_facilities_MX` |
 | `R/09c_terrain.R` | Elevación, pendiente, cauces y costa (CEM 4.0, Red Hidrográfica, CONABIO) | `terrain`, `streams_MX`, `coast_MX` |
 | `R/10_build.R` | Ensambla todo y calcula los indicadores | `complete` |
-| `R/11_qc.R` | 31 controles de calidad por entidad | `quality_control_report_*` |
+| `R/11_qc.R` | 33 controles de calidad por entidad | `quality_control_report_*` |
 | `R/12_export.R` | CSV, GeoPackage y consolidado nacional | `data/processed/` |
 | `R/13_hazard.R` | Grados municipales de peligro de CENAPRED, vía SEDATU | `hazard`, `hazard_national` |
+| `R/13b_income.R` | Ingreso corriente trimestral por hogar del municipio (ICMM 2022 del INEGI) | `income`, `income_national` |
 | `R/14_integrate.R` | Integra todas las tablas y entidades en una sola base nacional | `data/processed/base_ageb_MX.gpkg` |
 | `maps/map_municipio.R` | Mapa de control visual de la malla de un municipio | `maps/*.png` |
 
@@ -144,12 +145,12 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 
 | Archivo | Contenido |
 |---|---|
-| `ageb_indicadores_{ENT}.csv` | 184 columnas, una fila por AGEB |
+| `ageb_indicadores_{ENT}.csv` | 189 columnas, una fila por AGEB |
 | `ageb_indicadores_MX.csv` | Concatenado nacional |
 | `base_ageb_MX.gpkg` | **Base integrada**: todas las tablas en un solo GeoPackage nacional (ver abajo) |
 | `ageb_integrada_MX.csv` | La capa `ageb_integrada` sin geometría |
 | `ageb_geom_{ENT}.gpkg` | Geometría AGEB en EPSG:4326 con el bloque de identificación |
-| `quality_control_report_{ENT}.csv`, `_MX.csv` | 31 controles por entidad |
+| `quality_control_report_{ENT}.csv`, `_MX.csv` | 33 controles por entidad |
 | `qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
 | `denue_establishments_{ENT}.csv`, `denue_ageb_sector_{ENT}.csv`, `ageb_landuse_detail_{ENT}.csv` | Tablas de detalle |
 
@@ -171,7 +172,7 @@ QGIS, R (`sf`), Python (`geopandas`) o cualquier cliente SQL.
 
 | Capa | Geometría | Contenido |
 |---|---|---|
-| `ageb_integrada` | Polígono | Una fila por AGEB: las 184 columnas de `ageb_indicadores` más 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
+| `ageb_integrada` | Polígono | Una fila por AGEB: las 189 columnas de `ageb_indicadores` más 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
 | `denue_establishments` | Punto | Un registro por establecimiento del DENUE |
 | `denue_ageb_sector` | — | AGEB × sector SCIAN, formato largo |
 | `ageb_landuse_detail` | — | AGEB × clase de uso de suelo, formato largo |
@@ -204,6 +205,7 @@ ageb <- sf::st_read("data/processed/base_ageb_MX.gpkg", layer = "ageb_integrada"
 | Acceso a salud | `DIST_HOSP_KM`, `DIST_HOSP_PUB_KM`, `DIST_1NIVEL_PUB_KM`, `DIST_ORIGEN` | Ambos |
 | Relieve y exposición | `ELEV_M`, `PEND_MEDIA_GRAD`, `PCT_PEND_15`, `PCT_PEND_30`, `DIST_CAUCE_KM`, `DIST_COSTA_KM`, `DESNIVEL_CAUCE_M` | Ambos |
 | Amenaza (municipal) | 13 `AMZ_*` de peligro CENAPRED, más `CEN_RESIL` y `CEN_VULN_CC` | Ambos |
+| Ingreso (municipal) | `ING_MUN_HOG_TRIM` (ingreso corriente trimestral por hogar, ICMM 2022), su intervalo al 90 % `ING_MUN_LIM_INF`/`ING_MUN_LIM_SUP` y `ING_MUN_CV` | Ambos |
 | Conteos censales | 51 conteos, para reagregar a otras geografías | Ambos |
 | Metadatos | `YEAR_*` | Ambos |
 
@@ -227,6 +229,11 @@ Corrida nacional completa (32 entidades, 2026-09-17):
 | CLUES | 41,225 unidades en operación; 940 descartadas por geocodificación fuera de su entidad |
 | Relieve y exposición | 0 AGEB habitadas sin elevación; 17.6 % de la población a < 1 km de un cauce de orden ≥ 3 y < 5 m sobre el agua; 2.4 % a < 10 km de la costa y < 10 m de altitud |
 | Amenaza (CENAPRED) | 2,469 de 2,469 municipios empatados; 0 AGEB sin grado. Población en peligro Alto o Muy alto: inundación 64.1 %, deslizamientos 57.3 %, ondas cálidas 23.3 %, sequía 12.0 %, ciclones 6.9 % |
+
+Ingreso municipal (ICMM 2022, verificado el 2026-09-21 sobre las 81,451 AGEB
+de la corrida anterior): 2,469 de 2,469 municipios empatados y 0 AGEB sin
+ingreso; media ponderada por población de 62,572 pesos por hogar al trimestre
+(la ENIGH 2022 publica 63,695 para el país).
 
 La población cuadra exacta también por entidad: Oaxaca 4,132,148; CDMX 9,209,944;
 Estado de México 16,992,418.
@@ -293,5 +300,10 @@ Ver [problemas conocidos](docs/DECISIONES.md#problemas-conocidos) y
   tiempo de traslado; lo subestima en la sierra.
 - **Desocupación poco informativa:** el censo cuenta el trabajo informal como
   ocupación (tasa de 1.7–2.3 %); la participación femenina discrimina más.
+- **Ingreso solo municipal:** el censo no pregunta ingreso, así que
+  `ING_MUN_*` viene del ICMM del INEGI (estimación en áreas pequeñas de la
+  ENIGH 2022) y todas las AGEB de un municipio comparten valor. Es una media por
+  hogar, en pesos corrientes de 2022 y por trimestre. Para contrastes dentro del
+  municipio usa los indicadores censales (bienes, GRS).
 - **Años mixtos** entre fuentes; se registran en las columnas `YEAR_*`.
 - **Licencia:** las capas de CONABIO son CC BY-NC 2.5 MX (sin fines de lucro).

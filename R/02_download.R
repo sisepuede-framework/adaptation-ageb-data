@@ -39,6 +39,9 @@ download_national <- function() {
   # One small WFS query per CENAPRED hazard layer instead of 15 GeoPackages
   # that would differ in a single column; 13_hazard.R explains why.
   download_hazard()
+
+  # ICMM municipal income, a ~100 KB archive; 13b_income.R reads it.
+  download_income()
   invisible(TRUE)
 }
 

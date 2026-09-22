@@ -19,6 +19,7 @@ identificadores de la columna `FUENTE` del
 | `RED_HIDRO50` | Red Hidrográfica escala 1:50 000, edición 2.0 | INEGI | 2010 | 37 regiones hidrológicas | Línea de flujo | Shapefile por subcuenca | `09c_terrain.R` |
 | `CONABIO_COSTA` | Línea de costa de la República Mexicana (2011–2014) | CONABIO | 2018 | Nacional | Línea | Shapefile, 1:25 000 | `09c_terrain.R` |
 | `CENAPRED_SITU2023` | Sistema de Indicadores Municipales del Atlas Nacional de Riesgos, republicado por SEDATU en su IDE | CENAPRED; publicación de SEDATU | 2023 (indicadores sociodemográficos del censo 2020) | Nacional | Municipio | WFS, respuesta CSV | `13_hazard.R` |
+| `ICMM2022` | Ingreso Corriente para los Municipios de México 2022 (estadística derivada de la ENIGH 2022 por estimación en áreas pequeñas) | INEGI | 2022 (levantamiento agosto–noviembre de 2022; publicado 2024-11-14) | Nacional | Municipio | CSV nacional, formato largo | `13b_income.R` |
 | `PIPELINE` | Variables derivadas en este repositorio | — | — | — | — | — | ver `SCRIPT` |
 
 ## URL de descarga
@@ -40,6 +41,7 @@ identificadores de la columna `FUENTE` del
 | `RED_HIDRO50` | `https://www.inegi.org.mx/contenidos/productos/prod_serv/contenidos/espanol/bvinegi/productos/geografia/hidrogeolo/region_hidrografica/{UPC}_s.zip`, `{UPC}` de 702825006976 a 702825007012 |
 | `CONABIO_COSTA` | `http://www.conabio.gob.mx/informacion/gis/maps/geo/lc2018gw.zip` |
 | `CENAPRED_SITU2023` | `https://ide.sedatu.gob.mx/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=geonode:{capa}&outputFormat=csv&propertyName=cve_munc,{campo}` — una consulta por capa; el catálogo `capa`/`campo` está en `HAZARD_SOURCES` (`00_config.R`). El portal de descarga es `https://situ.sedatu.gob.mx/descargas/?tema=riesgo` |
+| `ICMM2022` | `https://www.inegi.org.mx/contenidos/investigacion/icmm/datosabiertos/conjunto_de_datos_icmm_2022_csv.zip` (portal: `https://www.inegi.org.mx/investigacion/icmm/`, pestaña «Datos abiertos»). Verificada el 2026-09-21 |
 | (auxiliar) | `http://www.conabio.gob.mx/informacion/gis/maps/geo/mun22gw.zip`, municipios de CONABIO 2022. No se usa para la cobertura (ver D-08); solo para validar la geocodificación de CLUES |
 
 La URL nacional del MG que aparecía en la especificación original está muerta
@@ -164,12 +166,33 @@ Codificación latin-1 (D-09).
   y los de incidencia delictiva y defunciones por accidentes de transporte están
   fuera del marco climático que sigue esta base.
 
+### ICMM (`ICMM2022`)
+- Una sola tabla larga: `ent`, `mun`, `est`, `icpth`. `est` distingue el
+  estimador (1 valor, 2 error estándar, 3 y 4 límites del intervalo de confianza
+  al 90 %, 5 coeficiente de variación en %) y `icpth` trae el número. Incluye
+  además la fila nacional (`ent = 0`, 63,695 pesos, la misma cifra que publica
+  la ENIGH 2022) y una por entidad (`mun = 0`); el pipeline solo toma las
+  municipales.
+- Se usa la edición **2022** porque es la primera con los 2,469 municipios del
+  Marco Geoestadístico 2020. La edición 2020 (`..._icmm_2020_csv.zip`) trae
+  2,458: le faltan 02006, 04012, 07120–07125 y 17034–17036.
+- No se importa el error estándar: es `ING_MUN_CV × ING_MUN_HOG_TRIM / 100`.
+- Es una **media** por hogar, a precios corrientes del levantamiento y por
+  trimestre. El INEGI no publica mediana ni ingreso por persona a esta escala.
+- Resolución **municipal**: todas las AGEB de un municipio comparten el valor.
+  Es la única medida de ingreso de la base porque el censo 2020 no pregunta
+  ingreso.
+- Todos los municipios tienen CV < 12.4 %, es decir precisión «alta» según el
+  criterio del INEGI (CV < 15). La nota metodológica advierte, aun así, que las
+  estimaciones son menos confiables en municipios con poca población.
+
 ## Licencias y cita
 
 | Fuente | Condiciones |
 |---|---|
 | INEGI (MG, censo, DENUE) | Términos de libre uso de la información del INEGI: uso libre citando la fuente. |
 | CONEVAL | Información pública; citar a CONEVAL como fuente. |
+| INEGI (ICMM) | Términos de libre uso de la información del INEGI: uso libre citando la fuente. |
 | INEGI (CEM, Red Hidrográfica) | Términos de libre uso de la información del INEGI: uso libre citando la fuente. |
 | Secretaría de Salud (CLUES) | Datos abiertos del Gobierno de México; citar a la Secretaría de Salud / DGIS como fuente. |
 | Capas vía CONABIO | **CC BY-NC 2.5 México**: citar al INEGI y a CONABIO, **sin fines de lucro**. |
@@ -196,3 +219,5 @@ Si se publica un producto derivado de esta base, conviene citar:
 - CENAPRED. *Sistema de Indicadores Municipales del Atlas Nacional de Riesgos*,
   actualización 2023. Publicado por SEDATU en su infraestructura de datos
   espaciales (SITU).
+- INEGI (2024). *Ingreso Corriente para los Municipios de México 2022.*
+  Estadística derivada. https://www.inegi.org.mx/investigacion/icmm/

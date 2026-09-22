@@ -33,7 +33,8 @@ YEARS <- list(
   cem      = 2024L,  # CEM 4.0 publication; ALOS PALSAR radar of 2006-2011
   red_hidro = 2010L,
   costa    = 2018L,  # CONABIO coastline, RapidEye imagery of 2011-2014
-  cenapred = 2023L
+  cenapred = 2023L,
+  icmm     = 2022L   # ENIGH 2022 fieldwork, Aug-Nov 2022
 )
 
 # --- Entity catalog -------------------------------------------------------
@@ -224,6 +225,28 @@ url_sedatu_wfs <- function(layer, field) sprintf(
   paste0("%s?service=WFS&version=2.0.0&request=GetFeature&typeNames=geonode:%s",
          "&outputFormat=csv&propertyName=cve_munc,%s"),
   URL_SEDATU_WFS, layer, field)
+
+# INEGI's Ingreso Corriente para los Municipios de Mexico (ICMM): small-area
+# estimates of the ENIGH's mean quarterly current income per household, one
+# national archive per edition (https://www.inegi.org.mx/investigacion/icmm/,
+# "Datos abiertos" tab). The 2022 edition is pinned because it is the first to
+# cover the 2,469 municipalities of the 2020 marco; the 2020 edition predates
+# 11 of them (02006, 04012, 07120-07125, 17034-17036). Verified 2026-09-21.
+url_icmm <- function(year) sprintf(paste0(
+  "https://www.inegi.org.mx/contenidos/investigacion/icmm/datosabiertos/",
+  "conjunto_de_datos_icmm_%d_csv.zip"), year)
+
+# Output column -> the ICMM estimator code ("est" catalog) it comes from, kept
+# here for the same reason as HAZARD_SOURCES. The standard error (est = 2) is
+# left out: it is ING_MUN_CV x ING_MUN_HOG_TRIM / 100, to rounding.
+INCOME_SOURCES <- c(
+  ING_MUN_HOG_TRIM = "1",  # Valor
+  ING_MUN_LIM_INF  = "3",  # Limite inferior de confianza (90%)
+  ING_MUN_LIM_SUP  = "4",  # Limite superior de confianza (90%)
+  ING_MUN_CV       = "5"   # Coeficiente de variacion (%)
+)
+
+INCOME_COLS <- names(INCOME_SOURCES)
 
 # Terrain and flood-exposure parameters (09c_terrain.R).
 # At 1:50 000 almost any point lies a few hundred metres from some first-order
