@@ -55,8 +55,8 @@ para los mapas, `ggplot2` y `scales`. Las descargas se descomprimen con
    `PATH`, usa la ruta completa, por ejemplo
    `& "C:\Program Files\R\R-4.6.0\bin\Rscript.exe" run_all.R 20`.
 
-Cierra QGIS u otro programa que tenga abierto `base_ageb_MX.gpkg` antes de
-correr el pipeline: Windows no deja reemplazar un archivo abierto.
+Cierra QGIS u otro programa que tenga abierto algún `base_ageb_{ENT}.gpkg`
+antes de correr el pipeline: Windows no deja reemplazar un archivo abierto.
 
 ### Linux
 
@@ -134,31 +134,34 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 | `R/09b_health.R` | Distancia a hospitales y unidades de primer nivel (CLUES) | `health`, `clues_facilities_MX` |
 | `R/09c_terrain.R` | Elevación, pendiente, cauces y costa (CEM 4.0, Red Hidrográfica, CONABIO) | `terrain`, `streams_MX`, `coast_MX` |
 | `R/10_build.R` | Ensambla todo y calcula los indicadores | `complete` |
-| `R/11_qc.R` | 33 controles de calidad por entidad | `quality_control_report_*` |
-| `R/12_export.R` | CSV, GeoPackage y consolidado nacional | `data/processed/` |
+| `R/11_qc.R` | 33 controles de calidad por entidad | `data/processed/qc/` |
+| `R/12_export.R` | Esquema publicado de indicadores y contrato del diccionario | — |
 | `R/13_hazard.R` | Grados municipales de peligro de CENAPRED, vía SEDATU | `hazard`, `hazard_national` |
 | `R/13b_income.R` | Ingreso corriente trimestral por hogar del municipio (ICMM 2022 del INEGI) | `income`, `income_national` |
-| `R/14_integrate.R` | Integra todas las tablas y entidades en una sola base nacional | `data/processed/base_ageb_MX.gpkg` |
+| `R/14_integrate.R` | Integra todas las tablas de una entidad en una sola base | `data/processed/base_ageb_{ENT}.gpkg` |
 | `maps/map_municipio.R` | Mapa de control visual de la malla de un municipio | `maps/*.png` |
 
 ## Salidas (`data/processed/`)
 
 | Archivo | Contenido |
 |---|---|
-| `ageb_indicadores_{ENT}.csv` | 189 columnas, una fila por AGEB |
-| `ageb_indicadores_MX.csv` | Concatenado nacional |
-| `base_ageb_MX.gpkg` | **Base integrada**: todas las tablas en un solo GeoPackage nacional (ver abajo) |
-| `ageb_integrada_MX.csv` | La capa `ageb_integrada` sin geometría |
-| `ageb_geom_{ENT}.gpkg` | Geometría AGEB en EPSG:4326 con el bloque de identificación |
-| `quality_control_report_{ENT}.csv`, `_MX.csv` | 33 controles por entidad |
-| `qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
-| `denue_establishments_{ENT}.csv`, `denue_ageb_sector_{ENT}.csv`, `ageb_landuse_detail_{ENT}.csv` | Tablas de detalle |
+| `base_ageb_{ENT}.gpkg` | **Base integrada** de la entidad: todas las tablas en un solo GeoPackage, 221 columnas (ver abajo) |
+| `ageb_integrada_{ENT}.csv` | La capa `ageb_integrada` sin geometría |
+| `detail/{tabla}_{ENT}.csv` | Las tres tablas de detalle, planas, para consulta sin GIS |
+| `qc/quality_control_report_{ENT}.csv`, `qc/_MX.csv` | 33 controles por entidad |
+| `qc/qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
+
+No hay archivos nacionales de datos: cada entidad se publica por separado. La
+geometría y las tablas de detalle (establecimientos del DENUE, AGEB × sector,
+AGEB × clase de uso de suelo) viven como capas de `base_ageb_{ENT}.gpkg`, no
+como archivos aparte, igual que las 189 columnas de indicadores, que son las
+primeras de la capa `ageb_integrada`.
 
 Lee el CSV **siempre** con las claves como texto, o se pierden los ceros a la
 izquierda:
 
 ```r
-readr::read_csv("data/processed/ageb_indicadores_MX.csv",
+readr::read_csv("data/processed/ageb_integrada_20.csv",
                 col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
                                         CVE_MUN = "c", CVE_LOC = "c",
                                         CVE_AGEB = "c"))
@@ -166,25 +169,33 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
 
 ## Base integrada
 
-`R/14_integrate.R` junta en `data/processed/base_ageb_MX.gpkg` todo lo que el
-pipeline produce por separado. Un GeoPackage es un archivo SQLite: lo abren
-QGIS, R (`sf`), Python (`geopandas`) o cualquier cliente SQL.
+`R/14_integrate.R` junta en `data/processed/base_ageb_{ENT}.gpkg` — uno por
+entidad — todo lo que el pipeline produce por separado. Un GeoPackage es un
+archivo SQLite: lo abren QGIS, R (`sf`), Python (`geopandas`) o cualquier
+cliente SQL.
 
 | Capa | Geometría | Contenido |
 |---|---|---|
-| `ageb_integrada` | Polígono | Una fila por AGEB: las 189 columnas de `ageb_indicadores` más 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
+| `ageb_integrada` | Polígono | Una fila por AGEB: las 189 columnas de indicadores más 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
 | `denue_establishments` | Punto | Un registro por establecimiento del DENUE |
 | `denue_ageb_sector` | — | AGEB × sector SCIAN, formato largo |
 | `ageb_landuse_detail` | — | AGEB × clase de uso de suelo, formato largo |
-| `quality_control_report` | — | Todos los controles de todas las entidades |
-| `diccionario_datos`, `data_dictionary` | — | Los diccionarios, para que el archivo se explique solo |
+| `diccionario_datos`, `data_dictionary` | — | Los diccionarios de estas capas, para que el archivo se explique solo |
 
-Se reconstruye con todas las entidades que haya en disco, no solo las de la
-corrida, así que `Rscript run_all.R 20` actualiza Oaxaca dentro de la base
-nacional. Si ninguna entrada cambió desde la última vez, se omite.
+El control de calidad no va dentro, ni en el diccionario embebido: es cómo
+verificamos la construcción, no parte de lo que se entrega. Vive aparte, en
+`data/processed/qc/`.
+
+No hay versión nacional a propósito: las 32 entidades en un solo GeoPackage son
+~1.4 GB, lento de abrir y de mover, y el trabajo que lee esta base se hace
+entidad por entidad. Para un análisis nacional, lee los 32
+`ageb_integrada_{ENT}.csv` y concaténalos.
+
+Cada entidad se reconstruye solo si alguna de sus propias entradas cambió, así
+que `Rscript run_all.R 20` toca Oaxaca y deja los otros 31 archivos intactos.
 
 ```r
-ageb <- sf::st_read("data/processed/base_ageb_MX.gpkg", layer = "ageb_integrada")
+ageb <- sf::st_read("data/processed/base_ageb_20.gpkg", layer = "ageb_integrada")
 ```
 
 ## Contenido del CSV

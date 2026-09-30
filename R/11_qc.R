@@ -311,7 +311,7 @@ build_qc <- function(ent) {
     "all published centroids fall inside the entity envelope")
 
   report <- bind_rows(res) |> mutate(CVE_ENT = ent, .before = 1)
-  path <- file.path(DIR_PROCESSED, sprintf("quality_control_report_%s.csv", ent))
+  path <- file.path(DIR_QC, sprintf("quality_control_report_%s.csv", ent))
   write_csv(report, path, na = "")
 
   n_fail <- sum(report$STATUS == "FAIL")
@@ -323,7 +323,7 @@ build_qc <- function(ent) {
   }
   # Municipal detail, so a coverage failure can be traced to the municipality.
   cov <- cov |> left_join(flagged |> select(CVE_MUN_FULL, KIND), by = "CVE_MUN_FULL")
-  write_csv(cov, file.path(DIR_PROCESSED,
+  write_csv(cov, file.path(DIR_QC,
                            sprintf("qc_municipal_coverage_%s.csv", ent)), na = "")
   invisible(report)
 }

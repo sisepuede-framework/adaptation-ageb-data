@@ -8,13 +8,16 @@
 #
 # The two CSVs are the sources of truth: same rows, same order, text in each
 # language (12_export.R refuses to export if their column lists drift apart).
-# When the national CSV exists, coverage and medians are measured from it and
-# printed next to each column; otherwise those cells are left out. Edit the
-# CSVs, never the Markdown: the Markdown is overwritten on every run.
+# When the per-entity integrated tables exist, coverage and medians are measured
+# across all of them and printed next to each column; otherwise those cells are
+# left out. Edit the CSVs, never the Markdown: it is overwritten on every run.
 
 suppressPackageStartupMessages({ library(dplyr); library(readr); library(purrr) })
 
-data_path <- "data/processed/ageb_indicadores_MX.csv"
+# Every entity's integrated table; there is no national file to read since
+# 14_integrate.R publishes one database per entity.
+data_paths <- sort(Sys.glob(file.path("data", "processed", "ageb_integrada_*.csv")))
+data_label <- "data/processed/ageb_integrada_{ENT}.csv"
 
 # English CSV headers -> the internal (Spanish) field names used below.
 EN_FIELDS <- c(
@@ -26,10 +29,10 @@ EN_FIELDS <- c(
   CVI_DIMENSION = "DIMENSION_IVC", SUGGESTED_DIRECTION = "SENTIDO_SUGERIDO",
   SCRIPT = "SCRIPT", NOTES = "NOTAS")
 
-# --- Coverage measured on the national table (shared by both languages) ----
+# --- Coverage measured across every entity (shared by both languages) ------
 stats <- NULL
-if (file.exists(data_path)) {
-  df <- read_csv(data_path, progress = FALSE, col_types = cols(
+if (length(data_paths) > 0) {
+  df <- map_dfr(data_paths, read_csv, progress = FALSE, col_types = cols(
     .default = col_guess(), ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
     CVE_LOC = "c", CVE_AGEB = "c", YEAR_DENUE = "c", YEAR_CLUES = "c"))
   urb <- df$AMBITO == "Urbana"
@@ -57,7 +60,7 @@ if (file.exists(data_path)) {
     )
   })
   stats_n <- format(nrow(df), big.mark = ",")
-  stats_date <- format(file.mtime(data_path), "%Y-%m-%d")
+  stats_date <- format(max(file.mtime(data_paths)), "%Y-%m-%d")
 }
 
 esc <- function(x) gsub("|", "\\|", x, fixed = TRUE)
@@ -118,21 +121,17 @@ TEXT <- list(
     table_word = "Tabla", tables_title = "Tablas", file_word = "Archivo",
     cols_word = "Columnas",
     table_desc = c(
-      ageb_indicadores       = "`data/processed/ageb_indicadores_{ENT}.csv` y `ageb_indicadores_MX.csv`. Una fila por AGEB urbana o rural.",
-      ageb_integrada         = "`data/processed/base_ageb_MX.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_MX.csv`. Una fila por AGEB con todas las columnas de ageb_indicadores más las que se listan aquí; `ORDEN` es su posición en esa tabla. El GeoPackage también trae, como capas, las demás tablas de este diccionario en versión nacional.",
-      ageb_geom              = "`data/processed/ageb_geom_{ENT}.gpkg`, capa `ageb`, EPSG:4326. Una fila por AGEB.",
-      denue_establishments   = "`data/processed/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE.",
-      denue_ageb_sector      = "`data/processed/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN.",
-      ageb_landuse_detail    = "`data/processed/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo.",
-      quality_control_report = "`data/processed/quality_control_report_{ENT}.csv` y `_MX.csv`. Una fila por control.",
-      qc_municipal_coverage  = "`data/processed/qc_municipal_coverage_{ENT}.csv`. Una fila por municipio."),
+      ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.",
+      denue_establishments   = "`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_establishments`, y `data/processed/detail/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE.",
+      denue_ageb_sector      = "`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_ageb_sector`, y `data/processed/detail/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN.",
+      ageb_landuse_detail    = "`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_landuse_detail`, y `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo."),
     stats_note = paste0(
       "Cobertura y mediana medidas sobre `%s` (%s AGEB, generado el %s). ",
       "La cobertura se mide sobre AGEB **habitadas**, como %% de AGEB con valor y como %% ",
       "de su población; la mediana y el rango también se miden sobre AGEB habitadas."),
     head_stats = "| # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |",
     head_plain = "| # | Variable | Descripción | Unidad | Ámbito | Variable fuente | Sentido |",
-    cards_title = "## Fichas de ageb_indicadores",
+    cards_title = "## Fichas de ageb_integrada",
     cards_intro = "Una ficha por columna, en el orden del CSV.",
     card = c(field = "Campo", value = "Valor", BLOQUE = "Bloque", TIPO = "Tipo",
              UNIDAD = "Unidad", DECIMALES = "Decimales", AMBITO = "Ámbito",
@@ -205,21 +204,17 @@ TEXT <- list(
     table_word = "Table", tables_title = "Tables", file_word = "File",
     cols_word = "Columns",
     table_desc = c(
-      ageb_indicadores       = "`data/processed/ageb_indicadores_{ENT}.csv` and `ageb_indicadores_MX.csv`. One row per urban or rural AGEB.",
-      ageb_integrada         = "`data/processed/base_ageb_MX.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_MX.csv`. One row per AGEB with every ageb_indicadores column plus the ones listed here; `ORDER` is their position in that table. The GeoPackage also carries, as layers, the national version of the other tables in this dictionary.",
-      ageb_geom              = "`data/processed/ageb_geom_{ENT}.gpkg`, layer `ageb`, EPSG:4326. One row per AGEB.",
-      denue_establishments   = "`data/processed/denue_establishments_{ENT}.csv`. One row per DENUE establishment.",
-      denue_ageb_sector      = "`data/processed/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector.",
-      ageb_landuse_detail    = "`data/processed/ageb_landuse_detail_{ENT}.csv`. One row per AGEB × land use class.",
-      quality_control_report = "`data/processed/quality_control_report_{ENT}.csv` and `_MX.csv`. One row per check.",
-      qc_municipal_coverage  = "`data/processed/qc_municipal_coverage_{ENT}.csv`. One row per municipality."),
+      ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.",
+      denue_establishments   = "`data/processed/base_ageb_{ENT}.gpkg`, layer `denue_establishments`, and `data/processed/detail/denue_establishments_{ENT}.csv`. One row per DENUE establishment.",
+      denue_ageb_sector      = "`data/processed/base_ageb_{ENT}.gpkg`, layer `denue_ageb_sector`, and `data/processed/detail/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector.",
+      ageb_landuse_detail    = "`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_landuse_detail`, and `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. One row per AGEB × land use class."),
     stats_note = paste0(
       "Coverage and median measured on `%s` (%s AGEB, generated on %s). ",
       "Coverage is measured on **inhabited** AGEB, as the %% of AGEB with a value and as the %% ",
       "of their population; the median and range are also measured on inhabited AGEB."),
     head_stats = "| # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |",
     head_plain = "| # | Variable | Description | Unit | Scope | Source variable | Direction |",
-    cards_title = "## ageb_indicadores column cards",
+    cards_title = "## ageb_integrada column cards",
     cards_intro = "One card per column, in CSV order.",
     card = c(field = "Field", value = "Value", BLOQUE = "Block", TIPO = "Type",
              UNIDAD = "Unit", DECIMALES = "Decimals", AMBITO = "Scope",
@@ -244,7 +239,7 @@ render <- function(lang) {
 
   lines <- c(T$intro, "",
              "```r",
-             "readr::read_csv(\"data/processed/ageb_indicadores_MX.csv\",",
+             "readr::read_csv(\"data/processed/ageb_integrada_20.csv\",",
              "                col_types = readr::cols(ID_AGEB = \"c\", CVE_ENT = \"c\", CVE_MUN = \"c\",",
              "                                        CVE_LOC = \"c\", CVE_AGEB = \"c\"))",
              "```",
@@ -257,17 +252,17 @@ render <- function(lang) {
                                           gsub("_", "-", t), T$table_desc[[t]],
                                           sum(dict$TABLA == t))), "")
 
-  main <- dict |> filter(TABLA == "ageb_indicadores")
-  # A column documented here but not yet present in the national CSV -- one
-  # added after the last national run -- gets empty cells instead of failing.
+  main <- dict |> filter(TABLA == "ageb_integrada")
+  # A column documented here but not yet present in the published tables --
+  # one added after the last run -- gets empty cells instead of failing.
   if (!is.null(stats)) main <- main |> left_join(stats, by = "VARIABLE") |>
     mutate(across(c(COB_URB, COB_RUR, POB_URB, POB_RUR, MEDIANA, RANGO),
                   ~ coalesce(.x, "")))
 
-  lines <- c(lines, "<a id=\"tabla-ageb-indicadores\"></a>",
-             paste0("## ", T$table_word, " ageb_indicadores"), "",
-             T$table_desc[["ageb_indicadores"]], "")
-  if (!is.null(stats)) lines <- c(lines, sprintf(T$stats_note, data_path, stats_n, stats_date), "")
+  lines <- c(lines, "<a id=\"tabla-ageb-integrada\"></a>",
+             paste0("## ", T$table_word, " ageb_integrada"), "",
+             T$table_desc[["ageb_integrada"]], "")
+  if (!is.null(stats)) lines <- c(lines, sprintf(T$stats_note, data_label, stats_n, stats_date), "")
 
   for (blk in unique(main$BLOQUE)) {
     sub <- main |> filter(BLOQUE == blk)
@@ -328,7 +323,7 @@ render <- function(lang) {
       "")
   }
 
-  for (t in setdiff(tables, "ageb_indicadores")) {
+  for (t in setdiff(tables, "ageb_integrada")) {
     sub <- dict |> filter(TABLA == t)
     lines <- c(lines,
       sprintf("<a id=\"tabla-%s\"></a>", gsub("_", "-", t)),

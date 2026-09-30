@@ -45,7 +45,7 @@ fuentes en [FUENTES.md](FUENTES.md).
 - `PCT_VIV_SIN_DRENAJE` no es `100 − PCT_DRENAJE`, y está bien que no sumen 100 (D-19).
 
 ```r
-readr::read_csv("data/processed/ageb_indicadores_MX.csv",
+readr::read_csv("data/processed/ageb_integrada_20.csv",
                 col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
                                         CVE_LOC = "c", CVE_AGEB = "c"))
 ```
@@ -54,21 +54,17 @@ readr::read_csv("data/processed/ageb_indicadores_MX.csv",
 
 | Tabla | Archivo | Columnas |
 |---|---|---|
-| [ageb_indicadores](#tabla-ageb-indicadores) | `data/processed/ageb_indicadores_{ENT}.csv` y `ageb_indicadores_MX.csv`. Una fila por AGEB urbana o rural. | 189 |
-| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_MX.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_MX.csv`. Una fila por AGEB con todas las columnas de ageb_indicadores más las que se listan aquí; `ORDEN` es su posición en esa tabla. El GeoPackage también trae, como capas, las demás tablas de este diccionario en versión nacional. | 32 |
-| [ageb_geom](#tabla-ageb-geom) | `data/processed/ageb_geom_{ENT}.gpkg`, capa `ageb`, EPSG:4326. Una fila por AGEB. | 10 |
-| [denue_establishments](#tabla-denue-establishments) | `data/processed/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE. | 7 |
-| [denue_ageb_sector](#tabla-denue-ageb-sector) | `data/processed/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN. | 3 |
-| [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo. | 5 |
-| [quality_control_report](#tabla-quality-control-report) | `data/processed/quality_control_report_{ENT}.csv` y `_MX.csv`. Una fila por control. | 4 |
-| [qc_municipal_coverage](#tabla-qc-municipal-coverage) | `data/processed/qc_municipal_coverage_{ENT}.csv`. Una fila por municipio. | 8 |
+| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario. | 222 |
+| [denue_establishments](#tabla-denue-establishments) | `data/processed/base_ageb_{ENT}.gpkg`, capa `denue_establishments`, y `data/processed/detail/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE. | 8 |
+| [denue_ageb_sector](#tabla-denue-ageb-sector) | `data/processed/base_ageb_{ENT}.gpkg`, capa `denue_ageb_sector`, y `data/processed/detail/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN. | 3 |
+| [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_landuse_detail`, y `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo. | 5 |
 
-<a id="tabla-ageb-indicadores"></a>
-## Tabla ageb_indicadores
+<a id="tabla-ageb-integrada"></a>
+## Tabla ageb_integrada
 
-`data/processed/ageb_indicadores_{ENT}.csv` y `ageb_indicadores_MX.csv`. Una fila por AGEB urbana o rural.
+`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.
 
-Cobertura y mediana medidas sobre `data/processed/ageb_indicadores_MX.csv` (81,451 AGEB, generado el 2026-09-21). La cobertura se mide sobre AGEB **habitadas**, como % de AGEB con valor y como % de su población; la mediana y el rango también se miden sobre AGEB habitadas.
+Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generado el 2026-09-29). La cobertura se mide sobre AGEB **habitadas**, como % de AGEB con valor y como % de su población; la mediana y el rango también se miden sobre AGEB habitadas.
 
 ### Identificación
 
@@ -91,6 +87,7 @@ Cobertura y mediana medidas sobre `data/processed/ageb_indicadores_MX.csv` (81,4
 | 10 | [`AREA_KM2`](#area_km2) | Superficie de la AGEB. | km² | Ambos | `geometría` | 100.0 / 100.0 | 100.0 / 100.0 | 0.3529 | n/a |
 | 11 | [`CENTROIDE_LON`](#centroide_lon) | Longitud de un punto representativo dentro de la AGEB. | grados decimales (EPSG:4326) | Ambos | `geometría` | 100.0 / 100.0 | 100.0 / 100.0 | -100.4 | n/a |
 | 12 | [`CENTROIDE_LAT`](#centroide_lat) | Latitud de un punto representativo dentro de la AGEB. | grados decimales (EPSG:4326) | Ambos | `geometría` | 100.0 / 100.0 | 100.0 / 100.0 | 20.64 | n/a |
+| 222 | [`geom`](#geom) | Polígono o multipolígono de la AGEB. | EPSG:4326 | Ambos | `geometría` |  /  |  /  |  | n/a |
 
 ### Población base
 
@@ -224,147 +221,179 @@ Cobertura y mediana medidas sobre `data/processed/ageb_indicadores_MX.csv` (81,4
 | 88 | [`DEN_EDU`](#den_edu) | Unidades económicas de servicios educativos. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
 | 89 | [`DEN_GOB`](#den_gob) | Unidades de actividades legislativas, gubernamentales y de impartición de justicia. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
 | 90 | [`SCHOOL_TOT`](#school_tot) | Escuelas (proxy de posibles refugios temporales). | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
+| 91 | [`DEN_SCIAN_11`](#den_scian_11) | Unidades económicas del sector SCIAN 11: Agricultura, cría y explotación de animales, aprovechamiento forestal, pesca y caza. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 92 | [`DEN_SCIAN_21`](#den_scian_21) | Unidades económicas del sector SCIAN 21: Minería. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 93 | [`DEN_SCIAN_22`](#den_scian_22) | Unidades económicas del sector SCIAN 22: Generación y distribución de energía eléctrica, suministro de agua y de gas por ductos. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 94 | [`DEN_SCIAN_23`](#den_scian_23) | Unidades económicas del sector SCIAN 23: Construcción. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 95 | [`DEN_SCIAN_31_33`](#den_scian_31_33) | Unidades económicas del sector SCIAN 31-33: Industrias manufactureras. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
+| 96 | [`DEN_SCIAN_43`](#den_scian_43) | Unidades económicas del sector SCIAN 43: Comercio al por mayor. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 97 | [`DEN_SCIAN_46`](#den_scian_46) | Unidades económicas del sector SCIAN 46: Comercio al por menor. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 8 | ± |
+| 98 | [`DEN_SCIAN_48_49`](#den_scian_48_49) | Unidades económicas del sector SCIAN 48-49: Transportes, correos y almacenamiento. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 99 | [`DEN_SCIAN_51`](#den_scian_51) | Unidades económicas del sector SCIAN 51: Información en medios masivos. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 100 | [`DEN_SCIAN_52`](#den_scian_52) | Unidades económicas del sector SCIAN 52: Servicios financieros y de seguros. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 101 | [`DEN_SCIAN_53`](#den_scian_53) | Unidades económicas del sector SCIAN 53: Servicios inmobiliarios y de alquiler de bienes muebles e intangibles. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 102 | [`DEN_SCIAN_54`](#den_scian_54) | Unidades económicas del sector SCIAN 54: Servicios profesionales, científicos y técnicos. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 103 | [`DEN_SCIAN_55`](#den_scian_55) | Unidades económicas del sector SCIAN 55: Corporativos. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 104 | [`DEN_SCIAN_56`](#den_scian_56) | Unidades económicas del sector SCIAN 56: Servicios de apoyo a los negocios, manejo de residuos y remediación. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 105 | [`DEN_SCIAN_61`](#den_scian_61) | Unidades económicas del sector SCIAN 61: Servicios educativos. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 106 | [`DEN_SCIAN_62`](#den_scian_62) | Unidades económicas del sector SCIAN 62: Servicios de salud y de asistencia social. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 107 | [`DEN_SCIAN_71`](#den_scian_71) | Unidades económicas del sector SCIAN 71: Servicios de esparcimiento culturales y deportivos, y otros servicios recreativos. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 108 | [`DEN_SCIAN_72`](#den_scian_72) | Unidades económicas del sector SCIAN 72: Servicios de alojamiento temporal y de preparación de alimentos y bebidas. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
+| 109 | [`DEN_SCIAN_81`](#den_scian_81) | Unidades económicas del sector SCIAN 81: Otros servicios excepto actividades gubernamentales. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | ± |
+| 110 | [`DEN_SCIAN_93`](#den_scian_93) | Unidades económicas del sector SCIAN 93: Actividades legislativas, gubernamentales y de impartición de justicia. | establecimientos | Ambos | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
 
 ### Hidrografía
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 91 | [`WATER_AREA`](#water_area) | Superficie de cuerpos de agua dentro de la AGEB. | km² | Ambos | `geometría` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 92 | [`WATER_PCT`](#water_pct) | Porcentaje de la superficie de la AGEB cubierta por cuerpos de agua. | % | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 93 | [`HAS_WATER`](#has_water) | Indicador de presencia de cuerpos de agua en la AGEB. | 0/1 | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 111 | [`WATER_AREA`](#water_area) | Superficie de cuerpos de agua dentro de la AGEB. | km² | Ambos | `geometría` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 112 | [`WATER_PCT`](#water_pct) | Porcentaje de la superficie de la AGEB cubierta por cuerpos de agua. | % | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 113 | [`HAS_WATER`](#has_water) | Indicador de presencia de cuerpos de agua en la AGEB. | 0/1 | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
 
 ### Uso de suelo
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 94 | [`USO_DOM`](#uso_dom) | Clase de uso de suelo y vegetación que ocupa más superficie de la AGEB. |  | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 |  | ± |
-| 95 | [`USO_PCT`](#uso_pct) | Porcentaje de la AGEB cubierto por la clase dominante. | % | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 93.64 | n/a |
-| 96 | [`PCT_URB`](#pct_urb) | Porcentaje de la AGEB clasificado como asentamiento humano o zona urbana. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 74.9 | ± |
+| 114 | [`USO_DOM`](#uso_dom) | Clase de uso de suelo y vegetación que ocupa más superficie de la AGEB. |  | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 |  | ± |
+| 115 | [`USO_PCT`](#uso_pct) | Porcentaje de la AGEB cubierto por la clase dominante. | % | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 93.64 | n/a |
+| 116 | [`PCT_URB`](#pct_urb) | Porcentaje de la AGEB clasificado como asentamiento humano o zona urbana. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 74.9 | ± |
+| 117 | [`USV_PCT_URBANO`](#usv_pct_urbano) | Porcentaje de la AGEB cubierto por asentamientos humanos y zona urbana. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 74.9 | ± |
+| 118 | [`USV_PCT_AGUA`](#usv_pct_agua) | Porcentaje de la AGEB cubierto por cuerpos de agua y acuicultura. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 119 | [`USV_PCT_SECUNDARIA`](#usv_pct_secundaria) | Porcentaje de la AGEB cubierto por vegetación secundaria (arbórea, arbustiva o herbácea) de cualquier formación. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 120 | [`USV_PCT_AGRICOLA`](#usv_pct_agricola) | Porcentaje de la AGEB cubierto por agricultura de riego, temporal o humedad. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0.21 | ± |
+| 121 | [`USV_PCT_PASTIZAL_INDUCIDO`](#usv_pct_pastizal_inducido) | Porcentaje de la AGEB cubierto por pastizal cultivado o inducido (uso pecuario). | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 122 | [`USV_PCT_BOSQUE`](#usv_pct_bosque) | Porcentaje de la AGEB cubierto por bosque primario (coníferas, encino, mesófilo, galería, cultivado). | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 123 | [`USV_PCT_SELVA`](#usv_pct_selva) | Porcentaje de la AGEB cubierto por selva primaria. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 124 | [`USV_PCT_MATORRAL`](#usv_pct_matorral) | Porcentaje de la AGEB cubierto por matorral y vegetación xerófila. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 125 | [`USV_PCT_PASTIZAL`](#usv_pct_pastizal) | Porcentaje de la AGEB cubierto por pastizal natural, pradera y sabana. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 126 | [`USV_PCT_HIDROFILA`](#usv_pct_hidrofila) | Porcentaje de la AGEB cubierto por vegetación hidrófila (manglar, tular, popal, galería, petén). | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 127 | [`USV_PCT_SIN_VEG`](#usv_pct_sin_veg) | Porcentaje de la AGEB cubierto por áreas sin vegetación aparente o desprovistas de vegetación. | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 128 | [`USV_PCT_OTRA`](#usv_pct_otra) | Porcentaje de la AGEB cubierto por otras formaciones (dunas costeras, palmar). | % | Ambos | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
 
 ### Acceso a salud
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 97 | [`DIST_HOSP_KM`](#dist_hosp_km) | Distancia a la unidad hospitalaria en operación más cercana (segundo o tercer nivel), pública o privada. | km | Ambos | `LATITUD, LONGITUD, NOMBRE TIPO ESTABLECIMIENTO` | 100.0 / 100.0 | 100.0 / 100.0 | 2.748 | + |
-| 98 | [`DIST_HOSP_PUB_KM`](#dist_hosp_pub_km) | Distancia al hospital público en operación más cercano (segundo o tercer nivel). | km | Ambos | `LATITUD, LONGITUD, NOMBRE DE LA INSTITUCION` | 100.0 / 100.0 | 100.0 / 100.0 | 4.652 | + |
-| 99 | [`DIST_1NIVEL_PUB_KM`](#dist_1nivel_pub_km) | Distancia a la unidad pública de primer nivel en operación más cercana (centro de salud, unidad de medicina familiar, unidad médica rural). | km | Ambos | `LATITUD, LONGITUD, NIVEL ATENCION` | 100.0 / 100.0 | 100.0 / 100.0 | 1.061 | + |
-| 100 | [`DIST_ORIGEN`](#dist_origen) | Punto desde el que se midieron las distancias a unidades de salud, cauces y costa. |  | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 129 | [`DIST_HOSP_KM`](#dist_hosp_km) | Distancia a la unidad hospitalaria en operación más cercana (segundo o tercer nivel), pública o privada. | km | Ambos | `LATITUD, LONGITUD, NOMBRE TIPO ESTABLECIMIENTO` | 100.0 / 100.0 | 100.0 / 100.0 | 2.748 | + |
+| 130 | [`DIST_HOSP_PUB_KM`](#dist_hosp_pub_km) | Distancia al hospital público en operación más cercano (segundo o tercer nivel). | km | Ambos | `LATITUD, LONGITUD, NOMBRE DE LA INSTITUCION` | 100.0 / 100.0 | 100.0 / 100.0 | 4.652 | + |
+| 131 | [`DIST_1NIVEL_PUB_KM`](#dist_1nivel_pub_km) | Distancia a la unidad pública de primer nivel en operación más cercana (centro de salud, unidad de medicina familiar, unidad médica rural). | km | Ambos | `LATITUD, LONGITUD, NIVEL ATENCION` | 100.0 / 100.0 | 100.0 / 100.0 | 1.061 | + |
+| 132 | [`DIST_ORIGEN`](#dist_origen) | Punto desde el que se midieron las distancias a unidades de salud, cauces y costa. |  | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
 
 ### Relieve y exposición
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 101 | [`ELEV_M`](#elev_m) | Elevación media del terreno habitado sobre el nivel medio del mar. | m | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 1,268 | ± |
-| 102 | [`PEND_MEDIA_GRAD`](#pend_media_grad) | Pendiente media del terreno habitado. | grados | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 3.5 | + |
-| 103 | [`PCT_PEND_15`](#pct_pend_15) | Porcentaje del terreno habitado con pendiente mayor a 15 grados. | % | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
-| 104 | [`PCT_PEND_30`](#pct_pend_30) | Porcentaje del terreno habitado con pendiente mayor a 30 grados. | % | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
-| 105 | [`DIST_CAUCE_KM`](#dist_cauce_km) | Distancia en línea recta al cauce más cercano de orden de Strahler 3 o mayor. | km | Ambos | `ORDER_1` | 100.0 / 100.0 | 100.0 / 100.0 | 0.77 | − |
-| 106 | [`DESNIVEL_CAUCE_M`](#desnivel_cauce_m) | Altura del terreno habitado sobre el agua más cercana: el lecho del cauce de orden ≥ 3 o el mar, lo que esté más cerca. | m | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 10.3 | − |
-| 107 | [`DIST_COSTA_KM`](#dist_costa_km) | Distancia en línea recta a la línea de costa. | km | Ambos | `DESCRIP` | 100.0 / 100.0 | 100.0 / 100.0 | 181.4 | − |
+| 133 | [`ELEV_M`](#elev_m) | Elevación media del terreno habitado sobre el nivel medio del mar. | m | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 1,268 | ± |
+| 134 | [`PEND_MEDIA_GRAD`](#pend_media_grad) | Pendiente media del terreno habitado. | grados | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 3.5 | + |
+| 135 | [`PCT_PEND_15`](#pct_pend_15) | Porcentaje del terreno habitado con pendiente mayor a 15 grados. | % | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
+| 136 | [`PCT_PEND_30`](#pct_pend_30) | Porcentaje del terreno habitado con pendiente mayor a 30 grados. | % | Ambos | `valor del ráster` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
+| 137 | [`DIST_CAUCE_KM`](#dist_cauce_km) | Distancia en línea recta al cauce más cercano de orden de Strahler 3 o mayor. | km | Ambos | `ORDER_1` | 100.0 / 100.0 | 100.0 / 100.0 | 0.77 | − |
+| 138 | [`DESNIVEL_CAUCE_M`](#desnivel_cauce_m) | Altura del terreno habitado sobre el agua más cercana: el lecho del cauce de orden ≥ 3 o el mar, lo que esté más cerca. | m | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 10.3 | − |
+| 139 | [`DIST_COSTA_KM`](#dist_costa_km) | Distancia en línea recta a la línea de costa. | km | Ambos | `DESCRIP` | 100.0 / 100.0 | 100.0 / 100.0 | 181.4 | − |
 
 ### Amenaza (CENAPRED)
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 108 | [`AMZ_INUND`](#amz_inund) | Grado de peligro por inundación del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_inundac` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
-| 109 | [`AMZ_SEQUIA`](#amz_sequia) | Grado de peligro por sequía del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_sequia2` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 110 | [`AMZ_ONDA_CAL`](#amz_onda_cal) | Grado de peligro por ondas cálidas (calor extremo) del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_ondasca` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 111 | [`AMZ_CICLON`](#amz_ciclon) | Grado de peligro por ciclones tropicales del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_ciclnes` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
-| 112 | [`AMZ_DESLIZ`](#amz_desliz) | Grado de susceptibilidad a deslizamientos de laderas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `susceplad` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
-| 113 | [`AMZ_TORM_ELEC`](#amz_torm_elec) | Grado de peligro por tormentas eléctricas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_tormele` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 114 | [`AMZ_GRANIZO`](#amz_granizo) | Grado de peligro por granizo del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_granizo` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
-| 115 | [`AMZ_TEMP_BAJA`](#amz_temp_baja) | Grado de peligro por temperaturas bajas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_bajaste` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
-| 116 | [`AMZ_NEVADA`](#amz_nevada) | Grado de peligro por nevadas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_nevadas` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
-| 117 | [`AMZ_SISMO`](#amz_sismo) | Grado de peligro sísmico del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_sismico` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 118 | [`AMZ_VOLCAN`](#amz_volcan) | Grado de peligro volcánico del municipio al que pertenece la AGEB. | grado (0–5) | Ambos | `volcanes` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
-| 119 | [`AMZ_SUS_TOX`](#amz_sus_tox) | Grado de peligro por sustancias tóxicas del municipio al que pertenece la AGEB. | grado (0–5) | Ambos | `gp_sustox` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | n/a |
-| 120 | [`AMZ_SUS_INFLA`](#amz_sus_infla) | Grado de peligro por sustancias inflamables del municipio al que pertenece la AGEB. | grado (0–5) | Ambos | `gp_susinfl` | 99.8 / 99.6 | 99.8 / 99.7 | 2 | n/a |
-| 121 | [`CEN_RESIL`](#cen_resil) | Grado de resiliencia del municipio según CENAPRED. | grado (1–5) | Ambos | `g_resilien` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | − |
-| 122 | [`CEN_VULN_CC`](#cen_vuln_cc) | Municipio clasificado por CENAPRED como vulnerable al cambio climático. |  | Ambos | `v_cc` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | + |
+| 140 | [`AMZ_INUND`](#amz_inund) | Grado de peligro por inundación del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_inundac` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
+| 141 | [`AMZ_SEQUIA`](#amz_sequia) | Grado de peligro por sequía del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_sequia2` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 142 | [`AMZ_ONDA_CAL`](#amz_onda_cal) | Grado de peligro por ondas cálidas (calor extremo) del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_ondasca` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 143 | [`AMZ_CICLON`](#amz_ciclon) | Grado de peligro por ciclones tropicales del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_ciclnes` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
+| 144 | [`AMZ_DESLIZ`](#amz_desliz) | Grado de susceptibilidad a deslizamientos de laderas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `susceplad` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
+| 145 | [`AMZ_TORM_ELEC`](#amz_torm_elec) | Grado de peligro por tormentas eléctricas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_tormele` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 146 | [`AMZ_GRANIZO`](#amz_granizo) | Grado de peligro por granizo del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_granizo` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 147 | [`AMZ_TEMP_BAJA`](#amz_temp_baja) | Grado de peligro por temperaturas bajas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_bajaste` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 148 | [`AMZ_NEVADA`](#amz_nevada) | Grado de peligro por nevadas del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_nevadas` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
+| 149 | [`AMZ_SISMO`](#amz_sismo) | Grado de peligro sísmico del municipio al que pertenece la AGEB. | grado (1–5) | Ambos | `gp_sismico` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 150 | [`AMZ_VOLCAN`](#amz_volcan) | Grado de peligro volcánico del municipio al que pertenece la AGEB. | grado (0–5) | Ambos | `volcanes` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 151 | [`AMZ_SUS_TOX`](#amz_sus_tox) | Grado de peligro por sustancias tóxicas del municipio al que pertenece la AGEB. | grado (0–5) | Ambos | `gp_sustox` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | n/a |
+| 152 | [`AMZ_SUS_INFLA`](#amz_sus_infla) | Grado de peligro por sustancias inflamables del municipio al que pertenece la AGEB. | grado (0–5) | Ambos | `gp_susinfl` | 99.8 / 99.6 | 99.8 / 99.7 | 2 | n/a |
+| 153 | [`CEN_RESIL`](#cen_resil) | Grado de resiliencia del municipio según CENAPRED. | grado (1–5) | Ambos | `g_resilien` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | − |
+| 154 | [`CEN_VULN_CC`](#cen_vuln_cc) | Municipio clasificado por CENAPRED como vulnerable al cambio climático. |  | Ambos | `v_cc` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | + |
 
 ### Ingreso (municipal)
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 123 | [`ING_MUN_HOG_TRIM`](#ing_mun_hog_trim) | Ingreso corriente promedio trimestral por hogar del municipio al que pertenece la AGEB. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 1)` | 100.0 / 100.0 | 100.0 / 100.0 | 57,083 | − |
-| 124 | [`ING_MUN_LIM_INF`](#ing_mun_lim_inf) | Límite inferior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 3)` | 100.0 / 100.0 | 100.0 / 100.0 | 50,308 | n/a |
-| 125 | [`ING_MUN_LIM_SUP`](#ing_mun_lim_sup) | Límite superior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 4)` | 100.0 / 100.0 | 100.0 / 100.0 | 64,345 | n/a |
-| 126 | [`ING_MUN_CV`](#ing_mun_cv) | Coeficiente de variación de ING_MUN_HOG_TRIM. | % | Ambos | `icpth (est = 5)` | 100.0 / 100.0 | 100.0 / 100.0 | 7.53 | n/a |
+| 155 | [`ING_MUN_HOG_TRIM`](#ing_mun_hog_trim) | Ingreso corriente promedio trimestral por hogar del municipio al que pertenece la AGEB. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 1)` | 100.0 / 100.0 | 100.0 / 100.0 | 57,083 | − |
+| 156 | [`ING_MUN_LIM_INF`](#ing_mun_lim_inf) | Límite inferior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 3)` | 100.0 / 100.0 | 100.0 / 100.0 | 50,308 | n/a |
+| 157 | [`ING_MUN_LIM_SUP`](#ing_mun_lim_sup) | Límite superior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM. | pesos de 2022 por hogar por trimestre | Ambos | `icpth (est = 4)` | 100.0 / 100.0 | 100.0 / 100.0 | 64,345 | n/a |
+| 158 | [`ING_MUN_CV`](#ing_mun_cv) | Coeficiente de variación de ING_MUN_HOG_TRIM. | % | Ambos | `icpth (est = 5)` | 100.0 / 100.0 | 100.0 / 100.0 | 7.53 | n/a |
 
 ### Conteos censales
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 127 | [`POB_0A2`](#pob_0a2) | Población de 0 a 2 años. | personas | Ambos | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
-| 128 | [`POB_3A5`](#pob_3a5) | Población de 3 a 5 años. | personas | Ambos | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
-| 129 | [`POB_65YMAS`](#pob_65ymas) | Población de 65 años y más. | personas | Ambos | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
-| 130 | [`POB_DISC`](#pob_disc) | Población con discapacidad. | personas | Ambos | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
-| 131 | [`POB_3YMAS`](#pob_3ymas) | Población de 3 años y más. | personas | Ambos | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
-| 132 | [`POB_HLI`](#pob_hli) | Población de 3 años y más que habla alguna lengua indígena. | personas | Ambos | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
-| 133 | [`POB_HLI_NHE`](#pob_hli_nhe) | Población de 3 años y más que habla lengua indígena y no habla español. | personas | Ambos | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
-| 134 | [`POB_SIN_SALUD`](#pob_sin_salud) | Población sin afiliación a servicios de salud. | personas | Ambos | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
-| 135 | [`POB_15YMAS`](#pob_15ymas) | Población de 15 años y más. | personas | Ambos | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
-| 136 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Población de 15 años y más analfabeta. | personas | Ambos | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
-| 137 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Población de 15 años y más sin escolaridad (o solo preescolar). | personas | Ambos | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
-| 138 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Población de 15 años y más con primaria incompleta. | personas | Ambos | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
-| 139 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Población de 15 años y más con primaria completa (como máxima escolaridad). | personas | Ambos | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
-| 140 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Población de 15 años y más con secundaria incompleta. | personas | Ambos | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
-| 141 | [`POB_6A11`](#pob_6a11) | Población de 6 a 11 años. | personas | Ambos | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
-| 142 | [`POB_12A14`](#pob_12a14) | Población de 12 a 14 años. | personas | Ambos | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 143 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Población de 6 a 11 años que no asiste a la escuela. | personas | Ambos | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 144 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Población de 12 a 14 años que no asiste a la escuela. | personas | Ambos | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 145 | [`POB_15A17`](#pob_15a17) | Población de 15 a 17 años. | personas | Ambos | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 146 | [`POB_18A24`](#pob_18a24) | Población de 18 a 24 años. | personas | Ambos | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
-| 147 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Población de 15 a 17 años que asiste a la escuela. | personas | Ambos | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
-| 148 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Población de 18 a 24 años que asiste a la escuela. | personas | Ambos | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
-| 149 | [`POB_PEA`](#pob_pea) | Población económicamente activa de 12 años y más. | personas | Ambos | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
-| 150 | [`POB_PEA_F`](#pob_pea_f) | Mujeres de 12 años y más económicamente activas. | personas | Ambos | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
-| 151 | [`POB_INAC`](#pob_inac) | Población de 12 años y más no económicamente activa. | personas | Ambos | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
-| 152 | [`POB_INAC_F`](#pob_inac_f) | Mujeres de 12 años y más no económicamente activas. | personas | Ambos | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
-| 153 | [`POB_DESOCUP`](#pob_desocup) | Población de 12 años y más desocupada. | personas | Ambos | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
-| 154 | [`HOGARES`](#hogares) | Total de hogares censales. | hogares | Ambos | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
-| 155 | [`HOGARES_JEFA`](#hogares_jefa) | Hogares censales con persona de referencia mujer. | hogares | Ambos | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
-| 156 | [`VIV_OCUPANTES`](#viv_ocupantes) | Ocupantes en viviendas particulares habitadas. | personas | Ambos | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
-| 157 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Viviendas que no disponen de drenaje. | viviendas | Ambos | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 158 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Viviendas que no disponen de energía eléctrica. | viviendas | Ambos | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 159 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Viviendas sin agua entubada en el ámbito de la vivienda. | viviendas | Ambos | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 160 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Viviendas con piso de tierra. | viviendas | Ambos | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 161 | [`VIV_1CUARTO`](#viv_1cuarto) | Viviendas con un solo cuarto. | viviendas | Ambos | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
-| 162 | [`VIV_EXCUSADO`](#viv_excusado) | Viviendas que disponen de excusado o sanitario. | viviendas | Ambos | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
-| 163 | [`VIV_LETRINA`](#viv_letrina) | Viviendas que disponen de letrina (pozo u hoyo). | viviendas | Ambos | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 164 | [`VIV_TINACO`](#viv_tinaco) | Viviendas que disponen de tinaco. | viviendas | Ambos | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
-| 165 | [`VIV_CISTERNA`](#viv_cisterna) | Viviendas que disponen de cisterna o aljibe. | viviendas | Ambos | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
-| 166 | [`VIV_REFRI`](#viv_refri) | Viviendas que disponen de refrigerador. | viviendas | Ambos | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
-| 167 | [`VIV_LAVADORA`](#viv_lavadora) | Viviendas que disponen de lavadora. | viviendas | Ambos | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
-| 168 | [`VIV_AUTO`](#viv_auto) | Viviendas que disponen de automóvil o camioneta. | viviendas | Ambos | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
-| 169 | [`VIV_RADIO`](#viv_radio) | Viviendas que disponen de radio. | viviendas | Ambos | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
-| 170 | [`VIV_TELEFONO`](#viv_telefono) | Viviendas que disponen de línea telefónica fija. | viviendas | Ambos | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
-| 171 | [`VIV_CELULAR`](#viv_celular) | Viviendas que disponen de teléfono celular. | viviendas | Ambos | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
-| 172 | [`VIV_INTERNET`](#viv_internet) | Viviendas que disponen de internet. | viviendas | Ambos | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
-| 173 | [`VIV_COMPU`](#viv_compu) | Viviendas que disponen de computadora, laptop o tablet. | viviendas | Ambos | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
-| 174 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Viviendas sin radio ni televisor. | viviendas | Ambos | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
-| 175 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Viviendas sin línea telefónica fija ni teléfono celular. | viviendas | Ambos | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
-| 176 | [`VIV_SIN_TIC`](#viv_sin_tic) | Viviendas sin tecnologías de la información y la comunicación. | viviendas | Ambos | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
-| 177 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Viviendas sin ningún bien. | viviendas | Ambos | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 159 | [`POB_0A2`](#pob_0a2) | Población de 0 a 2 años. | personas | Ambos | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
+| 160 | [`POB_3A5`](#pob_3a5) | Población de 3 a 5 años. | personas | Ambos | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
+| 161 | [`POB_65YMAS`](#pob_65ymas) | Población de 65 años y más. | personas | Ambos | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
+| 162 | [`POB_DISC`](#pob_disc) | Población con discapacidad. | personas | Ambos | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
+| 163 | [`POB_3YMAS`](#pob_3ymas) | Población de 3 años y más. | personas | Ambos | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
+| 164 | [`POB_HLI`](#pob_hli) | Población de 3 años y más que habla alguna lengua indígena. | personas | Ambos | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
+| 165 | [`POB_HLI_NHE`](#pob_hli_nhe) | Población de 3 años y más que habla lengua indígena y no habla español. | personas | Ambos | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
+| 166 | [`POB_SIN_SALUD`](#pob_sin_salud) | Población sin afiliación a servicios de salud. | personas | Ambos | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
+| 167 | [`POB_15YMAS`](#pob_15ymas) | Población de 15 años y más. | personas | Ambos | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
+| 168 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Población de 15 años y más analfabeta. | personas | Ambos | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
+| 169 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Población de 15 años y más sin escolaridad (o solo preescolar). | personas | Ambos | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
+| 170 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Población de 15 años y más con primaria incompleta. | personas | Ambos | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
+| 171 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Población de 15 años y más con primaria completa (como máxima escolaridad). | personas | Ambos | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
+| 172 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Población de 15 años y más con secundaria incompleta. | personas | Ambos | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
+| 173 | [`POB_6A11`](#pob_6a11) | Población de 6 a 11 años. | personas | Ambos | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
+| 174 | [`POB_12A14`](#pob_12a14) | Población de 12 a 14 años. | personas | Ambos | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 175 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Población de 6 a 11 años que no asiste a la escuela. | personas | Ambos | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 176 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Población de 12 a 14 años que no asiste a la escuela. | personas | Ambos | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 177 | [`POB_15A17`](#pob_15a17) | Población de 15 a 17 años. | personas | Ambos | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 178 | [`POB_18A24`](#pob_18a24) | Población de 18 a 24 años. | personas | Ambos | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
+| 179 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Población de 15 a 17 años que asiste a la escuela. | personas | Ambos | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
+| 180 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Población de 18 a 24 años que asiste a la escuela. | personas | Ambos | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
+| 181 | [`POB_PEA`](#pob_pea) | Población económicamente activa de 12 años y más. | personas | Ambos | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
+| 182 | [`POB_PEA_F`](#pob_pea_f) | Mujeres de 12 años y más económicamente activas. | personas | Ambos | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
+| 183 | [`POB_INAC`](#pob_inac) | Población de 12 años y más no económicamente activa. | personas | Ambos | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
+| 184 | [`POB_INAC_F`](#pob_inac_f) | Mujeres de 12 años y más no económicamente activas. | personas | Ambos | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
+| 185 | [`POB_DESOCUP`](#pob_desocup) | Población de 12 años y más desocupada. | personas | Ambos | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
+| 186 | [`HOGARES`](#hogares) | Total de hogares censales. | hogares | Ambos | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
+| 187 | [`HOGARES_JEFA`](#hogares_jefa) | Hogares censales con persona de referencia mujer. | hogares | Ambos | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
+| 188 | [`VIV_OCUPANTES`](#viv_ocupantes) | Ocupantes en viviendas particulares habitadas. | personas | Ambos | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
+| 189 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Viviendas que no disponen de drenaje. | viviendas | Ambos | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 190 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Viviendas que no disponen de energía eléctrica. | viviendas | Ambos | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 191 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Viviendas sin agua entubada en el ámbito de la vivienda. | viviendas | Ambos | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 192 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Viviendas con piso de tierra. | viviendas | Ambos | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 193 | [`VIV_1CUARTO`](#viv_1cuarto) | Viviendas con un solo cuarto. | viviendas | Ambos | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
+| 194 | [`VIV_EXCUSADO`](#viv_excusado) | Viviendas que disponen de excusado o sanitario. | viviendas | Ambos | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
+| 195 | [`VIV_LETRINA`](#viv_letrina) | Viviendas que disponen de letrina (pozo u hoyo). | viviendas | Ambos | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 196 | [`VIV_TINACO`](#viv_tinaco) | Viviendas que disponen de tinaco. | viviendas | Ambos | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
+| 197 | [`VIV_CISTERNA`](#viv_cisterna) | Viviendas que disponen de cisterna o aljibe. | viviendas | Ambos | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
+| 198 | [`VIV_REFRI`](#viv_refri) | Viviendas que disponen de refrigerador. | viviendas | Ambos | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
+| 199 | [`VIV_LAVADORA`](#viv_lavadora) | Viviendas que disponen de lavadora. | viviendas | Ambos | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
+| 200 | [`VIV_AUTO`](#viv_auto) | Viviendas que disponen de automóvil o camioneta. | viviendas | Ambos | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
+| 201 | [`VIV_RADIO`](#viv_radio) | Viviendas que disponen de radio. | viviendas | Ambos | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
+| 202 | [`VIV_TELEFONO`](#viv_telefono) | Viviendas que disponen de línea telefónica fija. | viviendas | Ambos | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
+| 203 | [`VIV_CELULAR`](#viv_celular) | Viviendas que disponen de teléfono celular. | viviendas | Ambos | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
+| 204 | [`VIV_INTERNET`](#viv_internet) | Viviendas que disponen de internet. | viviendas | Ambos | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
+| 205 | [`VIV_COMPU`](#viv_compu) | Viviendas que disponen de computadora, laptop o tablet. | viviendas | Ambos | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
+| 206 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Viviendas sin radio ni televisor. | viviendas | Ambos | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
+| 207 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Viviendas sin línea telefónica fija ni teléfono celular. | viviendas | Ambos | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
+| 208 | [`VIV_SIN_TIC`](#viv_sin_tic) | Viviendas sin tecnologías de la información y la comunicación. | viviendas | Ambos | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
+| 209 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Viviendas sin ningún bien. | viviendas | Ambos | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
 
 ### Metadatos
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 178 | [`YEAR_GEOMETRY`](#year_geometry) | Año de referencia de la geometría. | año | Ambos | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 179 | [`YEAR_CENSUS`](#year_census) | Año de referencia del censo. | año | Ambos | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 180 | [`YEAR_CONEVAL`](#year_coneval) | Año de referencia del GRS de CONEVAL. | año | Ambos | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 181 | [`YEAR_DENUE`](#year_denue) | Versión del DENUE. | año-mes | Ambos | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 182 | [`YEAR_HIDRO`](#year_hidro) | Año de referencia de la capa de cuerpos de agua. | año | Ambos | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 183 | [`YEAR_USV`](#year_usv) | Año de referencia de la capa de uso de suelo y vegetación. | año | Ambos | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
-| 184 | [`YEAR_CLUES`](#year_clues) | Corte del catálogo CLUES de establecimientos de salud. | año-mes | Ambos | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 185 | [`YEAR_CEM`](#year_cem) | Año de publicación del Continuo de Elevaciones Mexicano 4.0. | año | Ambos | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
-| 186 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Año de la edición 2.0 de la Red Hidrográfica 1:50 000. | año | Ambos | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
-| 187 | [`YEAR_COSTA`](#year_costa) | Año de la capa de línea de costa de CONABIO. | año | Ambos | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 188 | [`YEAR_CENAPRED`](#year_cenapred) | Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos. | año | Ambos | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
-| 189 | [`YEAR_ICMM`](#year_icmm) | Edición del Ingreso Corriente para los Municipios de México. | año | Ambos | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
+| 210 | [`YEAR_GEOMETRY`](#year_geometry) | Año de referencia de la geometría. | año | Ambos | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 211 | [`YEAR_CENSUS`](#year_census) | Año de referencia del censo. | año | Ambos | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 212 | [`YEAR_CONEVAL`](#year_coneval) | Año de referencia del GRS de CONEVAL. | año | Ambos | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 213 | [`YEAR_DENUE`](#year_denue) | Versión del DENUE. | año-mes | Ambos | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 214 | [`YEAR_HIDRO`](#year_hidro) | Año de referencia de la capa de cuerpos de agua. | año | Ambos | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 215 | [`YEAR_USV`](#year_usv) | Año de referencia de la capa de uso de suelo y vegetación. | año | Ambos | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
+| 216 | [`YEAR_CLUES`](#year_clues) | Corte del catálogo CLUES de establecimientos de salud. | año-mes | Ambos | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 217 | [`YEAR_CEM`](#year_cem) | Año de publicación del Continuo de Elevaciones Mexicano 4.0. | año | Ambos | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
+| 218 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Año de la edición 2.0 de la Red Hidrográfica 1:50 000. | año | Ambos | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
+| 219 | [`YEAR_COSTA`](#year_costa) | Año de la capa de línea de costa de CONABIO. | año | Ambos | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 220 | [`YEAR_CENAPRED`](#year_cenapred) | Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos. | año | Ambos | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
+| 221 | [`YEAR_ICMM`](#year_icmm) | Edición del Ingreso Corriente para los Municipios de México. | año | Ambos | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
 
-## Fichas de ageb_indicadores
+## Fichas de ageb_integrada
 
 Una ficha por columna, en el orden del CSV.
 
@@ -2589,8 +2618,488 @@ Escuelas (proxy de posibles refugios temporales).
 | Rango | 0 – 180 |
 | Notas | Hoy es idéntico a DEN_EDU (el sector 61 solo tiene el subsector 611). No son refugios oficiales. |
 
+<a id="den_scian_11"></a>
+#### 91. `DEN_SCIAN_11`
+
+Unidades económicas del sector SCIAN 11: Agricultura, cría y explotación de animales, aprovechamiento forestal, pesca y caza.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 11. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 342 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_21"></a>
+#### 92. `DEN_SCIAN_21`
+
+Unidades económicas del sector SCIAN 21: Minería.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 21. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 135 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_22"></a>
+#### 93. `DEN_SCIAN_22`
+
+Unidades económicas del sector SCIAN 22: Generación y distribución de energía eléctrica, suministro de agua y de gas por ductos.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 22. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 62 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_23"></a>
+#### 94. `DEN_SCIAN_23`
+
+Unidades económicas del sector SCIAN 23: Construcción.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 23. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 43 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_31_33"></a>
+#### 95. `DEN_SCIAN_31_33`
+
+Unidades económicas del sector SCIAN 31-33: Industrias manufactureras.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 31 o 33. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 2 |
+| Rango | 0 – 948 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_43"></a>
+#### 96. `DEN_SCIAN_43`
+
+Unidades económicas del sector SCIAN 43: Comercio al por mayor.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 43. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 1,576 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_46"></a>
+#### 97. `DEN_SCIAN_46`
+
+Unidades económicas del sector SCIAN 46: Comercio al por menor.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 46. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 8 |
+| Rango | 0 – 5,079 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_48_49"></a>
+#### 98. `DEN_SCIAN_48_49`
+
+Unidades económicas del sector SCIAN 48-49: Transportes, correos y almacenamiento.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 48 o 49. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 205 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_51"></a>
+#### 99. `DEN_SCIAN_51`
+
+Unidades económicas del sector SCIAN 51: Información en medios masivos.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 51. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 28 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_52"></a>
+#### 100. `DEN_SCIAN_52`
+
+Unidades económicas del sector SCIAN 52: Servicios financieros y de seguros.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 52. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 94 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_53"></a>
+#### 101. `DEN_SCIAN_53`
+
+Unidades económicas del sector SCIAN 53: Servicios inmobiliarios y de alquiler de bienes muebles e intangibles.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 53. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 102 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_54"></a>
+#### 102. `DEN_SCIAN_54`
+
+Unidades económicas del sector SCIAN 54: Servicios profesionales, científicos y técnicos.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 54. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 275 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_55"></a>
+#### 103. `DEN_SCIAN_55`
+
+Unidades económicas del sector SCIAN 55: Corporativos.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 55. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 24 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_56"></a>
+#### 104. `DEN_SCIAN_56`
+
+Unidades económicas del sector SCIAN 56: Servicios de apoyo a los negocios, manejo de residuos y remediación.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 56. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 57 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_61"></a>
+#### 105. `DEN_SCIAN_61`
+
+Unidades económicas del sector SCIAN 61: Servicios educativos.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 61. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 180 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_62"></a>
+#### 106. `DEN_SCIAN_62`
+
+Unidades económicas del sector SCIAN 62: Servicios de salud y de asistencia social.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 62. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 663 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_71"></a>
+#### 107. `DEN_SCIAN_71`
+
+Unidades económicas del sector SCIAN 71: Servicios de esparcimiento culturales y deportivos, y otros servicios recreativos.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 71. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 72 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_72"></a>
+#### 108. `DEN_SCIAN_72`
+
+Unidades económicas del sector SCIAN 72: Servicios de alojamiento temporal y de preparación de alimentos y bebidas.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 72. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 2 |
+| Rango | 0 – 526 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_81"></a>
+#### 109. `DEN_SCIAN_81`
+
+Unidades económicas del sector SCIAN 81: Otros servicios excepto actividades gubernamentales.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 81. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 3 |
+| Rango | 0 – 392 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
+<a id="den_scian_93"></a>
+#### 110. `DEN_SCIAN_93`
+
+Unidades económicas del sector SCIAN 93: Actividades legislativas, gubernamentales y de impartición de justicia.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Actividad económica |
+| Tipo | entero |
+| Unidad | establecimientos |
+| Ámbito | Ambos |
+| Fuente | DENUE |
+| Variable en la fuente | `codigo_act` |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 93. |
+| Valores vacíos | Nunca (0 = sin establecimientos) |
+| Dimensión sugerida | Contexto |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 331 |
+| Notas | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
+
 <a id="water_area"></a>
-#### 91. `WATER_AREA`
+#### 111. `WATER_AREA`
 
 Superficie de cuerpos de agua dentro de la AGEB.
 
@@ -2615,7 +3124,7 @@ Superficie de cuerpos de agua dentro de la AGEB.
 | Notas | Intersección de áreas, nunca unión espacial (D-27). |
 
 <a id="water_pct"></a>
-#### 92. `WATER_PCT`
+#### 112. `WATER_PCT`
 
 Porcentaje de la superficie de la AGEB cubierta por cuerpos de agua.
 
@@ -2640,7 +3149,7 @@ Porcentaje de la superficie de la AGEB cubierta por cuerpos de agua.
 | Notas | No mide amenaza de inundación: solo presencia de agua superficial cartografiada. |
 
 <a id="has_water"></a>
-#### 93. `HAS_WATER`
+#### 113. `HAS_WATER`
 
 Indicador de presencia de cuerpos de agua en la AGEB.
 
@@ -2662,7 +3171,7 @@ Indicador de presencia de cuerpos de agua en la AGEB.
 | Rango | 0 – 1 |
 
 <a id="uso_dom"></a>
-#### 94. `USO_DOM`
+#### 114. `USO_DOM`
 
 Clase de uso de suelo y vegetación que ocupa más superficie de la AGEB.
 
@@ -2683,7 +3192,7 @@ Clase de uso de suelo y vegetación que ocupa más superficie de la AGEB.
 | Notas | 129 clases a nivel nacional; 'ASENTAMIENTOS HUMANOS' es la más frecuente. Escala 1:250,000: poco detalle en AGEB urbanas chicas. |
 
 <a id="uso_pct"></a>
-#### 95. `USO_PCT`
+#### 115. `USO_PCT`
 
 Porcentaje de la AGEB cubierto por la clase dominante.
 
@@ -2707,7 +3216,7 @@ Porcentaje de la AGEB cubierto por la clase dominante.
 | Rango | 0.08 – 100 |
 
 <a id="pct_urb"></a>
-#### 96. `PCT_URB`
+#### 116. `PCT_URB`
 
 Porcentaje de la AGEB clasificado como asentamiento humano o zona urbana.
 
@@ -2732,8 +3241,320 @@ Porcentaje de la AGEB clasificado como asentamiento humano o zona urbana.
 | Rango | 0 – 100 |
 | Notas | Proxy grueso de superficie construida (isla de calor), limitado por la escala 1:250,000. |
 
+<a id="usv_pct_urbano"></a>
+#### 117. `USV_PCT_URBANO`
+
+Porcentaje de la AGEB cubierto por asentamientos humanos y zona urbana.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 74.9 |
+| Rango | 0 – 100 |
+| Notas | ASENTAMIENTOS HUMANOS, ZONA URBANA. Igual a PCT_URB salvo redondeo. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_agua"></a>
+#### 118. `USV_PCT_AGUA`
+
+Porcentaje de la AGEB cubierto por cuerpos de agua y acuicultura.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | CUERPO DE AGUA, ACUÍCOLA. Complementa WATER_PCT (INEGI hidrología 1:50,000), que es más fino. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_secundaria"></a>
+#### 119. `USV_PCT_SECUNDARIA`
+
+Porcentaje de la AGEB cubierto por vegetación secundaria (arbórea, arbustiva o herbácea) de cualquier formación.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | Todas las clases 'VEGETACIÓN SECUNDARIA ...'. Se separa de su formación original porque indica degradación. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_agricola"></a>
+#### 120. `USV_PCT_AGRICOLA`
+
+Porcentaje de la AGEB cubierto por agricultura de riego, temporal o humedad.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0.21 |
+| Rango | 0 – 100 |
+| Notas | Todas las clases 'AGRICULTURA ...'. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_pastizal_inducido"></a>
+#### 121. `USV_PCT_PASTIZAL_INDUCIDO`
+
+Porcentaje de la AGEB cubierto por pastizal cultivado o inducido (uso pecuario).
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | PASTIZAL CULTIVADO, PASTIZAL INDUCIDO. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_bosque"></a>
+#### 122. `USV_PCT_BOSQUE`
+
+Porcentaje de la AGEB cubierto por bosque primario (coníferas, encino, mesófilo, galería, cultivado).
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | Clases 'BOSQUE ...', incluidos bosque cultivado e inducido. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_selva"></a>
+#### 123. `USV_PCT_SELVA`
+
+Porcentaje de la AGEB cubierto por selva primaria.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | Clases 'SELVA ...'. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_matorral"></a>
+#### 124. `USV_PCT_MATORRAL`
+
+Porcentaje de la AGEB cubierto por matorral y vegetación xerófila.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | MATORRAL ..., MEZQUITAL ..., CHAPARRAL, desiertos arenosos, vegetación gipsófila y halófila xerófila. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_pastizal"></a>
+#### 125. `USV_PCT_PASTIZAL`
+
+Porcentaje de la AGEB cubierto por pastizal natural, pradera y sabana.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | PASTIZAL NATURAL, HALÓFILO, GIPSÓFILO; PRADERA DE ALTA MONTAÑA; SABANA, SABANOIDE. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_hidrofila"></a>
+#### 126. `USV_PCT_HIDROFILA`
+
+Porcentaje de la AGEB cubierto por vegetación hidrófila (manglar, tular, popal, galería, petén).
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | MANGLAR, TULAR, POPAL, halófila hidrófila, vegetación de galería y de petén. Bosque y selva de galería quedan en BOSQUE y SELVA. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_sin_veg"></a>
+#### 127. `USV_PCT_SIN_VEG`
+
+Porcentaje de la AGEB cubierto por áreas sin vegetación aparente o desprovistas de vegetación.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | SIN VEGETACIÓN APARENTE, DESPROVISTO DE VEGETACIÓN. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
+<a id="usv_pct_otra"></a>
+#### 128. `USV_PCT_OTRA`
+
+Porcentaje de la AGEB cubierto por otras formaciones (dunas costeras, palmar).
+
+| Campo | Valor |
+|---|---|
+| Bloque | Uso de suelo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | INEGI_USV7 |
+| Variable en la fuente | `DESCRIPCIO` |
+| Derivación | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. |
+| Universo | AREA_KM2 |
+| Valores vacíos | C: ningún polígono USV intersecta la AGEB (igual que USO_DOM); 0 = ninguna clase del grupo |
+| Dimensión sugerida | Exposición (contexto) |
+| Sentido sugerido | ± |
+| Script | 14_integrate.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 100 |
+| Notas | VEGETACIÓN DE DUNAS COSTERAS, PALMAR NATURAL, PALMAR INDUCIDO. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
+
 <a id="dist_hosp_km"></a>
-#### 97. `DIST_HOSP_KM`
+#### 129. `DIST_HOSP_KM`
 
 Distancia a la unidad hospitalaria en operación más cercana (segundo o tercer nivel), pública o privada.
 
@@ -2759,7 +3580,7 @@ Distancia a la unidad hospitalaria en operación más cercana (segundo o tercer 
 | Notas | Distancia en línea recta, no tiempo de traslado: subestima el acceso en zonas serranas. Incluye 3,645 hospitales privados, muchos de ellos clínicas pequeñas; para población sin seguridad social usa DIST_HOSP_PUB_KM. |
 
 <a id="dist_hosp_pub_km"></a>
-#### 98. `DIST_HOSP_PUB_KM`
+#### 130. `DIST_HOSP_PUB_KM`
 
 Distancia al hospital público en operación más cercano (segundo o tercer nivel).
 
@@ -2785,7 +3606,7 @@ Distancia al hospital público en operación más cercano (segundo o tercer nive
 | Notas | Distancia en línea recta, no tiempo de traslado: subestima el acceso en zonas serranas. Siempre ≥ DIST_HOSP_KM (control health_public_hospital_not_nearer). |
 
 <a id="dist_1nivel_pub_km"></a>
-#### 99. `DIST_1NIVEL_PUB_KM`
+#### 131. `DIST_1NIVEL_PUB_KM`
 
 Distancia a la unidad pública de primer nivel en operación más cercana (centro de salud, unidad de medicina familiar, unidad médica rural).
 
@@ -2811,7 +3632,7 @@ Distancia a la unidad pública de primer nivel en operación más cercana (centr
 | Notas | Distancia en línea recta, no tiempo de traslado: subestima el acceso en zonas serranas. Casi siempre corto (mediana < 1 km en AGEB urbanas); discrimina sobre todo en AGEB rurales. |
 
 <a id="dist_origen"></a>
-#### 100. `DIST_ORIGEN`
+#### 132. `DIST_ORIGEN`
 
 Punto desde el que se midieron las distancias a unidades de salud, cauces y costa.
 
@@ -2831,7 +3652,7 @@ Punto desde el que se midieron las distancias a unidades de salud, cauces y cost
 | Notas | Valores: Localidades, Punto interior. Toda AGEB urbana usa el punto interior; una rural con Punto interior está deshabitada. En relieve (ELEV_M, pendientes) el mismo criterio usa el polígono completo en lugar del punto interior, y discos de 150 m en lugar de las localidades puntuales. |
 
 <a id="elev_m"></a>
-#### 101. `ELEV_M`
+#### 133. `ELEV_M`
 
 Elevación media del terreno habitado sobre el nivel medio del mar.
 
@@ -2857,7 +3678,7 @@ Elevación media del terreno habitado sobre el nivel medio del mar.
 | Notas | Referida al Geoide Gravimétrico Mexicano 2010. Puede ser ligeramente negativa en planicies costeras. Junto con DIST_COSTA_KM identifica zonas bajas costeras. |
 
 <a id="pend_media_grad"></a>
-#### 102. `PEND_MEDIA_GRAD`
+#### 134. `PEND_MEDIA_GRAD`
 
 Pendiente media del terreno habitado.
 
@@ -2883,7 +3704,7 @@ Pendiente media del terreno habitado.
 | Notas | El CEM 4.0 viene de radar (ALOS PALSAR): en ciudades densas sigue en parte los techos, así que la pendiente urbana sale algo rugosa. |
 
 <a id="pct_pend_15"></a>
-#### 103. `PCT_PEND_15`
+#### 135. `PCT_PEND_15`
 
 Porcentaje del terreno habitado con pendiente mayor a 15 grados.
 
@@ -2909,7 +3730,7 @@ Porcentaje del terreno habitado con pendiente mayor a 15 grados.
 | Notas | 15° es un umbral habitual de susceptibilidad moderada a procesos de remoción en masa. |
 
 <a id="pct_pend_30"></a>
-#### 104. `PCT_PEND_30`
+#### 136. `PCT_PEND_30`
 
 Porcentaje del terreno habitado con pendiente mayor a 30 grados.
 
@@ -2935,7 +3756,7 @@ Porcentaje del terreno habitado con pendiente mayor a 30 grados.
 | Notas | Siempre ≤ PCT_PEND_15 (control terrain_slope_consistent). Mediana 0: muy concentrado en la sierra. |
 
 <a id="dist_cauce_km"></a>
-#### 105. `DIST_CAUCE_KM`
+#### 137. `DIST_CAUCE_KM`
 
 Distancia en línea recta al cauce más cercano de orden de Strahler 3 o mayor.
 
@@ -2961,7 +3782,7 @@ Distancia en línea recta al cauce más cercano de orden de Strahler 3 o mayor.
 | Notas | A escala 1:50 000 casi todo punto está a pocos cientos de metros de un arroyo de orden 1; el filtro de orden deja cauces con cuenca apreciable. Úsala junto con DESNIVEL_CAUCE_M: cerca y poco por encima es lo que indica riesgo. |
 
 <a id="desnivel_cauce_m"></a>
-#### 106. `DESNIVEL_CAUCE_M`
+#### 138. `DESNIVEL_CAUCE_M`
 
 Altura del terreno habitado sobre el agua más cercana: el lecho del cauce de orden ≥ 3 o el mar, lo que esté más cerca.
 
@@ -2986,7 +3807,7 @@ Altura del terreno habitado sobre el agua más cercana: el lecho del cauce de or
 | Notas | Aproximación de HAND (altura sobre el drenaje más cercano) con el cauce más cercano en planta, no el de la trayectoria real del agua: puede ser negativa si ese cauce corre en el valle vecino. No considera bordos, capacidad del cauce ni lluvia. |
 
 <a id="dist_costa_km"></a>
-#### 107. `DIST_COSTA_KM`
+#### 139. `DIST_COSTA_KM`
 
 Distancia en línea recta a la línea de costa.
 
@@ -3012,7 +3833,7 @@ Distancia en línea recta a la línea de costa.
 | Notas | Las lagunas costeras cuentan solo donde la capa de CONABIO las traza como costa. Para marea de tormenta, combinar con ELEV_M (p. ej. < 10 m). |
 
 <a id="amz_inund"></a>
-#### 108. `AMZ_INUND`
+#### 140. `AMZ_INUND`
 
 Grado de peligro por inundación del municipio al que pertenece la AGEB.
 
@@ -3036,7 +3857,7 @@ Grado de peligro por inundación del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). Distribución nacional casi uniforme entre las cinco clases (492–496 municipios cada una). |
 
 <a id="amz_sequia"></a>
-#### 109. `AMZ_SEQUIA`
+#### 141. `AMZ_SEQUIA`
 
 Grado de peligro por sequía del municipio al que pertenece la AGEB.
 
@@ -3060,7 +3881,7 @@ Grado de peligro por sequía del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). Muy sesgada: solo 9 municipios son Muy alto y 1,082 son Bajo. |
 
 <a id="amz_onda_cal"></a>
-#### 110. `AMZ_ONDA_CAL`
+#### 142. `AMZ_ONDA_CAL`
 
 Grado de peligro por ondas cálidas (calor extremo) del municipio al que pertenece la AGEB.
 
@@ -3084,7 +3905,7 @@ Grado de peligro por ondas cálidas (calor extremo) del municipio al que pertene
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). Es la amenaza de calor disponible a esta escala; no sustituye un indicador de isla de calor intraurbana. |
 
 <a id="amz_ciclon"></a>
-#### 111. `AMZ_CICLON`
+#### 143. `AMZ_CICLON`
 
 Grado de peligro por ciclones tropicales del municipio al que pertenece la AGEB.
 
@@ -3108,7 +3929,7 @@ Grado de peligro por ciclones tropicales del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). |
 
 <a id="amz_desliz"></a>
-#### 112. `AMZ_DESLIZ`
+#### 144. `AMZ_DESLIZ`
 
 Grado de susceptibilidad a deslizamientos de laderas del municipio al que pertenece la AGEB.
 
@@ -3132,7 +3953,7 @@ Grado de susceptibilidad a deslizamientos de laderas del municipio al que perten
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). Susceptibilidad del terreno, no peligro con periodo de retorno. 1,692 de 2,469 municipios son Alto, así que discrimina poco por sí sola. |
 
 <a id="amz_torm_elec"></a>
-#### 113. `AMZ_TORM_ELEC`
+#### 145. `AMZ_TORM_ELEC`
 
 Grado de peligro por tormentas eléctricas del municipio al que pertenece la AGEB.
 
@@ -3156,7 +3977,7 @@ Grado de peligro por tormentas eléctricas del municipio al que pertenece la AGE
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). |
 
 <a id="amz_granizo"></a>
-#### 114. `AMZ_GRANIZO`
+#### 146. `AMZ_GRANIZO`
 
 Grado de peligro por granizo del municipio al que pertenece la AGEB.
 
@@ -3180,7 +4001,7 @@ Grado de peligro por granizo del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). |
 
 <a id="amz_temp_baja"></a>
-#### 115. `AMZ_TEMP_BAJA`
+#### 147. `AMZ_TEMP_BAJA`
 
 Grado de peligro por temperaturas bajas del municipio al que pertenece la AGEB.
 
@@ -3204,7 +4025,7 @@ Grado de peligro por temperaturas bajas del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). |
 
 <a id="amz_nevada"></a>
-#### 116. `AMZ_NEVADA`
+#### 148. `AMZ_NEVADA`
 
 Grado de peligro por nevadas del municipio al que pertenece la AGEB.
 
@@ -3228,7 +4049,7 @@ Grado de peligro por nevadas del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). 2,318 de 2,469 municipios son Muy bajo: solo informativa en el norte y en zonas de alta montaña. |
 
 <a id="amz_sismo"></a>
-#### 117. `AMZ_SISMO`
+#### 149. `AMZ_SISMO`
 
 Grado de peligro sísmico del municipio al que pertenece la AGEB.
 
@@ -3252,7 +4073,7 @@ Grado de peligro sísmico del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). No es amenaza climática; se incluye para análisis multiamenaza. La clase Muy bajo no se usa en ningún municipio. |
 
 <a id="amz_volcan"></a>
-#### 118. `AMZ_VOLCAN`
+#### 150. `AMZ_VOLCAN`
 
 Grado de peligro volcánico del municipio al que pertenece la AGEB.
 
@@ -3276,7 +4097,7 @@ Grado de peligro volcánico del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). Única columna con 0 = 'Sin Peligro' (1,138 municipios), que es ausencia real de amenaza, no dato faltante. No es amenaza climática. |
 
 <a id="amz_sus_tox"></a>
-#### 119. `AMZ_SUS_TOX`
+#### 151. `AMZ_SUS_TOX`
 
 Grado de peligro por sustancias tóxicas del municipio al que pertenece la AGEB.
 
@@ -3300,7 +4121,7 @@ Grado de peligro por sustancias tóxicas del municipio al que pertenece la AGEB.
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). Riesgo tecnológico, no climático. 0 = 'Sin peligro': el municipio no registra instalaciones con esas sustancias, no es dato faltante. |
 
 <a id="amz_sus_infla"></a>
-#### 120. `AMZ_SUS_INFLA`
+#### 152. `AMZ_SUS_INFLA`
 
 Grado de peligro por sustancias inflamables del municipio al que pertenece la AGEB.
 
@@ -3324,7 +4145,7 @@ Grado de peligro por sustancias inflamables del municipio al que pertenece la AG
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor. Es una clase ordinal, no una magnitud física, y su escala no es comparable con la de otra amenaza. Queda fuera del índice de vulnerabilidad (D-30). Riesgo tecnológico, no climático. 0 = 'Sin peligro': el municipio no registra instalaciones con esas sustancias, no es dato faltante. |
 
 <a id="cen_resil"></a>
-#### 121. `CEN_RESIL`
+#### 153. `CEN_RESIL`
 
 Grado de resiliencia del municipio según CENAPRED.
 
@@ -3348,7 +4169,7 @@ Grado de resiliencia del municipio según CENAPRED.
 | Notas | Juicio municipal de CENAPRED, no insumo del índice: se publica para contrastarlo con lo que esta base calcula por AGEB, igual que GRS_GRADO (D-23). Un valor mayor indica más resiliencia, es decir menos vulnerabilidad. |
 
 <a id="cen_vuln_cc"></a>
-#### 122. `CEN_VULN_CC`
+#### 154. `CEN_VULN_CC`
 
 Municipio clasificado por CENAPRED como vulnerable al cambio climático.
 
@@ -3371,7 +4192,7 @@ Municipio clasificado por CENAPRED como vulnerable al cambio climático.
 | Notas | 319 municipios marcados Sí. CENAPRED no publica con esta capa el criterio de corte; úsese como contraste, no como insumo. |
 
 <a id="ing_mun_hog_trim"></a>
-#### 123. `ING_MUN_HOG_TRIM`
+#### 155. `ING_MUN_HOG_TRIM`
 
 Ingreso corriente promedio trimestral por hogar del municipio al que pertenece la AGEB.
 
@@ -3397,7 +4218,7 @@ Ingreso corriente promedio trimestral por hogar del municipio al que pertenece l
 | Notas | Resolución municipal: todas las AGEB del municipio comparten el valor y no hay variación intramunicipal. Es una media (la jalan los hogares de mayor ingreso), a precios corrientes de agosto–noviembre de 2022; divide entre 3 para el ingreso mensual. El censo no pregunta ingreso, así que es la única medida de ingreso de la base. |
 
 <a id="ing_mun_lim_inf"></a>
-#### 124. `ING_MUN_LIM_INF`
+#### 156. `ING_MUN_LIM_INF`
 
 Límite inferior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM.
 
@@ -3423,7 +4244,7 @@ Límite inferior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM.
 | Notas | Equivale a ING_MUN_HOG_TRIM − 1.645 × error estándar. Úsese para decidir si dos municipios difieren de verdad. |
 
 <a id="ing_mun_lim_sup"></a>
-#### 125. `ING_MUN_LIM_SUP`
+#### 157. `ING_MUN_LIM_SUP`
 
 Límite superior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM.
 
@@ -3449,7 +4270,7 @@ Límite superior del intervalo de confianza al 90 % de ING_MUN_HOG_TRIM.
 | Notas | Equivale a ING_MUN_HOG_TRIM + 1.645 × error estándar. |
 
 <a id="ing_mun_cv"></a>
-#### 126. `ING_MUN_CV`
+#### 158. `ING_MUN_CV`
 
 Coeficiente de variación de ING_MUN_HOG_TRIM.
 
@@ -3475,7 +4296,7 @@ Coeficiente de variación de ING_MUN_HOG_TRIM.
 | Notas | El INEGI califica la precisión como alta con CV < 15, moderada con 15–30 y baja con 30 o más. En la edición 2022 todos los municipios quedan por debajo de 12.4 (alta); los más altos son municipios pequeños de Oaxaca. |
 
 <a id="pob_0a2"></a>
-#### 127. `POB_0A2`
+#### 159. `POB_0A2`
 
 Población de 0 a 2 años.
 
@@ -3499,7 +4320,7 @@ Población de 0 a 2 años.
 | Notas | Los conteos se publican para reagregar a otras geografías: suma numeradores y denominadores, nunca porcentajes. |
 
 <a id="pob_3a5"></a>
-#### 128. `POB_3A5`
+#### 160. `POB_3A5`
 
 Población de 3 a 5 años.
 
@@ -3522,7 +4343,7 @@ Población de 3 a 5 años.
 | Rango | 0 – 3,516 |
 
 <a id="pob_65ymas"></a>
-#### 129. `POB_65YMAS`
+#### 161. `POB_65YMAS`
 
 Población de 65 años y más.
 
@@ -3545,7 +4366,7 @@ Población de 65 años y más.
 | Rango | 0 – 2,798 |
 
 <a id="pob_disc"></a>
-#### 130. `POB_DISC`
+#### 162. `POB_DISC`
 
 Población con discapacidad.
 
@@ -3568,7 +4389,7 @@ Población con discapacidad.
 | Rango | 0 – 2,027 |
 
 <a id="pob_3ymas"></a>
-#### 131. `POB_3YMAS`
+#### 163. `POB_3YMAS`
 
 Población de 3 años y más.
 
@@ -3591,7 +4412,7 @@ Población de 3 años y más.
 | Rango | 0 – 40,670 |
 
 <a id="pob_hli"></a>
-#### 132. `POB_HLI`
+#### 164. `POB_HLI`
 
 Población de 3 años y más que habla alguna lengua indígena.
 
@@ -3614,7 +4435,7 @@ Población de 3 años y más que habla alguna lengua indígena.
 | Rango | 0 – 40,047 |
 
 <a id="pob_hli_nhe"></a>
-#### 133. `POB_HLI_NHE`
+#### 165. `POB_HLI_NHE`
 
 Población de 3 años y más que habla lengua indígena y no habla español.
 
@@ -3637,7 +4458,7 @@ Población de 3 años y más que habla lengua indígena y no habla español.
 | Rango | 0 – 19,724 |
 
 <a id="pob_sin_salud"></a>
-#### 134. `POB_SIN_SALUD`
+#### 166. `POB_SIN_SALUD`
 
 Población sin afiliación a servicios de salud.
 
@@ -3660,7 +4481,7 @@ Población sin afiliación a servicios de salud.
 | Rango | 0 – 12,520 |
 
 <a id="pob_15ymas"></a>
-#### 135. `POB_15YMAS`
+#### 167. `POB_15YMAS`
 
 Población de 15 años y más.
 
@@ -3683,7 +4504,7 @@ Población de 15 años y más.
 | Rango | 0 – 26,914 |
 
 <a id="pob_15ymas_analf"></a>
-#### 136. `POB_15YMAS_ANALF`
+#### 168. `POB_15YMAS_ANALF`
 
 Población de 15 años y más analfabeta.
 
@@ -3706,7 +4527,7 @@ Población de 15 años y más analfabeta.
 | Rango | 0 – 8,748 |
 
 <a id="pob_15ymas_sin_esc"></a>
-#### 137. `POB_15YMAS_SIN_ESC`
+#### 169. `POB_15YMAS_SIN_ESC`
 
 Población de 15 años y más sin escolaridad (o solo preescolar).
 
@@ -3729,7 +4550,7 @@ Población de 15 años y más sin escolaridad (o solo preescolar).
 | Rango | 0 – 8,377 |
 
 <a id="pob_15ymas_prim_inc"></a>
-#### 138. `POB_15YMAS_PRIM_INC`
+#### 170. `POB_15YMAS_PRIM_INC`
 
 Población de 15 años y más con primaria incompleta.
 
@@ -3752,7 +4573,7 @@ Población de 15 años y más con primaria incompleta.
 | Rango | 0 – 4,023 |
 
 <a id="pob_15ymas_prim_com"></a>
-#### 139. `POB_15YMAS_PRIM_COM`
+#### 171. `POB_15YMAS_PRIM_COM`
 
 Población de 15 años y más con primaria completa (como máxima escolaridad).
 
@@ -3775,7 +4596,7 @@ Población de 15 años y más con primaria completa (como máxima escolaridad).
 | Rango | 0 – 12,855 |
 
 <a id="pob_15ymas_sec_inc"></a>
-#### 140. `POB_15YMAS_SEC_INC`
+#### 172. `POB_15YMAS_SEC_INC`
 
 Población de 15 años y más con secundaria incompleta.
 
@@ -3798,7 +4619,7 @@ Población de 15 años y más con secundaria incompleta.
 | Rango | 0 – 1,477 |
 
 <a id="pob_6a11"></a>
-#### 141. `POB_6A11`
+#### 173. `POB_6A11`
 
 Población de 6 a 11 años.
 
@@ -3821,7 +4642,7 @@ Población de 6 a 11 años.
 | Rango | 0 – 7,164 |
 
 <a id="pob_12a14"></a>
-#### 142. `POB_12A14`
+#### 174. `POB_12A14`
 
 Población de 12 a 14 años.
 
@@ -3844,7 +4665,7 @@ Población de 12 a 14 años.
 | Rango | 0 – 3,241 |
 
 <a id="pob_6a11_noasis"></a>
-#### 143. `POB_6A11_NOASIS`
+#### 175. `POB_6A11_NOASIS`
 
 Población de 6 a 11 años que no asiste a la escuela.
 
@@ -3867,7 +4688,7 @@ Población de 6 a 11 años que no asiste a la escuela.
 | Rango | 0 – 591 |
 
 <a id="pob_12a14_noasis"></a>
-#### 144. `POB_12A14_NOASIS`
+#### 176. `POB_12A14_NOASIS`
 
 Población de 12 a 14 años que no asiste a la escuela.
 
@@ -3890,7 +4711,7 @@ Población de 12 a 14 años que no asiste a la escuela.
 | Rango | 0 – 1,578 |
 
 <a id="pob_15a17"></a>
-#### 145. `POB_15A17`
+#### 177. `POB_15A17`
 
 Población de 15 a 17 años.
 
@@ -3913,7 +4734,7 @@ Población de 15 a 17 años.
 | Rango | 0 – 3,030 |
 
 <a id="pob_18a24"></a>
-#### 146. `POB_18A24`
+#### 178. `POB_18A24`
 
 Población de 18 a 24 años.
 
@@ -3936,7 +4757,7 @@ Población de 18 a 24 años.
 | Rango | 0 – 5,695 |
 
 <a id="pob_15a17_asis"></a>
-#### 147. `POB_15A17_ASIS`
+#### 179. `POB_15A17_ASIS`
 
 Población de 15 a 17 años que asiste a la escuela.
 
@@ -3959,7 +4780,7 @@ Población de 15 a 17 años que asiste a la escuela.
 | Rango | 0 – 1,865 |
 
 <a id="pob_18a24_asis"></a>
-#### 148. `POB_18A24_ASIS`
+#### 180. `POB_18A24_ASIS`
 
 Población de 18 a 24 años que asiste a la escuela.
 
@@ -3982,7 +4803,7 @@ Población de 18 a 24 años que asiste a la escuela.
 | Rango | 0 – 1,924 |
 
 <a id="pob_pea"></a>
-#### 149. `POB_PEA`
+#### 181. `POB_PEA`
 
 Población económicamente activa de 12 años y más.
 
@@ -4005,7 +4826,7 @@ Población económicamente activa de 12 años y más.
 | Rango | 0 – 17,516 |
 
 <a id="pob_pea_f"></a>
-#### 150. `POB_PEA_F`
+#### 182. `POB_PEA_F`
 
 Mujeres de 12 años y más económicamente activas.
 
@@ -4028,7 +4849,7 @@ Mujeres de 12 años y más económicamente activas.
 | Rango | 0 – 7,228 |
 
 <a id="pob_inac"></a>
-#### 151. `POB_INAC`
+#### 183. `POB_INAC`
 
 Población de 12 años y más no económicamente activa.
 
@@ -4051,7 +4872,7 @@ Población de 12 años y más no económicamente activa.
 | Rango | 0 – 16,310 |
 
 <a id="pob_inac_f"></a>
-#### 152. `POB_INAC_F`
+#### 184. `POB_INAC_F`
 
 Mujeres de 12 años y más no económicamente activas.
 
@@ -4074,7 +4895,7 @@ Mujeres de 12 años y más no económicamente activas.
 | Rango | 0 – 12,961 |
 
 <a id="pob_desocup"></a>
-#### 153. `POB_DESOCUP`
+#### 185. `POB_DESOCUP`
 
 Población de 12 años y más desocupada.
 
@@ -4097,7 +4918,7 @@ Población de 12 años y más desocupada.
 | Rango | 0 – 697 |
 
 <a id="hogares"></a>
-#### 154. `HOGARES`
+#### 186. `HOGARES`
 
 Total de hogares censales.
 
@@ -4121,7 +4942,7 @@ Total de hogares censales.
 | Notas | El censo considera un hogar por vivienda particular. |
 
 <a id="hogares_jefa"></a>
-#### 155. `HOGARES_JEFA`
+#### 187. `HOGARES_JEFA`
 
 Hogares censales con persona de referencia mujer.
 
@@ -4144,7 +4965,7 @@ Hogares censales con persona de referencia mujer.
 | Rango | 0 – 3,134 |
 
 <a id="viv_ocupantes"></a>
-#### 156. `VIV_OCUPANTES`
+#### 188. `VIV_OCUPANTES`
 
 Ocupantes en viviendas particulares habitadas.
 
@@ -4167,7 +4988,7 @@ Ocupantes en viviendas particulares habitadas.
 | Rango | 0 – 44,154 |
 
 <a id="viv_sin_drenaje"></a>
-#### 157. `VIV_SIN_DRENAJE`
+#### 189. `VIV_SIN_DRENAJE`
 
 Viviendas que no disponen de drenaje.
 
@@ -4191,7 +5012,7 @@ Viviendas que no disponen de drenaje.
 | Notas | Denominador para reagregar los porcentajes de vivienda: VIV_CARACT. |
 
 <a id="viv_sin_electricidad"></a>
-#### 158. `VIV_SIN_ELECTRICIDAD`
+#### 190. `VIV_SIN_ELECTRICIDAD`
 
 Viviendas que no disponen de energía eléctrica.
 
@@ -4214,7 +5035,7 @@ Viviendas que no disponen de energía eléctrica.
 | Rango | 0 – 1,877 |
 
 <a id="viv_sin_agua"></a>
-#### 159. `VIV_SIN_AGUA`
+#### 191. `VIV_SIN_AGUA`
 
 Viviendas sin agua entubada en el ámbito de la vivienda.
 
@@ -4237,7 +5058,7 @@ Viviendas sin agua entubada en el ámbito de la vivienda.
 | Rango | 0 – 3,068 |
 
 <a id="viv_piso_tierra"></a>
-#### 160. `VIV_PISO_TIERRA`
+#### 192. `VIV_PISO_TIERRA`
 
 Viviendas con piso de tierra.
 
@@ -4260,7 +5081,7 @@ Viviendas con piso de tierra.
 | Rango | 0 – 5,095 |
 
 <a id="viv_1cuarto"></a>
-#### 161. `VIV_1CUARTO`
+#### 193. `VIV_1CUARTO`
 
 Viviendas con un solo cuarto.
 
@@ -4283,7 +5104,7 @@ Viviendas con un solo cuarto.
 | Rango | 0 – 2,454 |
 
 <a id="viv_excusado"></a>
-#### 162. `VIV_EXCUSADO`
+#### 194. `VIV_EXCUSADO`
 
 Viviendas que disponen de excusado o sanitario.
 
@@ -4306,7 +5127,7 @@ Viviendas que disponen de excusado o sanitario.
 | Rango | 0 – 9,079 |
 
 <a id="viv_letrina"></a>
-#### 163. `VIV_LETRINA`
+#### 195. `VIV_LETRINA`
 
 Viviendas que disponen de letrina (pozo u hoyo).
 
@@ -4329,7 +5150,7 @@ Viviendas que disponen de letrina (pozo u hoyo).
 | Rango | 0 – 6,397 |
 
 <a id="viv_tinaco"></a>
-#### 164. `VIV_TINACO`
+#### 196. `VIV_TINACO`
 
 Viviendas que disponen de tinaco.
 
@@ -4352,7 +5173,7 @@ Viviendas que disponen de tinaco.
 | Rango | 0 – 6,969 |
 
 <a id="viv_cisterna"></a>
-#### 165. `VIV_CISTERNA`
+#### 197. `VIV_CISTERNA`
 
 Viviendas que disponen de cisterna o aljibe.
 
@@ -4375,7 +5196,7 @@ Viviendas que disponen de cisterna o aljibe.
 | Rango | 0 – 7,317 |
 
 <a id="viv_refri"></a>
-#### 166. `VIV_REFRI`
+#### 198. `VIV_REFRI`
 
 Viviendas que disponen de refrigerador.
 
@@ -4398,7 +5219,7 @@ Viviendas que disponen de refrigerador.
 | Rango | 0 – 8,813 |
 
 <a id="viv_lavadora"></a>
-#### 167. `VIV_LAVADORA`
+#### 199. `VIV_LAVADORA`
 
 Viviendas que disponen de lavadora.
 
@@ -4421,7 +5242,7 @@ Viviendas que disponen de lavadora.
 | Rango | 0 – 8,242 |
 
 <a id="viv_auto"></a>
-#### 168. `VIV_AUTO`
+#### 200. `VIV_AUTO`
 
 Viviendas que disponen de automóvil o camioneta.
 
@@ -4444,7 +5265,7 @@ Viviendas que disponen de automóvil o camioneta.
 | Rango | 0 – 6,072 |
 
 <a id="viv_radio"></a>
-#### 169. `VIV_RADIO`
+#### 201. `VIV_RADIO`
 
 Viviendas que disponen de radio.
 
@@ -4467,7 +5288,7 @@ Viviendas que disponen de radio.
 | Rango | 0 – 6,684 |
 
 <a id="viv_telefono"></a>
-#### 170. `VIV_TELEFONO`
+#### 202. `VIV_TELEFONO`
 
 Viviendas que disponen de línea telefónica fija.
 
@@ -4490,7 +5311,7 @@ Viviendas que disponen de línea telefónica fija.
 | Rango | 0 – 6,196 |
 
 <a id="viv_celular"></a>
-#### 171. `VIV_CELULAR`
+#### 203. `VIV_CELULAR`
 
 Viviendas que disponen de teléfono celular.
 
@@ -4513,7 +5334,7 @@ Viviendas que disponen de teléfono celular.
 | Rango | 0 – 8,715 |
 
 <a id="viv_internet"></a>
-#### 172. `VIV_INTERNET`
+#### 204. `VIV_INTERNET`
 
 Viviendas que disponen de internet.
 
@@ -4536,7 +5357,7 @@ Viviendas que disponen de internet.
 | Rango | 0 – 7,512 |
 
 <a id="viv_compu"></a>
-#### 173. `VIV_COMPU`
+#### 205. `VIV_COMPU`
 
 Viviendas que disponen de computadora, laptop o tablet.
 
@@ -4559,7 +5380,7 @@ Viviendas que disponen de computadora, laptop o tablet.
 | Rango | 0 – 6,919 |
 
 <a id="viv_sin_radio_tv"></a>
-#### 174. `VIV_SIN_RADIO_TV`
+#### 206. `VIV_SIN_RADIO_TV`
 
 Viviendas sin radio ni televisor.
 
@@ -4582,7 +5403,7 @@ Viviendas sin radio ni televisor.
 | Rango | 0 – 5,191 |
 
 <a id="viv_sin_tel_cel"></a>
-#### 175. `VIV_SIN_TEL_CEL`
+#### 207. `VIV_SIN_TEL_CEL`
 
 Viviendas sin línea telefónica fija ni teléfono celular.
 
@@ -4605,7 +5426,7 @@ Viviendas sin línea telefónica fija ni teléfono celular.
 | Rango | 0 – 6,762 |
 
 <a id="viv_sin_tic"></a>
-#### 176. `VIV_SIN_TIC`
+#### 208. `VIV_SIN_TIC`
 
 Viviendas sin tecnologías de la información y la comunicación.
 
@@ -4628,7 +5449,7 @@ Viviendas sin tecnologías de la información y la comunicación.
 | Rango | 0 – 4,695 |
 
 <a id="viv_sin_bienes"></a>
-#### 177. `VIV_SIN_BIENES`
+#### 209. `VIV_SIN_BIENES`
 
 Viviendas sin ningún bien.
 
@@ -4651,7 +5472,7 @@ Viviendas sin ningún bien.
 | Rango | 0 – 4,215 |
 
 <a id="year_geometry"></a>
-#### 178. `YEAR_GEOMETRY`
+#### 210. `YEAR_GEOMETRY`
 
 Año de referencia de la geometría.
 
@@ -4674,7 +5495,7 @@ Año de referencia de la geometría.
 | Rango | 2,020 – 2,020 |
 
 <a id="year_census"></a>
-#### 179. `YEAR_CENSUS`
+#### 211. `YEAR_CENSUS`
 
 Año de referencia del censo.
 
@@ -4697,7 +5518,7 @@ Año de referencia del censo.
 | Rango | 2,020 – 2,020 |
 
 <a id="year_coneval"></a>
-#### 180. `YEAR_CONEVAL`
+#### 212. `YEAR_CONEVAL`
 
 Año de referencia del GRS de CONEVAL.
 
@@ -4720,7 +5541,7 @@ Año de referencia del GRS de CONEVAL.
 | Rango | 2,020 – 2,020 |
 
 <a id="year_denue"></a>
-#### 181. `YEAR_DENUE`
+#### 213. `YEAR_DENUE`
 
 Versión del DENUE.
 
@@ -4742,7 +5563,7 @@ Versión del DENUE.
 | Notas | Se escribe a mano en 00_config.R: actualizarlo si se vuelve a descargar el DENUE. |
 
 <a id="year_hidro"></a>
-#### 182. `YEAR_HIDRO`
+#### 214. `YEAR_HIDRO`
 
 Año de referencia de la capa de cuerpos de agua.
 
@@ -4766,7 +5587,7 @@ Año de referencia de la capa de cuerpos de agua.
 | Notas | Continuo topográfico 1:50,000 serie III, levantamiento 2013–2018. |
 
 <a id="year_usv"></a>
-#### 183. `YEAR_USV`
+#### 215. `YEAR_USV`
 
 Año de referencia de la capa de uso de suelo y vegetación.
 
@@ -4790,7 +5611,7 @@ Año de referencia de la capa de uso de suelo y vegetación.
 | Notas | Serie VII, publicada en 2021 con imágenes de año base 2018. |
 
 <a id="year_clues"></a>
-#### 184. `YEAR_CLUES`
+#### 216. `YEAR_CLUES`
 
 Corte del catálogo CLUES de establecimientos de salud.
 
@@ -4812,7 +5633,7 @@ Corte del catálogo CLUES de establecimientos de salud.
 | Notas | Se escribe a mano en 00_config.R junto con URL_CLUES y CLUES_FILE: actualizar los tres si se descarga otro corte. |
 
 <a id="year_cem"></a>
-#### 185. `YEAR_CEM`
+#### 217. `YEAR_CEM`
 
 Año de publicación del Continuo de Elevaciones Mexicano 4.0.
 
@@ -4836,7 +5657,7 @@ Año de publicación del Continuo de Elevaciones Mexicano 4.0.
 | Notas | Imágenes de radar ALOS PALSAR de 2006–2011. |
 
 <a id="year_red_hidro"></a>
-#### 186. `YEAR_RED_HIDRO`
+#### 218. `YEAR_RED_HIDRO`
 
 Año de la edición 2.0 de la Red Hidrográfica 1:50 000.
 
@@ -4860,7 +5681,7 @@ Año de la edición 2.0 de la Red Hidrográfica 1:50 000.
 | Notas | Construida sobre cartas topográficas 1:50 000 de 1995–2002 según la subcuenca. |
 
 <a id="year_costa"></a>
-#### 187. `YEAR_COSTA`
+#### 219. `YEAR_COSTA`
 
 Año de la capa de línea de costa de CONABIO.
 
@@ -4884,7 +5705,7 @@ Año de la capa de línea de costa de CONABIO.
 | Notas | Imágenes RapidEye de 2011–2014. |
 
 <a id="year_cenapred"></a>
-#### 188. `YEAR_CENAPRED`
+#### 220. `YEAR_CENAPRED`
 
 Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos.
 
@@ -4908,7 +5729,7 @@ Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Ries
 | Notas | Los indicadores sociodemográficos con los que CENAPRED construyó estos grados vienen del censo 2020; 2023 es el corte de publicación. |
 
 <a id="year_icmm"></a>
-#### 189. `YEAR_ICMM`
+#### 221. `YEAR_ICMM`
 
 Edición del Ingreso Corriente para los Municipios de México.
 
@@ -4931,68 +5752,30 @@ Edición del Ingreso Corriente para los Municipios de México.
 | Rango | 2,022 – 2,022 |
 | Notas | Levantamiento de la ENIGH 2022: 21 de agosto a 28 de noviembre de 2022. Publicado por el INEGI el 2024-11-14. |
 
-<a id="tabla-ageb-integrada"></a>
-## Tabla ageb_integrada
+<a id="geom"></a>
+#### 222. `geom`
 
-`data/processed/base_ageb_MX.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_MX.csv`. Una fila por AGEB con todas las columnas de ageb_indicadores más las que se listan aquí; `ORDEN` es su posición en esa tabla. El GeoPackage también trae, como capas, las demás tablas de este diccionario en versión nacional.
+Polígono o multipolígono de la AGEB.
 
-| # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
-|---|---|---|---|---|---|---|---|
-| 91 | `DEN_SCIAN_11` | Unidades económicas del sector SCIAN 11: Agricultura, cría y explotación de animales, aprovechamiento forestal, pesca y caza. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 11. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 92 | `DEN_SCIAN_21` | Unidades económicas del sector SCIAN 21: Minería. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 21. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 93 | `DEN_SCIAN_22` | Unidades económicas del sector SCIAN 22: Generación y distribución de energía eléctrica, suministro de agua y de gas por ductos. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 22. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 94 | `DEN_SCIAN_23` | Unidades económicas del sector SCIAN 23: Construcción. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 23. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 95 | `DEN_SCIAN_31_33` | Unidades económicas del sector SCIAN 31-33: Industrias manufactureras. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 31 o 33. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 96 | `DEN_SCIAN_43` | Unidades económicas del sector SCIAN 43: Comercio al por mayor. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 43. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 97 | `DEN_SCIAN_46` | Unidades económicas del sector SCIAN 46: Comercio al por menor. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 46. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 98 | `DEN_SCIAN_48_49` | Unidades económicas del sector SCIAN 48-49: Transportes, correos y almacenamiento. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 48 o 49. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 99 | `DEN_SCIAN_51` | Unidades económicas del sector SCIAN 51: Información en medios masivos. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 51. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 100 | `DEN_SCIAN_52` | Unidades económicas del sector SCIAN 52: Servicios financieros y de seguros. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 52. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 101 | `DEN_SCIAN_53` | Unidades económicas del sector SCIAN 53: Servicios inmobiliarios y de alquiler de bienes muebles e intangibles. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 53. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 102 | `DEN_SCIAN_54` | Unidades económicas del sector SCIAN 54: Servicios profesionales, científicos y técnicos. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 54. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 103 | `DEN_SCIAN_55` | Unidades económicas del sector SCIAN 55: Corporativos. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 55. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 104 | `DEN_SCIAN_56` | Unidades económicas del sector SCIAN 56: Servicios de apoyo a los negocios, manejo de residuos y remediación. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 56. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 105 | `DEN_SCIAN_61` | Unidades económicas del sector SCIAN 61: Servicios educativos. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 61. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 106 | `DEN_SCIAN_62` | Unidades económicas del sector SCIAN 62: Servicios de salud y de asistencia social. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 62. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 107 | `DEN_SCIAN_71` | Unidades económicas del sector SCIAN 71: Servicios de esparcimiento culturales y deportivos, y otros servicios recreativos. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 71. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 108 | `DEN_SCIAN_72` | Unidades económicas del sector SCIAN 72: Servicios de alojamiento temporal y de preparación de alimentos y bebidas. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 72. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 109 | `DEN_SCIAN_81` | Unidades económicas del sector SCIAN 81: Otros servicios excepto actividades gubernamentales. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 81. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 110 | `DEN_SCIAN_93` | Unidades económicas del sector SCIAN 93: Actividades legislativas, gubernamentales y de impartición de justicia. | entero | establecimientos | DENUE | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 93. | Los 20 DEN_SCIAN_* suman exactamente DENUE_TOT. Formato ancho de denue_ageb_sector. |
-| 117 | `USV_PCT_URBANO` | Porcentaje de la AGEB cubierto por asentamientos humanos y zona urbana. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | ASENTAMIENTOS HUMANOS, ZONA URBANA. Igual a PCT_URB salvo redondeo. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 118 | `USV_PCT_AGUA` | Porcentaje de la AGEB cubierto por cuerpos de agua y acuicultura. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | CUERPO DE AGUA, ACUÍCOLA. Complementa WATER_PCT (INEGI hidrología 1:50,000), que es más fino. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 119 | `USV_PCT_SECUNDARIA` | Porcentaje de la AGEB cubierto por vegetación secundaria (arbórea, arbustiva o herbácea) de cualquier formación. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | Todas las clases 'VEGETACIÓN SECUNDARIA ...'. Se separa de su formación original porque indica degradación. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 120 | `USV_PCT_AGRICOLA` | Porcentaje de la AGEB cubierto por agricultura de riego, temporal o humedad. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | Todas las clases 'AGRICULTURA ...'. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 121 | `USV_PCT_PASTIZAL_INDUCIDO` | Porcentaje de la AGEB cubierto por pastizal cultivado o inducido (uso pecuario). | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | PASTIZAL CULTIVADO, PASTIZAL INDUCIDO. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 122 | `USV_PCT_BOSQUE` | Porcentaje de la AGEB cubierto por bosque primario (coníferas, encino, mesófilo, galería, cultivado). | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | Clases 'BOSQUE ...', incluidos bosque cultivado e inducido. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 123 | `USV_PCT_SELVA` | Porcentaje de la AGEB cubierto por selva primaria. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | Clases 'SELVA ...'. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 124 | `USV_PCT_MATORRAL` | Porcentaje de la AGEB cubierto por matorral y vegetación xerófila. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | MATORRAL ..., MEZQUITAL ..., CHAPARRAL, desiertos arenosos, vegetación gipsófila y halófila xerófila. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 125 | `USV_PCT_PASTIZAL` | Porcentaje de la AGEB cubierto por pastizal natural, pradera y sabana. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | PASTIZAL NATURAL, HALÓFILO, GIPSÓFILO; PRADERA DE ALTA MONTAÑA; SABANA, SABANOIDE. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 126 | `USV_PCT_HIDROFILA` | Porcentaje de la AGEB cubierto por vegetación hidrófila (manglar, tular, popal, galería, petén). | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | MANGLAR, TULAR, POPAL, halófila hidrófila, vegetación de galería y de petén. Bosque y selva de galería quedan en BOSQUE y SELVA. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 127 | `USV_PCT_SIN_VEG` | Porcentaje de la AGEB cubierto por áreas sin vegetación aparente o desprovistas de vegetación. | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | SIN VEGETACIÓN APARENTE, DESPROVISTO DE VEGETACIÓN. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-| 128 | `USV_PCT_OTRA` | Porcentaje de la AGEB cubierto por otras formaciones (dunas costeras, palmar). | decimal | % | INEGI_USV7 | min(100, Σ CLASS_PCT de las clases USYV del grupo), según la tabla USV_GROUPS de 14_integrate.R. | VEGETACIÓN DE DUNAS COSTERAS, PALMAR NATURAL, PALMAR INDUCIDO. Los 12 USV_PCT_* suman ≤ 100 (menos si la capa no cubre toda la AGEB). |
-
-<a id="tabla-ageb-geom"></a>
-## Tabla ageb_geom
-
-`data/processed/ageb_geom_{ENT}.gpkg`, capa `ageb`, EPSG:4326. Una fila por AGEB.
-
-| # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
-|---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | Clave única de la AGEB (llave hacia ageb_indicadores). | texto | clave | MG2020 | Igual que en ageb_indicadores. | GeoPackage, capa 'ageb', EPSG:4326. |
-| 2 | `AMBITO` | Ámbito de la AGEB. | categórica |  | MG2020 | Copia de ageb_indicadores. |  |
-| 3 | `CVE_ENT` | Clave de entidad. | texto | clave | MG2020 | Copia de ageb_indicadores. |  |
-| 4 | `CVE_MUN` | Clave de municipio. | texto | clave | MG2020 | Copia de ageb_indicadores. |  |
-| 5 | `NOM_MUN` | Nombre del municipio. | texto |  | MG2020 | Copia de ageb_indicadores. |  |
-| 6 | `NOM_LOC` | Nombre de la localidad. | texto |  | MG2020 / CPV2020_ITER | Copia de ageb_indicadores. |  |
-| 7 | `AREA_KM2` | Superficie de la AGEB. | decimal | km² | MG2020 | Copia de ageb_indicadores. |  |
-| 8 | `POB_TOTAL` | Población total. | decimal (conteo) | personas | CPV2020_AGEB / CPV2020_ITER | Copia de ageb_indicadores. |  |
-| 9 | `GRS_GRADO` | Grado de Rezago Social. | categórica ordinal |  | CONEVAL_GRS2020 | Copia de ageb_indicadores. |  |
-| 10 | `geom` | Polígono o multipolígono de la AGEB. | geometría | EPSG:4326 | MG2020 | Geometría del MG tras st_make_valid(), reproyectada a EPSG:4326. | Para calcular áreas o distancias reproyecta a EPSG:6372. |
+| Campo | Valor |
+|---|---|
+| Bloque | Geometría |
+| Tipo | geometría |
+| Unidad | EPSG:4326 |
+| Ámbito | Ambos |
+| Fuente | MG2020 |
+| Variable en la fuente | `geometría` |
+| Derivación | Geometría del MG tras st_make_valid(), reproyectada a EPSG:4326. |
+| Valores vacíos | Nunca |
+| Dimensión sugerida | Identificación |
+| Sentido sugerido | n/a |
+| Script | 14_integrate.R |
+| Notas | Para calcular áreas o distancias reproyecta a EPSG:6372. |
 
 <a id="tabla-denue-establishments"></a>
 ## Tabla denue_establishments
 
-`data/processed/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE.
+`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_establishments`, y `data/processed/detail/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE.
 
 | # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
 |---|---|---|---|---|---|---|---|
@@ -5003,11 +5786,12 @@ Edición del Ingreso Corriente para los Municipios de México.
 | 5 | `PER_OCU_STRATUM` | Estrato de personal ocupado. | categórica |  | DENUE | Texto tal cual (p. ej. '0 a 5 personas'). | Es un rango, no un número: nunca sumarlo. |
 | 6 | `LON` | Longitud del establecimiento. | decimal | grados decimales (EPSG:4326) | DENUE | Se anula si cae fuera del rectángulo envolvente de la entidad (+0.05°). | El establecimiento se sigue contando: la asignación usa la clave, no la coordenada. |
 | 7 | `LAT` | Latitud del establecimiento. | decimal | grados decimales (EPSG:4326) | DENUE | Igual que LON. |  |
+| 8 | `geom` | Punto del establecimiento. | geometría | EPSG:4326 | DENUE | Punto construido con LON y LAT; vacío cuando el DENUE no trae coordenada usable. | Para calcular áreas o distancias reproyecta a EPSG:6372. |
 
 <a id="tabla-denue-ageb-sector"></a>
 ## Tabla denue_ageb_sector
 
-`data/processed/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN.
+`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_ageb_sector`, y `data/processed/detail/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN.
 
 | # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
 |---|---|---|---|---|---|---|---|
@@ -5018,41 +5802,13 @@ Edición del Ingreso Corriente para los Municipios de México.
 <a id="tabla-ageb-landuse-detail"></a>
 ## Tabla ageb_landuse_detail
 
-`data/processed/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo.
+`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_landuse_detail`, y `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo.
 
 | # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
 |---|---|---|---|---|---|---|---|
 | 1 | `ID_AGEB` | Clave de la AGEB. | texto | clave | MG2020 |  | Formato largo: una fila por AGEB × clase de uso de suelo presente. |
 | 2 | `USO_CLASE` | Clase de uso de suelo y vegetación. | categórica |  | INEGI_USV7 |  |  |
 | 3 | `CLASS_AREA_KM2` | Superficie de la clase dentro de la AGEB. | decimal | km² | PIPELINE | Área (EPSG:6372) de la intersección AGEB ∩ USV, disuelta por AGEB y clase. | Disolver antes de medir evita contar dos veces polígonos traslapados (D-28). |
-| 4 | `AREA_KM2` | Superficie total de la AGEB. | decimal | km² | MG2020 | Copia de ageb_indicadores. |  |
+| 4 | `AREA_KM2` | Superficie total de la AGEB. | decimal | km² | MG2020 | Copia de ageb_integrada. |  |
 | 5 | `CLASS_PCT` | Porcentaje de la AGEB cubierto por la clase. | decimal | % | PIPELINE | min(100, 100 × CLASS_AREA_KM2 / AREA_KM2). | Las clases de una AGEB pueden sumar menos de 100 si la capa USV no la cubre completa. |
-
-<a id="tabla-quality-control-report"></a>
-## Tabla quality_control_report
-
-`data/processed/quality_control_report_{ENT}.csv` y `_MX.csv`. Una fila por control.
-
-| # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
-|---|---|---|---|---|---|---|---|
-| 1 | `CVE_ENT` | Clave de entidad. | texto | clave | PIPELINE |  | Una fila por control (29 por entidad). La versión _MX concatena todas. |
-| 2 | `CHECK` | Nombre del control. | texto |  | PIPELINE |  | Descritos en docs/DECISIONES.md, sección Controles de calidad. |
-| 3 | `STATUS` | Resultado del control. | categórica |  | PIPELINE | PASS o FAIL. |  |
-| 4 | `DETAIL` | Evidencia numérica del resultado. | texto |  | PIPELINE |  |  |
-
-<a id="tabla-qc-municipal-coverage"></a>
-## Tabla qc_municipal_coverage
-
-`data/processed/qc_municipal_coverage_{ENT}.csv`. Una fila por municipio.
-
-| # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
-|---|---|---|---|---|---|---|---|
-| 1 | `CVE_MUN_FULL` | Clave municipal completa (entidad + municipio). | texto | clave | MG2020 |  | Una fila por municipio. |
-| 2 | `AGEB_AREA` | Suma de la superficie de las AGEB del municipio. | decimal | km² | PIPELINE | Σ AREA_KM2. |  |
-| 3 | `N_AGEB` | Número de AGEB del municipio. | entero | AGEB | PIPELINE |  |  |
-| 4 | `NOM_MUN` | Nombre del municipio. | texto |  | MG2020 |  |  |
-| 5 | `MUN_AREA_KM2` | Superficie del polígono municipal del mismo Marco Geoestadístico. | decimal | km² | MG2020 | Área en EPSG:6372. |  |
-| 6 | `DIFF_KM2` | Diferencia de superficie AGEB − municipio. | decimal | km² | PIPELINE | AGEB_AREA − MUN_AREA_KM2. |  |
-| 7 | `DIFF_PCT` | Diferencia relativa de superficie. | decimal | % | PIPELINE | 100 × DIFF_KM2 / MUN_AREA_KM2. |  |
-| 8 | `KIND` | Tipo de discrepancia, solo si rebasa ambas tolerancias. | categórica |  | PIPELINE | 'gap' (hueco real) o 'attribution' (franja que otro municipio compensa). | Ver D-08. |
 

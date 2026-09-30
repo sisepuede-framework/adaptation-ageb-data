@@ -41,7 +41,6 @@ process_entity <- function(ent) {
   run_block("income",       interim_path("income", ent),                build_income,       ent)
   build_complete(ent)
   build_qc(ent)
-  export_entity(ent)
   invisible(TRUE)
 }
 
@@ -66,13 +65,13 @@ for (i in seq_along(ents)) {
 }
 
 ok <- results$CVE_ENT[results$STATUS == "OK"]
-if (length(ok) > 1) export_national(ok)
 
-# One GeoPackage with every table, rebuilt from all entities on disk (not just
-# this run's), so a partial run refreshes its entities inside the national file.
-if (length(ok) > 0) {
-  tryCatch(build_integrated(), error = function(e) {
-    log_msg("!! integrated database failed: ", conditionMessage(e))
+# One GeoPackage per entity with every table of the pipeline. Kept out of
+# process_entity so a failure to assemble the database does not mark an entity
+# whose blocks all ran as failed.
+for (ent in ok) {
+  tryCatch(build_integrated(ent), error = function(e) {
+    log_msg("!! integrated database ", ent, " failed: ", conditionMessage(e))
   })
 }
 
@@ -80,11 +79,11 @@ write_csv(results, file.path(DIR_LOGS, sprintf(
   "run_%s.csv", format(started, "%Y%m%d_%H%M%S"))), na = "")
 
 # Consolidated QC across everything that succeeded.
-qc_paths <- file.path(DIR_PROCESSED, sprintf("quality_control_report_%s.csv", ok))
+qc_paths <- file.path(DIR_QC, sprintf("quality_control_report_%s.csv", ok))
 qc_paths <- qc_paths[file.exists(qc_paths)]
 if (length(qc_paths) > 0) {
   qc_all <- map_dfr(qc_paths, read_csv, col_types = cols(.default = col_character()))
-  write_csv(qc_all, file.path(DIR_PROCESSED, "quality_control_report_MX.csv"), na = "")
+  write_csv(qc_all, file.path(DIR_QC, "quality_control_report_MX.csv"), na = "")
   n_fail <- sum(qc_all$STATUS == "FAIL")
   log_step("QC: ", nrow(qc_all) - n_fail, " passed, ", n_fail, " failed")
   if (n_fail > 0) {
