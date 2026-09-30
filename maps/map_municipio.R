@@ -17,15 +17,18 @@ args <- commandArgs(trailingOnly = TRUE)
 ent <- if (length(args) >= 1) args[[1]] else "20"
 mun <- if (length(args) >= 2) args[[2]] else "057"
 
-geom <- st_read(file.path(DIR_PROCESSED, sprintf("ageb_geom_%s.gpkg", ent)), quiet = TRUE)
-tab  <- read_csv(file.path(DIR_PROCESSED, sprintf("ageb_indicadores_%s.csv", ent)),
-                 show_col_types = FALSE,
+# The polygon and the indicators come from the entity's database; CVE_MUN and
+# the other identifiers from ageb_ids.csv, which is national and the only copy.
+# Being national, it has to be cut by CVE_ENT as well: CVE_MUN is three digits
+# and unique only inside an entity, so 057 alone matches 32 municipalities.
+ids <- read_csv(file.path(DIR_PROCESSED, "ageb_ids.csv"), show_col_types = FALSE,
                  col_types = cols(ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
-                                  CVE_LOC = "c", CVE_AGEB = "c"))
+                                  CVE_LOC = "c", CVE_AGEB = "c")) |>
+  filter(CVE_ENT == ent, CVE_MUN == mun)
 
-sel <- geom |>
-  select(ID_AGEB) |>
-  inner_join(tab |> filter(CVE_MUN == mun), by = "ID_AGEB") |>
+sel <- st_read(file.path(DIR_PROCESSED, sprintf("base_ageb_%s.gpkg", ent)),
+               layer = "ageb_integrada", quiet = TRUE) |>
+  inner_join(ids, by = "ID_AGEB") |>
   st_transform(CRS_ANALYSIS)
 
 # Municipal outline straight from the marco, i.e. the reference the coverage QC

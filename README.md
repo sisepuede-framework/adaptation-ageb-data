@@ -138,33 +138,94 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 | `R/12_export.R` | Esquema publicado de indicadores y contrato del diccionario | — |
 | `R/13_hazard.R` | Grados municipales de peligro de CENAPRED, vía SEDATU | `hazard`, `hazard_national` |
 | `R/13b_income.R` | Ingreso corriente trimestral por hogar del municipio (ICMM 2022 del INEGI) | `income`, `income_national` |
-| `R/14_integrate.R` | Integra todas las tablas de una entidad en una sola base | `data/processed/base_ageb_{ENT}.gpkg` |
+| `R/14_integrate.R` | Integra todas las tablas de una entidad en una sola base y publica la tabla de IDs | `data/processed/base_ageb_{ENT}.gpkg`, `ageb_ids.csv` |
 | `maps/map_municipio.R` | Mapa de control visual de la malla de un municipio | `maps/*.png` |
 
 ## Salidas (`data/processed/`)
 
 | Archivo | Contenido |
 |---|---|
-| `base_ageb_{ENT}.gpkg` | **Base integrada** de la entidad: todas las tablas en un solo GeoPackage, 221 columnas (ver abajo) |
-| `ageb_integrada_{ENT}.csv` | La capa `ageb_integrada` sin geometría |
+| `base_ageb_{ENT}.gpkg` | **Base integrada** de la entidad: todas las tablas en un solo GeoPackage (ver abajo) |
+| `ageb_ids.csv` | **Tabla de relación**, única y nacional: una fila por AGEB del país con todos sus identificadores |
+| `ageb_integrada_{ENT}.csv` | La capa `ageb_integrada` sin geometría: `ID_AGEB` más 209 indicadores |
 | `detail/{tabla}_{ENT}.csv` | Las tres tablas de detalle, planas, para consulta sin GIS |
 | `qc/quality_control_report_{ENT}.csv`, `qc/_MX.csv` | 33 controles por entidad |
 | `qc/qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
 
-No hay archivos nacionales de datos: cada entidad se publica por separado. La
-geometría y las tablas de detalle (establecimientos del DENUE, AGEB × sector,
-AGEB × clase de uso de suelo) viven como capas de `base_ageb_{ENT}.gpkg`, no
-como archivos aparte, igual que las 189 columnas de indicadores, que son las
-primeras de la capa `ageb_integrada`.
+Salvo `ageb_ids.csv`, cada entidad se publica por separado. La geometría y las
+tablas de detalle (establecimientos del DENUE, AGEB × sector, AGEB × clase de
+uso de suelo) viven como capas de `base_ageb_{ENT}.gpkg`, no como archivos
+aparte.
 
-Lee el CSV **siempre** con las claves como texto, o se pierden los ceros a la
-izquierda:
+El modelo es el de la [ENIGH](https://www.inegi.org.mx/programas/enigh/nc/2022/):
+una tabla de identificadores y todo lo demás colgando de su llave. Donde la
+ENIGH tiene `VIVIENDAS`, `HOGARES` y `POBLACION`, aquí hay una sola tabla,
+`ageb_ids`, porque la AGEB es un único nivel.
+
+`ID_AGEB` es la única columna de identificación que llevan las tablas de datos.
+Quién es la AGEB — entidad, municipio, localidad, ámbito, superficie y punto
+interior — se dice **una sola vez en todo el proyecto**, en `ageb_ids.csv`, y se
+recupera uniendo por esa clave. Ese archivo es nacional y no se copia dentro de
+los GeoPackages: 32 copias serían 32 respuestas a una pregunta que tiene una, y
+lo primero que se desactualiza al corregir un nombre.
+
+A cambio, `base_ageb_{ENT}.gpkg` por sí solo mapea cualquier indicador pero no
+puede etiquetarlo con el municipio; el diccionario que trae dentro dice dónde
+están los nombres.
+
+```mermaid
+erDiagram
+    ageb_ids ||--|| ageb_integrada       : ID_AGEB
+    ageb_ids ||--o{ denue_establishments : ID_AGEB
+    ageb_ids ||--o{ denue_ageb_sector    : ID_AGEB
+    ageb_ids ||--o{ ageb_landuse_detail  : ID_AGEB
+
+    ageb_ids {
+        text     ID_AGEB PK
+        text     AMBITO
+        text     CVE_ENT_NOM_ENT
+        text     CVE_MUN_NOM_MUN
+        text     CVE_LOC_NOM_LOC
+        text     CVE_AGEB
+        decimal  AREA_KM2
+        decimal  CENTROIDE_LON_LAT
+    }
+    ageb_integrada {
+        text     ID_AGEB FK
+        decimal  indicadores_209
+        geometry geom
+    }
+    denue_establishments {
+        text     ID_AGEB FK
+        text     NOM_ESTAB_SCIAN_SECTOR
+        geometry geom
+    }
+    denue_ageb_sector {
+        text     ID_AGEB FK
+        text     SECTOR
+        integer  N_UNITS
+    }
+    ageb_landuse_detail {
+        text     ID_AGEB FK
+        text     USO_CLASE
+        decimal  CLASS_AREA_KM2_PCT
+    }
+```
+
+`||--||` es uno a uno y `||--o{` uno a varios, como la `1` y la `P` del diagrama
+de la ENIGH.
+
+Lee **siempre** las claves como texto, o se pierden los ceros a la izquierda:
 
 ```r
-readr::read_csv("data/processed/ageb_integrada_20.csv",
-                col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
-                                        CVE_MUN = "c", CVE_LOC = "c",
-                                        CVE_AGEB = "c"))
+ids  <- readr::read_csv("data/processed/ageb_ids.csv",
+                        col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
+                                                CVE_MUN = "c", CVE_LOC = "c",
+                                                CVE_AGEB = "c"))
+ageb <- readr::read_csv("data/processed/ageb_integrada_20.csv",
+                        col_types = readr::cols(ID_AGEB = "c"))
+
+dplyr::left_join(ageb, ids, by = "ID_AGEB")
 ```
 
 ## Base integrada
@@ -176,11 +237,11 @@ cliente SQL.
 
 | Capa | Geometría | Contenido |
 |---|---|---|
-| `ageb_integrada` | Polígono | Una fila por AGEB: las 189 columnas de indicadores más 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
+| `ageb_integrada` | Polígono | Una fila por AGEB: `ID_AGEB` más los indicadores, entre ellos 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
 | `denue_establishments` | Punto | Un registro por establecimiento del DENUE |
 | `denue_ageb_sector` | — | AGEB × sector SCIAN, formato largo |
 | `ageb_landuse_detail` | — | AGEB × clase de uso de suelo, formato largo |
-| `diccionario_datos`, `data_dictionary` | — | Los diccionarios de estas capas, para que el archivo se explique solo |
+| `diccionario_datos`, `data_dictionary` | — | Los diccionarios de estas capas y de `ageb_ids`, para que el archivo se explique solo |
 
 El control de calidad no va dentro, ni en el diccionario embebido: es cómo
 verificamos la construcción, no parte de lo que se entrega. Vive aparte, en
@@ -189,20 +250,28 @@ verificamos la construcción, no parte de lo que se entrega. Vive aparte, en
 No hay versión nacional a propósito: las 32 entidades en un solo GeoPackage son
 ~1.4 GB, lento de abrir y de mover, y el trabajo que lee esta base se hace
 entidad por entidad. Para un análisis nacional, lee los 32
-`ageb_integrada_{ENT}.csv` y concaténalos.
+`ageb_integrada_{ENT}.csv` y concaténalos; los identificadores ya vienen juntos
+en `ageb_ids.csv`, que es nacional justamente porque es lo que se une contra
+cualquier tabla cuya única clave es `ID_AGEB`.
 
 Cada entidad se reconstruye solo si alguna de sus propias entradas cambió, así
 que `Rscript run_all.R 20` toca Oaxaca y deja los otros 31 archivos intactos.
 
 ```r
 ageb <- sf::st_read("data/processed/base_ageb_20.gpkg", layer = "ageb_integrada")
+ids  <- readr::read_csv("data/processed/ageb_ids.csv",
+                        col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
+                                                CVE_MUN = "c", CVE_LOC = "c",
+                                                CVE_AGEB = "c"))
+
+dplyr::left_join(ageb, ids, by = "ID_AGEB")
 ```
 
 ## Contenido del CSV
 
 | Bloque | Columnas | Ámbito |
 |---|---|---|
-| Identificación y geometría | `ID_AGEB`, claves y nombres, `AREA_KM2`, punto representativo | Ambos |
+| Identificación y geometría | En `ageb_ids.csv`: `ID_AGEB`, claves y nombres, `AREA_KM2`, punto representativo | Ambos |
 | Población base | `POB_TOTAL`, sexo, `DENS_POB_KM2`, `POB_POR_VIV`, viviendas | Ambos |
 | Confiabilidad | `POB_REPORTADA`, `PCT_POB_REPORTADA`, `N_CELDAS_IMPUTADAS` | Ambos |
 | Sensibilidad | `PCT_POB_0A5`, `PCT_POB_65YMAS`, `PCT_POB_DISC`, `PCT_POB_HLI`, `PCT_POB_HLI_NHE`, `PCT_HOG_JEFA` | Ambos |

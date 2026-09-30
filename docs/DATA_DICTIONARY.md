@@ -51,353 +51,348 @@ Básica*) is INEGI's census tract.
 - `PCT_VIV_SIN_DRENAJE` is not `100 − PCT_DRENAJE`, and it is expected that they do not add up to 100 (D-19).
 
 ```r
-readr::read_csv("data/processed/ageb_integrada_20.csv",
-                col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
-                                        CVE_LOC = "c", CVE_AGEB = "c"))
+ids  <- readr::read_csv("data/processed/ageb_ids.csv",
+                        col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
+                                                CVE_MUN = "c", CVE_LOC = "c",
+                                                CVE_AGEB = "c"))
+ageb <- readr::read_csv("data/processed/ageb_integrada_20.csv",
+                        col_types = readr::cols(ID_AGEB = "c"))
+
+dplyr::left_join(ageb, ids, by = "ID_AGEB")
 ```
 
 ## Tables
 
 | Table | File | Columns |
 |---|---|---|
-| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary. | 222 |
+| [ageb_ids](#tabla-ageb-ids) | `data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `ID_AGEB` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here. | 12 |
+| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary. | 211 |
 | [denue_establishments](#tabla-denue-establishments) | `data/processed/base_ageb_{ENT}.gpkg`, layer `denue_establishments`, and `data/processed/detail/denue_establishments_{ENT}.csv`. One row per DENUE establishment. | 8 |
 | [denue_ageb_sector](#tabla-denue-ageb-sector) | `data/processed/base_ageb_{ENT}.gpkg`, layer `denue_ageb_sector`, and `data/processed/detail/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector. | 3 |
-| [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_landuse_detail`, and `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. One row per AGEB × land use class. | 5 |
+| [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_landuse_detail`, and `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. One row per AGEB × land use class. | 4 |
 
 <a id="tabla-ageb-integrada"></a>
 ## Table ageb_integrada
 
-`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.
+`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.
 
-Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generated on 2026-09-29). Coverage is measured on **inhabited** AGEB, as the % of AGEB with a value and as the % of their population; the median and range are also measured on inhabited AGEB.
+Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generated on 2026-09-30). Coverage is measured on **inhabited** AGEB, as the % of AGEB with a value and as the % of their population; the median and range are also measured on inhabited AGEB.
 
 ### Identification
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | [`ID_AGEB`](#id_ageb) | Unique AGEB key: state (2) + municipality (3) + locality (4) + AGEB (4). | code | Both | `CVEGEO` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 2 | [`AMBITO`](#ambito) | Setting of the AGEB, according to the Marco Geoestadístico layer it comes from. |  | Both | `layer {ENT}a / {ENT}ar` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 3 | [`CVE_ENT`](#cve_ent) | State (entidad federativa) code. | code | Both | `CVE_ENT` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 4 | [`NOM_ENT`](#nom_ent) | State name. |  | Both | `ENTITY_NAMES` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 5 | [`CVE_MUN`](#cve_mun) | Municipality or territorial demarcation code (3 digits, unique only within the state). | code | Both | `CVE_MUN` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 6 | [`NOM_MUN`](#nom_mun) | Municipality name. |  | Both | `NOMGEO (layer {ENT}mun)` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 7 | [`CVE_LOC`](#cve_loc) | Locality code (4 digits). '0000' by convention in rural AGEB. | code | Both | `CVE_LOC` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 8 | [`NOM_LOC`](#nom_loc) | Locality name. |  | Both | `NOMGEO (layer {ENT}l) / NOM_LOC (ITER)` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 9 | [`CVE_AGEB`](#cve_ageb) | AGEB code (4 alphanumeric characters). | code | Both | `CVE_AGEB` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-
-### Geometry
-
-| # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
-|---|---|---|---|---|---|---|---|---|---|
-| 10 | [`AREA_KM2`](#area_km2) | Area of the AGEB. | km² | Both | `geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 0.3529 | n/a |
-| 11 | [`CENTROIDE_LON`](#centroide_lon) | Longitude of a representative point inside the AGEB. | decimal degrees (EPSG:4326) | Both | `geometry` | 100.0 / 100.0 | 100.0 / 100.0 | -100.4 | n/a |
-| 12 | [`CENTROIDE_LAT`](#centroide_lat) | Latitude of a representative point inside the AGEB. | decimal degrees (EPSG:4326) | Both | `geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 20.64 | n/a |
-| 222 | [`geom`](#geom) | Polygon or multipolygon of the AGEB. | EPSG:4326 | Both | `geometry` |  /  |  /  |  | n/a |
+| 1 | [`ID_AGEB`](#id_ageb) | AGEB key. | code | Both |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
 
 ### Base population
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 13 | [`POB_TOTAL`](#pob_total) | Total usually resident population. | persons | Both | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,027 | n/a |
-| 17 | [`POB_HOMBRES`](#pob_hombres) | Male population. | persons | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 565 | n/a |
-| 18 | [`POB_MUJERES`](#pob_mujeres) | Female population. | persons | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 592 | n/a |
-| 19 | [`PCT_HOMBRES`](#pct_hombres) | Share of men. | % | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 48.94 | n/a |
-| 20 | [`PCT_MUJERES`](#pct_mujeres) | Share of women. | % | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 51.06 | n/a |
-| 21 | [`DENS_POB_KM2`](#dens_pob_km2) | Population density. | persons/km² | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2,560 | ± |
-| 22 | [`POB_POR_VIV`](#pob_por_viv) | Persons per inhabited private dwelling. | persons/dwelling | Both |  | 95.5 / 86.6 | 100.0 / 99.9 | 3.55 | + |
+| 2 | [`POB_TOTAL`](#pob_total) | Total usually resident population. | persons | Both | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,027 | n/a |
+| 6 | [`POB_HOMBRES`](#pob_hombres) | Male population. | persons | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 565 | n/a |
+| 7 | [`POB_MUJERES`](#pob_mujeres) | Female population. | persons | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 592 | n/a |
+| 8 | [`PCT_HOMBRES`](#pct_hombres) | Share of men. | % | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 48.94 | n/a |
+| 9 | [`PCT_MUJERES`](#pct_mujeres) | Share of women. | % | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 51.06 | n/a |
+| 10 | [`DENS_POB_KM2`](#dens_pob_km2) | Population density. | persons/km² | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2,560 | ± |
+| 11 | [`POB_POR_VIV`](#pob_por_viv) | Persons per inhabited private dwelling. | persons/dwelling | Both |  | 95.5 / 86.6 | 100.0 / 99.9 | 3.55 | + |
 
 ### Reliability
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 14 | [`POB_REPORTADA`](#pob_reportada) | Population whose characteristics the census does publish. | persons | Both | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,021 | n/a |
-| 15 | [`PCT_POB_REPORTADA`](#pct_pob_reportada) | Share of the AGEB population whose characteristics the census publishes. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 100 | n/a |
-| 16 | [`N_CELDAS_IMPUTADAS`](#n_celdas_imputadas) | Number of census cells in the AGEB imputed as 1.5 because they were suppressed ('*'). | cells | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 3 | [`POB_REPORTADA`](#pob_reportada) | Population whose characteristics the census does publish. | persons | Both | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,021 | n/a |
+| 4 | [`PCT_POB_REPORTADA`](#pct_pob_reportada) | Share of the AGEB population whose characteristics the census publishes. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 100 | n/a |
+| 5 | [`N_CELDAS_IMPUTADAS`](#n_celdas_imputadas) | Number of census cells in the AGEB imputed as 1.5 because they were suppressed ('*'). | cells | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
 
 ### Housing
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 23 | [`VIV_PART_HAB`](#viv_part_hab) | Total inhabited private dwellings. | dwellings | Both | `TVIVPARHAB` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
-| 24 | [`VIV_CARACT`](#viv_caract) | Inhabited private dwellings whose characteristics were captured (estimate). Denominator of every housing share. | dwellings | Both | `VPH_*` | 95.6 / 86.6 | 100.0 / 99.9 | 328.5 | n/a |
-| 25 | [`VIV_DRENAJE`](#viv_drenaje) | Dwellings with drainage (public sewer, septic tank, ravine, river, lake or sea). | dwellings | Both | `VPH_DRENAJ` | 95.6 / 86.6 | 100.0 / 99.9 | 307 | n/a |
-| 26 | [`VIV_ELECTRICIDAD`](#viv_electricidad) | Dwellings with electricity. | dwellings | Both | `VPH_C_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 325 | n/a |
-| 27 | [`PCT_DRENAJE`](#pct_drenaje) | Share of dwellings with drainage. | % | Both | `VPH_DRENAJ` | 95.5 / 86.6 | 100.0 / 99.9 | 99.59 | − |
-| 28 | [`PCT_ELECTRIC`](#pct_electric) | Share of dwellings with electricity. | % | Both | `VPH_C_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 99.89 | − |
-| 43 | [`PCT_VIV_SIN_DRENAJE`](#pct_viv_sin_drenaje) | Share of dwellings without drainage. | % | Both | `VPH_NODREN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.34 | + |
-| 44 | [`PCT_VIV_SIN_ELECTRIC`](#pct_viv_sin_electric) | Share of dwellings without electricity. | % | Both | `VPH_S_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.1 | + |
-| 45 | [`PCT_VIV_SIN_AGUA`](#pct_viv_sin_agua) | Share of dwellings without piped water inside the dwelling or its plot. | % | Both | `VPH_AGUAFV` | 95.5 / 86.6 | 100.0 / 99.9 | 0.31 | + |
-| 46 | [`PCT_VIV_PISO_TIERRA`](#pct_viv_piso_tierra) | Share of dwellings with a dirt floor. | % | Both | `VPH_PISOTI` | 95.5 / 86.6 | 100.0 / 99.9 | 1.23 | + |
-| 47 | [`PCT_VIV_1CUARTO`](#pct_viv_1cuarto) | Share of dwellings with a single room. | % | Both | `VPH_1CUART` | 95.5 / 86.6 | 100.0 / 99.9 | 4.06 | + |
-| 48 | [`PCT_VIV_SIN_SANITARIO`](#pct_viv_sin_sanitario) | Share of dwellings with no toilet, sanitary facility or latrine. | % | Both | `VPH_EXCSA + VPH_LETR` | 95.5 / 86.6 | 100.0 / 99.9 | 0.2 | + |
+| 12 | [`VIV_PART_HAB`](#viv_part_hab) | Total inhabited private dwellings. | dwellings | Both | `TVIVPARHAB` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
+| 13 | [`VIV_CARACT`](#viv_caract) | Inhabited private dwellings whose characteristics were captured (estimate). Denominator of every housing share. | dwellings | Both | `VPH_*` | 95.6 / 86.6 | 100.0 / 99.9 | 328.5 | n/a |
+| 14 | [`VIV_DRENAJE`](#viv_drenaje) | Dwellings with drainage (public sewer, septic tank, ravine, river, lake or sea). | dwellings | Both | `VPH_DRENAJ` | 95.6 / 86.6 | 100.0 / 99.9 | 307 | n/a |
+| 15 | [`VIV_ELECTRICIDAD`](#viv_electricidad) | Dwellings with electricity. | dwellings | Both | `VPH_C_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 325 | n/a |
+| 16 | [`PCT_DRENAJE`](#pct_drenaje) | Share of dwellings with drainage. | % | Both | `VPH_DRENAJ` | 95.5 / 86.6 | 100.0 / 99.9 | 99.59 | − |
+| 17 | [`PCT_ELECTRIC`](#pct_electric) | Share of dwellings with electricity. | % | Both | `VPH_C_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 99.89 | − |
+| 32 | [`PCT_VIV_SIN_DRENAJE`](#pct_viv_sin_drenaje) | Share of dwellings without drainage. | % | Both | `VPH_NODREN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.34 | + |
+| 33 | [`PCT_VIV_SIN_ELECTRIC`](#pct_viv_sin_electric) | Share of dwellings without electricity. | % | Both | `VPH_S_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.1 | + |
+| 34 | [`PCT_VIV_SIN_AGUA`](#pct_viv_sin_agua) | Share of dwellings without piped water inside the dwelling or its plot. | % | Both | `VPH_AGUAFV` | 95.5 / 86.6 | 100.0 / 99.9 | 0.31 | + |
+| 35 | [`PCT_VIV_PISO_TIERRA`](#pct_viv_piso_tierra) | Share of dwellings with a dirt floor. | % | Both | `VPH_PISOTI` | 95.5 / 86.6 | 100.0 / 99.9 | 1.23 | + |
+| 36 | [`PCT_VIV_1CUARTO`](#pct_viv_1cuarto) | Share of dwellings with a single room. | % | Both | `VPH_1CUART` | 95.5 / 86.6 | 100.0 / 99.9 | 4.06 | + |
+| 37 | [`PCT_VIV_SIN_SANITARIO`](#pct_viv_sin_sanitario) | Share of dwellings with no toilet, sanitary facility or latrine. | % | Both | `VPH_EXCSA + VPH_LETR` | 95.5 / 86.6 | 100.0 / 99.9 | 0.2 | + |
 
 ### Sensitivity
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 29 | [`PCT_POB_0A5`](#pct_pob_0a5) | Share of population aged 0 to 5. | % | Both | `P_0A2 + P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 10.01 | + |
-| 30 | [`PCT_POB_65YMAS`](#pct_pob_65ymas) | Share of population aged 65 and over. | % | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 7.21 | + |
-| 31 | [`PCT_POB_DISC`](#pct_pob_disc) | Share of population with a disability. | % | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 4.6 | + |
-| 32 | [`PCT_POB_HLI`](#pct_pob_hli) | Share of population aged 3 and over who speak an indigenous language. | % | Both | `P3YM_HLI` | 95.5 / 86.6 | 100.0 / 99.9 | 0.47 | + |
-| 33 | [`PCT_POB_HLI_NHE`](#pct_pob_hli_nhe) | Share of population aged 3 and over who speak an indigenous language and do not speak Spanish. | % | Both | `P3HLINHE` | 95.5 / 86.6 | 100.0 / 99.9 | 0 | + |
-| 34 | [`PCT_HOG_JEFA`](#pct_hog_jefa) | Share of census households whose reference person is a woman. | % | Both | `HOGJEF_F` | 95.5 / 86.6 | 100.0 / 99.9 | 31.04 | + |
+| 18 | [`PCT_POB_0A5`](#pct_pob_0a5) | Share of population aged 0 to 5. | % | Both | `P_0A2 + P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 10.01 | + |
+| 19 | [`PCT_POB_65YMAS`](#pct_pob_65ymas) | Share of population aged 65 and over. | % | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 7.21 | + |
+| 20 | [`PCT_POB_DISC`](#pct_pob_disc) | Share of population with a disability. | % | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 4.6 | + |
+| 21 | [`PCT_POB_HLI`](#pct_pob_hli) | Share of population aged 3 and over who speak an indigenous language. | % | Both | `P3YM_HLI` | 95.5 / 86.6 | 100.0 / 99.9 | 0.47 | + |
+| 22 | [`PCT_POB_HLI_NHE`](#pct_pob_hli_nhe) | Share of population aged 3 and over who speak an indigenous language and do not speak Spanish. | % | Both | `P3HLINHE` | 95.5 / 86.6 | 100.0 / 99.9 | 0 | + |
+| 23 | [`PCT_HOG_JEFA`](#pct_hog_jefa) | Share of census households whose reference person is a woman. | % | Both | `HOGJEF_F` | 95.5 / 86.6 | 100.0 / 99.9 | 31.04 | + |
 
 ### Social lag
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 35 | [`PCT_POB_SIN_SALUD`](#pct_pob_sin_salud) | Share of population without health service affiliation. | % | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 23.44 | + |
-| 36 | [`PCT_ANALF`](#pct_analf) | Share of population aged 15 and over who are illiterate. | % | Both | `P15YM_AN` | 95.5 / 86.6 | 100.0 / 99.9 | 3.23 | + |
-| 37 | [`PCT_EDU_BAS_INC`](#pct_edu_bas_inc) | Share of population aged 15 and over with incomplete basic education. | % | Both | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` | 95.5 / 86.6 | 100.0 / 99.9 | 31.82 | + |
-| 38 | [`PCT_NOASIS_6A14`](#pct_noasis_6a14) | Share of population aged 6 to 14 not attending school. | % | Both | `P6A11_NOA + P12A14NOA` | 94.8 / 84.0 | 100.0 / 99.9 | 4.7 | + |
-| 39 | [`PCT_NOASIS_15A24`](#pct_noasis_15a24) | Share of population aged 15 to 24 not attending school. | % | Both | `P_15A17 + P_18A24 − P15A17A − P18A24A` | 94.7 / 84.7 | 100.0 / 99.9 | 55.7 | ± |
-| 63 | [`GRAPROES`](#graproes) | Average years of schooling of the population aged 15 and over. | years completed | Both | `GRAPROES` | 95.5 / 86.6 | 100.0 / 99.9 | 9.08 | − |
-| 64 | [`PRO_OCUP_C`](#pro_ocup_c) | Average occupants per room in inhabited private dwellings. | occupants/room | Both | `PRO_OCUP_C` | 95.5 / 86.6 | 100.0 / 99.9 | 1.02 | + |
+| 24 | [`PCT_POB_SIN_SALUD`](#pct_pob_sin_salud) | Share of population without health service affiliation. | % | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 23.44 | + |
+| 25 | [`PCT_ANALF`](#pct_analf) | Share of population aged 15 and over who are illiterate. | % | Both | `P15YM_AN` | 95.5 / 86.6 | 100.0 / 99.9 | 3.23 | + |
+| 26 | [`PCT_EDU_BAS_INC`](#pct_edu_bas_inc) | Share of population aged 15 and over with incomplete basic education. | % | Both | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` | 95.5 / 86.6 | 100.0 / 99.9 | 31.82 | + |
+| 27 | [`PCT_NOASIS_6A14`](#pct_noasis_6a14) | Share of population aged 6 to 14 not attending school. | % | Both | `P6A11_NOA + P12A14NOA` | 94.8 / 84.0 | 100.0 / 99.9 | 4.7 | + |
+| 28 | [`PCT_NOASIS_15A24`](#pct_noasis_15a24) | Share of population aged 15 to 24 not attending school. | % | Both | `P_15A17 + P_18A24 − P15A17A − P18A24A` | 94.7 / 84.7 | 100.0 / 99.9 | 55.7 | ± |
+| 52 | [`GRAPROES`](#graproes) | Average years of schooling of the population aged 15 and over. | years completed | Both | `GRAPROES` | 95.5 / 86.6 | 100.0 / 99.9 | 9.08 | − |
+| 53 | [`PRO_OCUP_C`](#pro_ocup_c) | Average occupants per room in inhabited private dwellings. | occupants/room | Both | `PRO_OCUP_C` | 95.5 / 86.6 | 100.0 / 99.9 | 1.02 | + |
 
 ### Employment
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 40 | [`PCT_PEA`](#pct_pea) | Labour force participation rate: share of the population aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA / (PEA + PE_INAC)` | 95.5 / 86.6 | 100.0 / 99.9 | 61.9 | − |
-| 41 | [`PCT_PEA_F`](#pct_pea_f) | Female labour force participation rate: share of women aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA_F / (PEA_F + PE_INAC_F)` | 95.5 / 86.4 | 100.0 / 99.9 | 48.72 | − |
-| 42 | [`PCT_DESOCUP`](#pct_desocup) | Unemployment rate: share of the economically active population with no job who looked for one. | % | Both | `PDESOCUP / PEA` | 95.5 / 86.5 | 100.0 / 99.9 | 1.38 | + |
+| 29 | [`PCT_PEA`](#pct_pea) | Labour force participation rate: share of the population aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA / (PEA + PE_INAC)` | 95.5 / 86.6 | 100.0 / 99.9 | 61.9 | − |
+| 30 | [`PCT_PEA_F`](#pct_pea_f) | Female labour force participation rate: share of women aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA_F / (PEA_F + PE_INAC_F)` | 95.5 / 86.4 | 100.0 / 99.9 | 48.72 | − |
+| 31 | [`PCT_DESOCUP`](#pct_desocup) | Unemployment rate: share of the economically active population with no job who looked for one. | % | Both | `PDESOCUP / PEA` | 95.5 / 86.5 | 100.0 / 99.9 | 1.38 | + |
 
 ### Water and storage
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 49 | [`PCT_VIV_TINACO`](#pct_viv_tinaco) | Share of dwellings with a rooftop water tank (tinaco). | % | Both | `VPH_TINACO` | 95.5 / 86.6 | 100.0 / 99.9 | 71.75 | − |
-| 50 | [`PCT_VIV_CISTERNA`](#pct_viv_cisterna) | Share of dwellings with a cistern. | % | Both | `VPH_CISTER` | 95.5 / 86.6 | 100.0 / 99.9 | 13.04 | − |
+| 38 | [`PCT_VIV_TINACO`](#pct_viv_tinaco) | Share of dwellings with a rooftop water tank (tinaco). | % | Both | `VPH_TINACO` | 95.5 / 86.6 | 100.0 / 99.9 | 71.75 | − |
+| 39 | [`PCT_VIV_CISTERNA`](#pct_viv_cisterna) | Share of dwellings with a cistern. | % | Both | `VPH_CISTER` | 95.5 / 86.6 | 100.0 / 99.9 | 13.04 | − |
 
 ### Goods and mobility
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 51 | [`PCT_VIV_REFRI`](#pct_viv_refri) | Share of dwellings with a refrigerator. | % | Both | `VPH_REFRI` | 95.5 / 86.6 | 100.0 / 99.9 | 92.38 | − |
-| 52 | [`PCT_VIV_LAVADORA`](#pct_viv_lavadora) | Share of dwellings with a washing machine. | % | Both | `VPH_LAVAD` | 95.5 / 86.6 | 100.0 / 99.9 | 76.35 | − |
-| 53 | [`PCT_VIV_AUTO`](#pct_viv_auto) | Share of dwellings with a car or pickup truck. | % | Both | `VPH_AUTOM` | 95.5 / 86.6 | 100.0 / 99.9 | 47.03 | − |
-| 62 | [`PCT_VIV_SIN_BIENES`](#pct_viv_sin_bienes) | Share of dwellings with no goods at all. | % | Both | `VPH_SNBIEN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.28 | + |
+| 40 | [`PCT_VIV_REFRI`](#pct_viv_refri) | Share of dwellings with a refrigerator. | % | Both | `VPH_REFRI` | 95.5 / 86.6 | 100.0 / 99.9 | 92.38 | − |
+| 41 | [`PCT_VIV_LAVADORA`](#pct_viv_lavadora) | Share of dwellings with a washing machine. | % | Both | `VPH_LAVAD` | 95.5 / 86.6 | 100.0 / 99.9 | 76.35 | − |
+| 42 | [`PCT_VIV_AUTO`](#pct_viv_auto) | Share of dwellings with a car or pickup truck. | % | Both | `VPH_AUTOM` | 95.5 / 86.6 | 100.0 / 99.9 | 47.03 | − |
+| 51 | [`PCT_VIV_SIN_BIENES`](#pct_viv_sin_bienes) | Share of dwellings with no goods at all. | % | Both | `VPH_SNBIEN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.28 | + |
 
 ### Communication and warnings
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 54 | [`PCT_VIV_RADIO`](#pct_viv_radio) | Share of dwellings with a radio. | % | Both | `VPH_RADIO` | 95.5 / 86.6 | 100.0 / 99.9 | 68.03 | − |
-| 55 | [`PCT_VIV_TELEFONO`](#pct_viv_telefono) | Share of dwellings with a landline telephone. | % | Both | `VPH_TELEF` | 95.5 / 86.6 | 100.0 / 99.9 | 25 | − |
-| 56 | [`PCT_VIV_CELULAR`](#pct_viv_celular) | Share of dwellings with a mobile phone. | % | Both | `VPH_CEL` | 95.5 / 86.6 | 100.0 / 99.9 | 90.97 | − |
-| 57 | [`PCT_VIV_INTERNET`](#pct_viv_internet) | Share of dwellings with internet. | % | Both | `VPH_INTER` | 95.5 / 86.6 | 100.0 / 99.9 | 44.7 | − |
-| 58 | [`PCT_VIV_COMPU`](#pct_viv_compu) | Share of dwellings with a computer, laptop or tablet. | % | Both | `VPH_PC` | 95.5 / 86.6 | 100.0 / 99.9 | 28.57 | − |
-| 59 | [`PCT_VIV_SIN_RADIO_TV`](#pct_viv_sin_radio_tv) | Share of dwellings with neither radio nor television. | % | Both | `VPH_SINRTV` | 95.5 / 86.6 | 100.0 / 99.9 | 3.18 | + |
-| 60 | [`PCT_VIV_SIN_TEL_CEL`](#pct_viv_sin_tel_cel) | Share of dwellings with neither landline nor mobile phone. | % | Both | `VPH_SINLTC` | 95.5 / 86.6 | 100.0 / 99.9 | 5.66 | + |
-| 61 | [`PCT_VIV_SIN_TIC`](#pct_viv_sin_tic) | Share of dwellings with no information and communication technology at all. | % | Both | `VPH_SINTIC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.73 | + |
+| 43 | [`PCT_VIV_RADIO`](#pct_viv_radio) | Share of dwellings with a radio. | % | Both | `VPH_RADIO` | 95.5 / 86.6 | 100.0 / 99.9 | 68.03 | − |
+| 44 | [`PCT_VIV_TELEFONO`](#pct_viv_telefono) | Share of dwellings with a landline telephone. | % | Both | `VPH_TELEF` | 95.5 / 86.6 | 100.0 / 99.9 | 25 | − |
+| 45 | [`PCT_VIV_CELULAR`](#pct_viv_celular) | Share of dwellings with a mobile phone. | % | Both | `VPH_CEL` | 95.5 / 86.6 | 100.0 / 99.9 | 90.97 | − |
+| 46 | [`PCT_VIV_INTERNET`](#pct_viv_internet) | Share of dwellings with internet. | % | Both | `VPH_INTER` | 95.5 / 86.6 | 100.0 / 99.9 | 44.7 | − |
+| 47 | [`PCT_VIV_COMPU`](#pct_viv_compu) | Share of dwellings with a computer, laptop or tablet. | % | Both | `VPH_PC` | 95.5 / 86.6 | 100.0 / 99.9 | 28.57 | − |
+| 48 | [`PCT_VIV_SIN_RADIO_TV`](#pct_viv_sin_radio_tv) | Share of dwellings with neither radio nor television. | % | Both | `VPH_SINRTV` | 95.5 / 86.6 | 100.0 / 99.9 | 3.18 | + |
+| 49 | [`PCT_VIV_SIN_TEL_CEL`](#pct_viv_sin_tel_cel) | Share of dwellings with neither landline nor mobile phone. | % | Both | `VPH_SINLTC` | 95.5 / 86.6 | 100.0 / 99.9 | 5.66 | + |
+| 50 | [`PCT_VIV_SIN_TIC`](#pct_viv_sin_tic) | Share of dwellings with no information and communication technology at all. | % | Both | `VPH_SINTIC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.73 | + |
 
 ### CONEVAL validation
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 65 | [`GRS_GRADO`](#grs_grado) | CONEVAL's Social Lag Grade (Grado de Rezago Social) of the urban AGEB. |  | Urban only | `Grado de Rezago Social (col. 28)` | 99.8 / 0.0 | 100.0 / 0.0 |  | + |
-| 66 | [`GRS_NUM`](#grs_num) | Social Lag Grade, numerically coded. | ordinal 1–5 | Urban only | `GRS_GRADO` | 99.8 / 0.0 | 100.0 / 0.0 | 3 | + |
-| 67 | [`RZ_ANALF`](#rz_analf) | CONEVAL: % of population aged 15 or over who are illiterate. | % | Urban only | `col. 11` | 95.5 / 0.0 | 100.0 / 0.0 | 2.472 | + |
-| 68 | [`RZ_INA614`](#rz_ina614) | CONEVAL: % of population aged 6 to 14 not attending school. | % | Urban only | `col. 12` | 95.5 / 0.0 | 100.0 / 0.0 | 4.348 | + |
-| 69 | [`RZ_INA1524`](#rz_ina1524) | CONEVAL: % of population aged 15 to 24 not attending school. | % | Urban only | `col. 13` | 95.5 / 0.0 | 100.0 / 0.0 | 52.61 | + |
-| 70 | [`RZ_EBINC`](#rz_ebinc) | CONEVAL: % of population aged 15 or over with incomplete basic education. | % | Urban only | `col. 14` | 95.5 / 0.0 | 100.0 / 0.0 | 28.17 | + |
-| 71 | [`RZ_SSALUD`](#rz_ssalud) | CONEVAL: % of population without health service entitlement. | % | Urban only | `col. 15` | 95.5 / 0.0 | 100.0 / 0.0 | 23.81 | + |
-| 72 | [`RZ_HACIN`](#rz_hacin) | CONEVAL: % of overcrowded dwellings. | % | Urban only | `col. 16` | 95.5 / 0.0 | 100.0 / 0.0 | 2.814 | + |
-| 73 | [`RZ_SAGUA`](#rz_sagua) | CONEVAL: % of dwellings without piped water from the public network. | % | Urban only | `col. 17` | 95.5 / 0.0 | 100.0 / 0.0 | 0.1379 | + |
-| 74 | [`RZ_SEXCUS`](#rz_sexcus) | CONEVAL: % of dwellings without a toilet or sanitary facility. | % | Urban only | `col. 18` | 95.5 / 0.0 | 100.0 / 0.0 | 0 | + |
-| 75 | [`RZ_SDREN`](#rz_sdren) | CONEVAL: % of dwellings without drainage. | % | Urban only | `col. 19` | 95.5 / 0.0 | 100.0 / 0.0 | 0.09804 | + |
-| 76 | [`RZ_SELEC`](#rz_selec) | CONEVAL: % of dwellings without electricity. | % | Urban only | `col. 20` | 95.5 / 0.0 | 100.0 / 0.0 | 0 | + |
-| 77 | [`RZ_PISOT`](#rz_pisot) | CONEVAL: % of dwellings with a dirt floor. | % | Urban only | `col. 21` | 95.5 / 0.0 | 100.0 / 0.0 | 0.8247 | + |
-| 78 | [`RZ_SLAVAD`](#rz_slavad) | CONEVAL: % of dwellings without a washing machine. | % | Urban only | `col. 22` | 95.5 / 0.0 | 100.0 / 0.0 | 21.21 | + |
-| 79 | [`RZ_SREFRI`](#rz_srefri) | CONEVAL: % of dwellings without a refrigerator. | % | Urban only | `col. 23` | 95.5 / 0.0 | 100.0 / 0.0 | 6.25 | + |
-| 80 | [`RZ_STELF`](#rz_stelf) | CONEVAL: % of dwellings without a landline telephone. | % | Urban only | `col. 24` | 95.5 / 0.0 | 100.0 / 0.0 | 68.81 | + |
-| 81 | [`RZ_SCEL`](#rz_scel) | CONEVAL: % of dwellings without a mobile phone. | % | Urban only | `col. 25` | 95.5 / 0.0 | 100.0 / 0.0 | 7.666 | + |
-| 82 | [`RZ_SCOMPU`](#rz_scompu) | CONEVAL: % of dwellings without a computer, laptop or tablet. | % | Urban only | `col. 26` | 95.5 / 0.0 | 100.0 / 0.0 | 66.67 | + |
-| 83 | [`RZ_SINTER`](#rz_sinter) | CONEVAL: % of dwellings without internet. | % | Urban only | `col. 27` | 95.5 / 0.0 | 100.0 / 0.0 | 47.75 | + |
+| 54 | [`GRS_GRADO`](#grs_grado) | CONEVAL's Social Lag Grade (Grado de Rezago Social) of the urban AGEB. |  | Urban only | `Grado de Rezago Social (col. 28)` | 99.8 / 0.0 | 100.0 / 0.0 |  | + |
+| 55 | [`GRS_NUM`](#grs_num) | Social Lag Grade, numerically coded. | ordinal 1–5 | Urban only | `GRS_GRADO` | 99.8 / 0.0 | 100.0 / 0.0 | 3 | + |
+| 56 | [`RZ_ANALF`](#rz_analf) | CONEVAL: % of population aged 15 or over who are illiterate. | % | Urban only | `col. 11` | 95.5 / 0.0 | 100.0 / 0.0 | 2.472 | + |
+| 57 | [`RZ_INA614`](#rz_ina614) | CONEVAL: % of population aged 6 to 14 not attending school. | % | Urban only | `col. 12` | 95.5 / 0.0 | 100.0 / 0.0 | 4.348 | + |
+| 58 | [`RZ_INA1524`](#rz_ina1524) | CONEVAL: % of population aged 15 to 24 not attending school. | % | Urban only | `col. 13` | 95.5 / 0.0 | 100.0 / 0.0 | 52.61 | + |
+| 59 | [`RZ_EBINC`](#rz_ebinc) | CONEVAL: % of population aged 15 or over with incomplete basic education. | % | Urban only | `col. 14` | 95.5 / 0.0 | 100.0 / 0.0 | 28.17 | + |
+| 60 | [`RZ_SSALUD`](#rz_ssalud) | CONEVAL: % of population without health service entitlement. | % | Urban only | `col. 15` | 95.5 / 0.0 | 100.0 / 0.0 | 23.81 | + |
+| 61 | [`RZ_HACIN`](#rz_hacin) | CONEVAL: % of overcrowded dwellings. | % | Urban only | `col. 16` | 95.5 / 0.0 | 100.0 / 0.0 | 2.814 | + |
+| 62 | [`RZ_SAGUA`](#rz_sagua) | CONEVAL: % of dwellings without piped water from the public network. | % | Urban only | `col. 17` | 95.5 / 0.0 | 100.0 / 0.0 | 0.1379 | + |
+| 63 | [`RZ_SEXCUS`](#rz_sexcus) | CONEVAL: % of dwellings without a toilet or sanitary facility. | % | Urban only | `col. 18` | 95.5 / 0.0 | 100.0 / 0.0 | 0 | + |
+| 64 | [`RZ_SDREN`](#rz_sdren) | CONEVAL: % of dwellings without drainage. | % | Urban only | `col. 19` | 95.5 / 0.0 | 100.0 / 0.0 | 0.09804 | + |
+| 65 | [`RZ_SELEC`](#rz_selec) | CONEVAL: % of dwellings without electricity. | % | Urban only | `col. 20` | 95.5 / 0.0 | 100.0 / 0.0 | 0 | + |
+| 66 | [`RZ_PISOT`](#rz_pisot) | CONEVAL: % of dwellings with a dirt floor. | % | Urban only | `col. 21` | 95.5 / 0.0 | 100.0 / 0.0 | 0.8247 | + |
+| 67 | [`RZ_SLAVAD`](#rz_slavad) | CONEVAL: % of dwellings without a washing machine. | % | Urban only | `col. 22` | 95.5 / 0.0 | 100.0 / 0.0 | 21.21 | + |
+| 68 | [`RZ_SREFRI`](#rz_srefri) | CONEVAL: % of dwellings without a refrigerator. | % | Urban only | `col. 23` | 95.5 / 0.0 | 100.0 / 0.0 | 6.25 | + |
+| 69 | [`RZ_STELF`](#rz_stelf) | CONEVAL: % of dwellings without a landline telephone. | % | Urban only | `col. 24` | 95.5 / 0.0 | 100.0 / 0.0 | 68.81 | + |
+| 70 | [`RZ_SCEL`](#rz_scel) | CONEVAL: % of dwellings without a mobile phone. | % | Urban only | `col. 25` | 95.5 / 0.0 | 100.0 / 0.0 | 7.666 | + |
+| 71 | [`RZ_SCOMPU`](#rz_scompu) | CONEVAL: % of dwellings without a computer, laptop or tablet. | % | Urban only | `col. 26` | 95.5 / 0.0 | 100.0 / 0.0 | 66.67 | + |
+| 72 | [`RZ_SINTER`](#rz_sinter) | CONEVAL: % of dwellings without internet. | % | Urban only | `col. 27` | 95.5 / 0.0 | 100.0 / 0.0 | 47.75 | + |
 
 ### Economic activity
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 84 | [`DENUE_TOT`](#denue_tot) | Economic units registered in DENUE. | establishments | Both | `records` | 100.0 / 100.0 | 100.0 / 100.0 | 22 | ± |
-| 85 | [`DEN_MANUF`](#den_manuf) | Manufacturing economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
-| 86 | [`DEN_COM`](#den_com) | Trade economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 9 | ± |
-| 87 | [`DEN_SERV`](#den_serv) | Service economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 8 | ± |
-| 88 | [`DEN_EDU`](#den_edu) | Educational service economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
-| 89 | [`DEN_GOB`](#den_gob) | Units of legislative, governmental and judicial activities. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
-| 90 | [`SCHOOL_TOT`](#school_tot) | Schools (proxy of potential temporary shelters). | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
-| 91 | [`DEN_SCIAN_11`](#den_scian_11) | Economic units in SCIAN sector 11: Agriculture, animal production, forestry, fishing and hunting. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 92 | [`DEN_SCIAN_21`](#den_scian_21) | Economic units in SCIAN sector 21: Mining. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 93 | [`DEN_SCIAN_22`](#den_scian_22) | Economic units in SCIAN sector 22: Electric power generation and distribution, water and pipeline gas supply. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 94 | [`DEN_SCIAN_23`](#den_scian_23) | Economic units in SCIAN sector 23: Construction. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 95 | [`DEN_SCIAN_31_33`](#den_scian_31_33) | Economic units in SCIAN sector 31-33: Manufacturing. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
-| 96 | [`DEN_SCIAN_43`](#den_scian_43) | Economic units in SCIAN sector 43: Wholesale trade. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 97 | [`DEN_SCIAN_46`](#den_scian_46) | Economic units in SCIAN sector 46: Retail trade. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 8 | ± |
-| 98 | [`DEN_SCIAN_48_49`](#den_scian_48_49) | Economic units in SCIAN sector 48-49: Transportation, postal services and warehousing. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 99 | [`DEN_SCIAN_51`](#den_scian_51) | Economic units in SCIAN sector 51: Information in mass media. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 100 | [`DEN_SCIAN_52`](#den_scian_52) | Economic units in SCIAN sector 52: Financial and insurance services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 101 | [`DEN_SCIAN_53`](#den_scian_53) | Economic units in SCIAN sector 53: Real estate and rental and leasing. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 102 | [`DEN_SCIAN_54`](#den_scian_54) | Economic units in SCIAN sector 54: Professional, scientific and technical services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 103 | [`DEN_SCIAN_55`](#den_scian_55) | Economic units in SCIAN sector 55: Management of companies. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 104 | [`DEN_SCIAN_56`](#den_scian_56) | Economic units in SCIAN sector 56: Business support, waste management and remediation services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 105 | [`DEN_SCIAN_61`](#den_scian_61) | Economic units in SCIAN sector 61: Educational services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 106 | [`DEN_SCIAN_62`](#den_scian_62) | Economic units in SCIAN sector 62: Health care and social assistance. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 107 | [`DEN_SCIAN_71`](#den_scian_71) | Economic units in SCIAN sector 71: Arts, entertainment and recreation. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 108 | [`DEN_SCIAN_72`](#den_scian_72) | Economic units in SCIAN sector 72: Accommodation and food services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
-| 109 | [`DEN_SCIAN_81`](#den_scian_81) | Economic units in SCIAN sector 81: Other services except public administration. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | ± |
-| 110 | [`DEN_SCIAN_93`](#den_scian_93) | Economic units in SCIAN sector 93: Public administration. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 73 | [`DENUE_TOT`](#denue_tot) | Economic units registered in DENUE. | establishments | Both | `records` | 100.0 / 100.0 | 100.0 / 100.0 | 22 | ± |
+| 74 | [`DEN_MANUF`](#den_manuf) | Manufacturing economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
+| 75 | [`DEN_COM`](#den_com) | Trade economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 9 | ± |
+| 76 | [`DEN_SERV`](#den_serv) | Service economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 8 | ± |
+| 77 | [`DEN_EDU`](#den_edu) | Educational service economic units. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
+| 78 | [`DEN_GOB`](#den_gob) | Units of legislative, governmental and judicial activities. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
+| 79 | [`SCHOOL_TOT`](#school_tot) | Schools (proxy of potential temporary shelters). | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | − |
+| 80 | [`DEN_SCIAN_11`](#den_scian_11) | Economic units in SCIAN sector 11: Agriculture, animal production, forestry, fishing and hunting. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 81 | [`DEN_SCIAN_21`](#den_scian_21) | Economic units in SCIAN sector 21: Mining. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 82 | [`DEN_SCIAN_22`](#den_scian_22) | Economic units in SCIAN sector 22: Electric power generation and distribution, water and pipeline gas supply. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 83 | [`DEN_SCIAN_23`](#den_scian_23) | Economic units in SCIAN sector 23: Construction. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 84 | [`DEN_SCIAN_31_33`](#den_scian_31_33) | Economic units in SCIAN sector 31-33: Manufacturing. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
+| 85 | [`DEN_SCIAN_43`](#den_scian_43) | Economic units in SCIAN sector 43: Wholesale trade. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 86 | [`DEN_SCIAN_46`](#den_scian_46) | Economic units in SCIAN sector 46: Retail trade. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 8 | ± |
+| 87 | [`DEN_SCIAN_48_49`](#den_scian_48_49) | Economic units in SCIAN sector 48-49: Transportation, postal services and warehousing. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 88 | [`DEN_SCIAN_51`](#den_scian_51) | Economic units in SCIAN sector 51: Information in mass media. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 89 | [`DEN_SCIAN_52`](#den_scian_52) | Economic units in SCIAN sector 52: Financial and insurance services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 90 | [`DEN_SCIAN_53`](#den_scian_53) | Economic units in SCIAN sector 53: Real estate and rental and leasing. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 91 | [`DEN_SCIAN_54`](#den_scian_54) | Economic units in SCIAN sector 54: Professional, scientific and technical services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 92 | [`DEN_SCIAN_55`](#den_scian_55) | Economic units in SCIAN sector 55: Management of companies. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 93 | [`DEN_SCIAN_56`](#den_scian_56) | Economic units in SCIAN sector 56: Business support, waste management and remediation services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 94 | [`DEN_SCIAN_61`](#den_scian_61) | Economic units in SCIAN sector 61: Educational services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 95 | [`DEN_SCIAN_62`](#den_scian_62) | Economic units in SCIAN sector 62: Health care and social assistance. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 96 | [`DEN_SCIAN_71`](#den_scian_71) | Economic units in SCIAN sector 71: Arts, entertainment and recreation. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 97 | [`DEN_SCIAN_72`](#den_scian_72) | Economic units in SCIAN sector 72: Accommodation and food services. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | ± |
+| 98 | [`DEN_SCIAN_81`](#den_scian_81) | Economic units in SCIAN sector 81: Other services except public administration. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | ± |
+| 99 | [`DEN_SCIAN_93`](#den_scian_93) | Economic units in SCIAN sector 93: Public administration. | establishments | Both | `codigo_act` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
 
 ### Hydrography
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 111 | [`WATER_AREA`](#water_area) | Area of water bodies inside the AGEB. | km² | Both | `geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 112 | [`WATER_PCT`](#water_pct) | Share of the AGEB area covered by water bodies. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 113 | [`HAS_WATER`](#has_water) | Flag for the presence of water bodies in the AGEB. | 0/1 | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 100 | [`WATER_AREA`](#water_area) | Area of water bodies inside the AGEB. | km² | Both | `geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 101 | [`WATER_PCT`](#water_pct) | Share of the AGEB area covered by water bodies. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 102 | [`HAS_WATER`](#has_water) | Flag for the presence of water bodies in the AGEB. | 0/1 | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
 
 ### Land use
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 114 | [`USO_DOM`](#uso_dom) | Land use and vegetation class covering the largest area of the AGEB. |  | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 |  | ± |
-| 115 | [`USO_PCT`](#uso_pct) | Share of the AGEB covered by the dominant class. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 93.64 | n/a |
-| 116 | [`PCT_URB`](#pct_urb) | Share of the AGEB classified as human settlement or urban area. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 74.9 | ± |
-| 117 | [`USV_PCT_URBANO`](#usv_pct_urbano) | Share of the AGEB covered by human settlements and urban area. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 74.9 | ± |
-| 118 | [`USV_PCT_AGUA`](#usv_pct_agua) | Share of the AGEB covered by water bodies and aquaculture. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 119 | [`USV_PCT_SECUNDARIA`](#usv_pct_secundaria) | Share of the AGEB covered by secondary vegetation (tree, shrub or herbaceous) of any formation. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 120 | [`USV_PCT_AGRICOLA`](#usv_pct_agricola) | Share of the AGEB covered by irrigated, rain-fed or moisture agriculture. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0.21 | ± |
-| 121 | [`USV_PCT_PASTIZAL_INDUCIDO`](#usv_pct_pastizal_inducido) | Share of the AGEB covered by cultivated or induced grassland (livestock use). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 122 | [`USV_PCT_BOSQUE`](#usv_pct_bosque) | Share of the AGEB covered by primary forest (conifer, oak, cloud, gallery, planted). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 123 | [`USV_PCT_SELVA`](#usv_pct_selva) | Share of the AGEB covered by primary tropical forest. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 124 | [`USV_PCT_MATORRAL`](#usv_pct_matorral) | Share of the AGEB covered by scrubland and xerophytic vegetation. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 125 | [`USV_PCT_PASTIZAL`](#usv_pct_pastizal) | Share of the AGEB covered by natural grassland, meadow and savanna. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 126 | [`USV_PCT_HIDROFILA`](#usv_pct_hidrofila) | Share of the AGEB covered by hydrophytic vegetation (mangrove, reed, popal, gallery, petén). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 127 | [`USV_PCT_SIN_VEG`](#usv_pct_sin_veg) | Share of the AGEB covered by areas with no apparent vegetation or devoid of vegetation. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
-| 128 | [`USV_PCT_OTRA`](#usv_pct_otra) | Share of the AGEB covered by other formations (coastal dunes, palm groves). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 103 | [`USO_DOM`](#uso_dom) | Land use and vegetation class covering the largest area of the AGEB. |  | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 |  | ± |
+| 104 | [`USO_PCT`](#uso_pct) | Share of the AGEB covered by the dominant class. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 93.64 | n/a |
+| 105 | [`PCT_URB`](#pct_urb) | Share of the AGEB classified as human settlement or urban area. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 74.9 | ± |
+| 106 | [`USV_PCT_URBANO`](#usv_pct_urbano) | Share of the AGEB covered by human settlements and urban area. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 74.9 | ± |
+| 107 | [`USV_PCT_AGUA`](#usv_pct_agua) | Share of the AGEB covered by water bodies and aquaculture. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 108 | [`USV_PCT_SECUNDARIA`](#usv_pct_secundaria) | Share of the AGEB covered by secondary vegetation (tree, shrub or herbaceous) of any formation. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 109 | [`USV_PCT_AGRICOLA`](#usv_pct_agricola) | Share of the AGEB covered by irrigated, rain-fed or moisture agriculture. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0.21 | ± |
+| 110 | [`USV_PCT_PASTIZAL_INDUCIDO`](#usv_pct_pastizal_inducido) | Share of the AGEB covered by cultivated or induced grassland (livestock use). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 111 | [`USV_PCT_BOSQUE`](#usv_pct_bosque) | Share of the AGEB covered by primary forest (conifer, oak, cloud, gallery, planted). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 112 | [`USV_PCT_SELVA`](#usv_pct_selva) | Share of the AGEB covered by primary tropical forest. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 113 | [`USV_PCT_MATORRAL`](#usv_pct_matorral) | Share of the AGEB covered by scrubland and xerophytic vegetation. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 114 | [`USV_PCT_PASTIZAL`](#usv_pct_pastizal) | Share of the AGEB covered by natural grassland, meadow and savanna. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 115 | [`USV_PCT_HIDROFILA`](#usv_pct_hidrofila) | Share of the AGEB covered by hydrophytic vegetation (mangrove, reed, popal, gallery, petén). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 116 | [`USV_PCT_SIN_VEG`](#usv_pct_sin_veg) | Share of the AGEB covered by areas with no apparent vegetation or devoid of vegetation. | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
+| 117 | [`USV_PCT_OTRA`](#usv_pct_otra) | Share of the AGEB covered by other formations (coastal dunes, palm groves). | % | Both | `DESCRIPCIO` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | ± |
 
 ### Health access
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 129 | [`DIST_HOSP_KM`](#dist_hosp_km) | Distance to the nearest operating hospital (second or third level of care), public or private. | km | Both | `LATITUD, LONGITUD, NOMBRE TIPO ESTABLECIMIENTO` | 100.0 / 100.0 | 100.0 / 100.0 | 2.748 | + |
-| 130 | [`DIST_HOSP_PUB_KM`](#dist_hosp_pub_km) | Distance to the nearest operating public hospital (second or third level of care). | km | Both | `LATITUD, LONGITUD, NOMBRE DE LA INSTITUCION` | 100.0 / 100.0 | 100.0 / 100.0 | 4.652 | + |
-| 131 | [`DIST_1NIVEL_PUB_KM`](#dist_1nivel_pub_km) | Distance to the nearest operating public first-level care unit (health centre, family medicine unit, rural medical unit). | km | Both | `LATITUD, LONGITUD, NIVEL ATENCION` | 100.0 / 100.0 | 100.0 / 100.0 | 1.061 | + |
-| 132 | [`DIST_ORIGEN`](#dist_origen) | Point from which distances to health facilities, streams and the coast were measured. |  | Both |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 118 | [`DIST_HOSP_KM`](#dist_hosp_km) | Distance to the nearest operating hospital (second or third level of care), public or private. | km | Both | `LATITUD, LONGITUD, NOMBRE TIPO ESTABLECIMIENTO` | 100.0 / 100.0 | 100.0 / 100.0 | 2.748 | + |
+| 119 | [`DIST_HOSP_PUB_KM`](#dist_hosp_pub_km) | Distance to the nearest operating public hospital (second or third level of care). | km | Both | `LATITUD, LONGITUD, NOMBRE DE LA INSTITUCION` | 100.0 / 100.0 | 100.0 / 100.0 | 4.652 | + |
+| 120 | [`DIST_1NIVEL_PUB_KM`](#dist_1nivel_pub_km) | Distance to the nearest operating public first-level care unit (health centre, family medicine unit, rural medical unit). | km | Both | `LATITUD, LONGITUD, NIVEL ATENCION` | 100.0 / 100.0 | 100.0 / 100.0 | 1.061 | + |
+| 121 | [`DIST_ORIGEN`](#dist_origen) | Point from which distances to health facilities, streams and the coast were measured. |  | Both |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
 
 ### Relief and exposure
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 133 | [`ELEV_M`](#elev_m) | Mean elevation of the inhabited ground above mean sea level. | m | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 1,268 | ± |
-| 134 | [`PEND_MEDIA_GRAD`](#pend_media_grad) | Mean slope of the inhabited ground. | degrees | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 3.5 | + |
-| 135 | [`PCT_PEND_15`](#pct_pend_15) | Share of the inhabited ground with slope above 15 degrees. | % | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
-| 136 | [`PCT_PEND_30`](#pct_pend_30) | Share of the inhabited ground with slope above 30 degrees. | % | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
-| 137 | [`DIST_CAUCE_KM`](#dist_cauce_km) | Straight-line distance to the nearest stream of Strahler order 3 or higher. | km | Both | `ORDER_1` | 100.0 / 100.0 | 100.0 / 100.0 | 0.77 | − |
-| 138 | [`DESNIVEL_CAUCE_M`](#desnivel_cauce_m) | Height of the inhabited ground above the nearest water: the bed of the order ≥ 3 stream or the sea, whichever is closer. | m | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 10.3 | − |
-| 139 | [`DIST_COSTA_KM`](#dist_costa_km) | Straight-line distance to the coastline. | km | Both | `DESCRIP` | 100.0 / 100.0 | 100.0 / 100.0 | 181.4 | − |
+| 122 | [`ELEV_M`](#elev_m) | Mean elevation of the inhabited ground above mean sea level. | m | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 1,268 | ± |
+| 123 | [`PEND_MEDIA_GRAD`](#pend_media_grad) | Mean slope of the inhabited ground. | degrees | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 3.5 | + |
+| 124 | [`PCT_PEND_15`](#pct_pend_15) | Share of the inhabited ground with slope above 15 degrees. | % | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
+| 125 | [`PCT_PEND_30`](#pct_pend_30) | Share of the inhabited ground with slope above 30 degrees. | % | Both | `raster value` | 100.0 / 100.0 | 100.0 / 100.0 | 0 | + |
+| 126 | [`DIST_CAUCE_KM`](#dist_cauce_km) | Straight-line distance to the nearest stream of Strahler order 3 or higher. | km | Both | `ORDER_1` | 100.0 / 100.0 | 100.0 / 100.0 | 0.77 | − |
+| 127 | [`DESNIVEL_CAUCE_M`](#desnivel_cauce_m) | Height of the inhabited ground above the nearest water: the bed of the order ≥ 3 stream or the sea, whichever is closer. | m | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 10.3 | − |
+| 128 | [`DIST_COSTA_KM`](#dist_costa_km) | Straight-line distance to the coastline. | km | Both | `DESCRIP` | 100.0 / 100.0 | 100.0 / 100.0 | 181.4 | − |
 
 ### Hazard (CENAPRED)
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 140 | [`AMZ_INUND`](#amz_inund) | Flood hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_inundac` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
-| 141 | [`AMZ_SEQUIA`](#amz_sequia) | Drought hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_sequia2` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 142 | [`AMZ_ONDA_CAL`](#amz_onda_cal) | Heat-wave hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_ondasca` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 143 | [`AMZ_CICLON`](#amz_ciclon) | Tropical cyclone hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_ciclnes` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
-| 144 | [`AMZ_DESLIZ`](#amz_desliz) | Landslide susceptibility grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `susceplad` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
-| 145 | [`AMZ_TORM_ELEC`](#amz_torm_elec) | Thunderstorm hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_tormele` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 146 | [`AMZ_GRANIZO`](#amz_granizo) | Hail hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_granizo` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
-| 147 | [`AMZ_TEMP_BAJA`](#amz_temp_baja) | Low-temperature hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_bajaste` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
-| 148 | [`AMZ_NEVADA`](#amz_nevada) | Snowfall hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_nevadas` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
-| 149 | [`AMZ_SISMO`](#amz_sismo) | Seismic hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_sismico` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
-| 150 | [`AMZ_VOLCAN`](#amz_volcan) | Volcanic hazard grade of the municipality the AGEB belongs to. | grade (0–5) | Both | `volcanes` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
-| 151 | [`AMZ_SUS_TOX`](#amz_sus_tox) | Toxic-substance hazard grade of the municipality the AGEB belongs to. | grade (0–5) | Both | `gp_sustox` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | n/a |
-| 152 | [`AMZ_SUS_INFLA`](#amz_sus_infla) | Flammable-substance hazard grade of the municipality the AGEB belongs to. | grade (0–5) | Both | `gp_susinfl` | 99.8 / 99.6 | 99.8 / 99.7 | 2 | n/a |
-| 153 | [`CEN_RESIL`](#cen_resil) | Resilience grade of the municipality according to CENAPRED. | grade (1–5) | Both | `g_resilien` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | − |
-| 154 | [`CEN_VULN_CC`](#cen_vuln_cc) | Municipality classified by CENAPRED as vulnerable to climate change. |  | Both | `v_cc` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | + |
+| 129 | [`AMZ_INUND`](#amz_inund) | Flood hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_inundac` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
+| 130 | [`AMZ_SEQUIA`](#amz_sequia) | Drought hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_sequia2` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 131 | [`AMZ_ONDA_CAL`](#amz_onda_cal) | Heat-wave hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_ondasca` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 132 | [`AMZ_CICLON`](#amz_ciclon) | Tropical cyclone hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_ciclnes` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
+| 133 | [`AMZ_DESLIZ`](#amz_desliz) | Landslide susceptibility grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `susceplad` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | n/a |
+| 134 | [`AMZ_TORM_ELEC`](#amz_torm_elec) | Thunderstorm hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_tormele` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 135 | [`AMZ_GRANIZO`](#amz_granizo) | Hail hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_granizo` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 136 | [`AMZ_TEMP_BAJA`](#amz_temp_baja) | Low-temperature hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_bajaste` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 137 | [`AMZ_NEVADA`](#amz_nevada) | Snowfall hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_nevadas` | 100.0 / 100.0 | 100.0 / 100.0 | 1 | n/a |
+| 138 | [`AMZ_SISMO`](#amz_sismo) | Seismic hazard grade of the municipality the AGEB belongs to. | grade (1–5) | Both | `gp_sismico` | 100.0 / 100.0 | 100.0 / 100.0 | 3 | n/a |
+| 139 | [`AMZ_VOLCAN`](#amz_volcan) | Volcanic hazard grade of the municipality the AGEB belongs to. | grade (0–5) | Both | `volcanes` | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 140 | [`AMZ_SUS_TOX`](#amz_sus_tox) | Toxic-substance hazard grade of the municipality the AGEB belongs to. | grade (0–5) | Both | `gp_sustox` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | n/a |
+| 141 | [`AMZ_SUS_INFLA`](#amz_sus_infla) | Flammable-substance hazard grade of the municipality the AGEB belongs to. | grade (0–5) | Both | `gp_susinfl` | 99.8 / 99.6 | 99.8 / 99.7 | 2 | n/a |
+| 142 | [`CEN_RESIL`](#cen_resil) | Resilience grade of the municipality according to CENAPRED. | grade (1–5) | Both | `g_resilien` | 100.0 / 100.0 | 100.0 / 100.0 | 4 | − |
+| 143 | [`CEN_VULN_CC`](#cen_vuln_cc) | Municipality classified by CENAPRED as vulnerable to climate change. |  | Both | `v_cc` | 99.8 / 99.6 | 99.8 / 99.7 | 0 | + |
 
 ### Income (municipal)
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 155 | [`ING_MUN_HOG_TRIM`](#ing_mun_hog_trim) | Mean quarterly current income per household of the municipality the AGEB belongs to. | 2022 pesos per household per quarter | Both | `icpth (est = 1)` | 100.0 / 100.0 | 100.0 / 100.0 | 57,083 | − |
-| 156 | [`ING_MUN_LIM_INF`](#ing_mun_lim_inf) | Lower bound of the 90% confidence interval of ING_MUN_HOG_TRIM. | 2022 pesos per household per quarter | Both | `icpth (est = 3)` | 100.0 / 100.0 | 100.0 / 100.0 | 50,308 | n/a |
-| 157 | [`ING_MUN_LIM_SUP`](#ing_mun_lim_sup) | Upper bound of the 90% confidence interval of ING_MUN_HOG_TRIM. | 2022 pesos per household per quarter | Both | `icpth (est = 4)` | 100.0 / 100.0 | 100.0 / 100.0 | 64,345 | n/a |
-| 158 | [`ING_MUN_CV`](#ing_mun_cv) | Coefficient of variation of ING_MUN_HOG_TRIM. | % | Both | `icpth (est = 5)` | 100.0 / 100.0 | 100.0 / 100.0 | 7.53 | n/a |
+| 144 | [`ING_MUN_HOG_TRIM`](#ing_mun_hog_trim) | Mean quarterly current income per household of the municipality the AGEB belongs to. | 2022 pesos per household per quarter | Both | `icpth (est = 1)` | 100.0 / 100.0 | 100.0 / 100.0 | 57,083 | − |
+| 145 | [`ING_MUN_LIM_INF`](#ing_mun_lim_inf) | Lower bound of the 90% confidence interval of ING_MUN_HOG_TRIM. | 2022 pesos per household per quarter | Both | `icpth (est = 3)` | 100.0 / 100.0 | 100.0 / 100.0 | 50,308 | n/a |
+| 146 | [`ING_MUN_LIM_SUP`](#ing_mun_lim_sup) | Upper bound of the 90% confidence interval of ING_MUN_HOG_TRIM. | 2022 pesos per household per quarter | Both | `icpth (est = 4)` | 100.0 / 100.0 | 100.0 / 100.0 | 64,345 | n/a |
+| 147 | [`ING_MUN_CV`](#ing_mun_cv) | Coefficient of variation of ING_MUN_HOG_TRIM. | % | Both | `icpth (est = 5)` | 100.0 / 100.0 | 100.0 / 100.0 | 7.53 | n/a |
 
 ### Census counts
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 159 | [`POB_0A2`](#pob_0a2) | Population aged 0 to 2. | persons | Both | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
-| 160 | [`POB_3A5`](#pob_3a5) | Population aged 3 to 5. | persons | Both | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
-| 161 | [`POB_65YMAS`](#pob_65ymas) | Population aged 65 and over. | persons | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
-| 162 | [`POB_DISC`](#pob_disc) | Population with a disability. | persons | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
-| 163 | [`POB_3YMAS`](#pob_3ymas) | Population aged 3 and over. | persons | Both | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
-| 164 | [`POB_HLI`](#pob_hli) | Population aged 3 and over who speak an indigenous language. | persons | Both | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
-| 165 | [`POB_HLI_NHE`](#pob_hli_nhe) | Population aged 3 and over who speak an indigenous language and do not speak Spanish. | persons | Both | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
-| 166 | [`POB_SIN_SALUD`](#pob_sin_salud) | Population without health service affiliation. | persons | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
-| 167 | [`POB_15YMAS`](#pob_15ymas) | Population aged 15 and over. | persons | Both | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
-| 168 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Illiterate population aged 15 and over. | persons | Both | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
-| 169 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Population aged 15 and over with no schooling (or preschool only). | persons | Both | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
-| 170 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Population aged 15 and over with incomplete primary education. | persons | Both | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
-| 171 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Population aged 15 and over with complete primary education (as highest level). | persons | Both | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
-| 172 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Population aged 15 and over with incomplete lower secondary education. | persons | Both | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
-| 173 | [`POB_6A11`](#pob_6a11) | Population aged 6 to 11. | persons | Both | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
-| 174 | [`POB_12A14`](#pob_12a14) | Population aged 12 to 14. | persons | Both | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 175 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Population aged 6 to 11 not attending school. | persons | Both | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 176 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Population aged 12 to 14 not attending school. | persons | Both | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 177 | [`POB_15A17`](#pob_15a17) | Population aged 15 to 17. | persons | Both | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
-| 178 | [`POB_18A24`](#pob_18a24) | Population aged 18 to 24. | persons | Both | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
-| 179 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Population aged 15 to 17 attending school. | persons | Both | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
-| 180 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Population aged 18 to 24 attending school. | persons | Both | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
-| 181 | [`POB_PEA`](#pob_pea) | Economically active population aged 12 and over. | persons | Both | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
-| 182 | [`POB_PEA_F`](#pob_pea_f) | Economically active women aged 12 and over. | persons | Both | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
-| 183 | [`POB_INAC`](#pob_inac) | Economically inactive population aged 12 and over. | persons | Both | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
-| 184 | [`POB_INAC_F`](#pob_inac_f) | Economically inactive women aged 12 and over. | persons | Both | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
-| 185 | [`POB_DESOCUP`](#pob_desocup) | Unemployed population aged 12 and over. | persons | Both | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
-| 186 | [`HOGARES`](#hogares) | Total census households. | households | Both | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
-| 187 | [`HOGARES_JEFA`](#hogares_jefa) | Census households whose reference person is a woman. | households | Both | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
-| 188 | [`VIV_OCUPANTES`](#viv_ocupantes) | Occupants of inhabited private dwellings. | persons | Both | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
-| 189 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Dwellings without drainage. | dwellings | Both | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 190 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Dwellings without electricity. | dwellings | Both | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 191 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Dwellings without piped water inside the dwelling or its plot. | dwellings | Both | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
-| 192 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Dwellings with a dirt floor. | dwellings | Both | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
-| 193 | [`VIV_1CUARTO`](#viv_1cuarto) | Dwellings with a single room. | dwellings | Both | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
-| 194 | [`VIV_EXCUSADO`](#viv_excusado) | Dwellings with a toilet or sanitary facility. | dwellings | Both | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
-| 195 | [`VIV_LETRINA`](#viv_letrina) | Dwellings with a latrine (pit or hole). | dwellings | Both | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
-| 196 | [`VIV_TINACO`](#viv_tinaco) | Dwellings with a rooftop water tank (tinaco). | dwellings | Both | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
-| 197 | [`VIV_CISTERNA`](#viv_cisterna) | Dwellings with a cistern. | dwellings | Both | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
-| 198 | [`VIV_REFRI`](#viv_refri) | Dwellings with a refrigerator. | dwellings | Both | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
-| 199 | [`VIV_LAVADORA`](#viv_lavadora) | Dwellings with a washing machine. | dwellings | Both | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
-| 200 | [`VIV_AUTO`](#viv_auto) | Dwellings with a car or pickup truck. | dwellings | Both | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
-| 201 | [`VIV_RADIO`](#viv_radio) | Dwellings with a radio. | dwellings | Both | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
-| 202 | [`VIV_TELEFONO`](#viv_telefono) | Dwellings with a landline telephone. | dwellings | Both | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
-| 203 | [`VIV_CELULAR`](#viv_celular) | Dwellings with a mobile phone. | dwellings | Both | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
-| 204 | [`VIV_INTERNET`](#viv_internet) | Dwellings with internet. | dwellings | Both | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
-| 205 | [`VIV_COMPU`](#viv_compu) | Dwellings with a computer, laptop or tablet. | dwellings | Both | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
-| 206 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Dwellings with neither radio nor television. | dwellings | Both | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
-| 207 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Dwellings with neither landline nor mobile phone. | dwellings | Both | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
-| 208 | [`VIV_SIN_TIC`](#viv_sin_tic) | Dwellings without information and communication technologies. | dwellings | Both | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
-| 209 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Dwellings with no goods at all. | dwellings | Both | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 148 | [`POB_0A2`](#pob_0a2) | Population aged 0 to 2. | persons | Both | `P_0A2` | 95.6 / 86.6 | 100.0 / 99.9 | 49 | n/a |
+| 149 | [`POB_3A5`](#pob_3a5) | Population aged 3 to 5. | persons | Both | `P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 56 | n/a |
+| 150 | [`POB_65YMAS`](#pob_65ymas) | Population aged 65 and over. | persons | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 78 | n/a |
+| 151 | [`POB_DISC`](#pob_disc) | Population with a disability. | persons | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 52 | n/a |
+| 152 | [`POB_3YMAS`](#pob_3ymas) | Population aged 3 and over. | persons | Both | `P_3YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 1,100 | n/a |
+| 153 | [`POB_HLI`](#pob_hli) | Population aged 3 and over who speak an indigenous language. | persons | Both | `P3YM_HLI` | 95.6 / 86.6 | 100.0 / 99.9 | 5 | n/a |
+| 154 | [`POB_HLI_NHE`](#pob_hli_nhe) | Population aged 3 and over who speak an indigenous language and do not speak Spanish. | persons | Both | `P3HLINHE` | 95.6 / 86.6 | 100.0 / 99.9 | 0 | n/a |
+| 155 | [`POB_SIN_SALUD`](#pob_sin_salud) | Population without health service affiliation. | persons | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 246 | n/a |
+| 156 | [`POB_15YMAS`](#pob_15ymas) | Population aged 15 and over. | persons | Both | `P_15YMAS` | 95.6 / 86.6 | 100.0 / 99.9 | 850 | n/a |
+| 157 | [`POB_15YMAS_ANALF`](#pob_15ymas_analf) | Illiterate population aged 15 and over. | persons | Both | `P15YM_AN` | 95.6 / 86.6 | 100.0 / 99.9 | 21 | n/a |
+| 158 | [`POB_15YMAS_SIN_ESC`](#pob_15ymas_sin_esc) | Population aged 15 and over with no schooling (or preschool only). | persons | Both | `P15YM_SE` | 95.6 / 86.6 | 100.0 / 99.9 | 26 | n/a |
+| 159 | [`POB_15YMAS_PRIM_INC`](#pob_15ymas_prim_inc) | Population aged 15 and over with incomplete primary education. | persons | Both | `P15PRI_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 55 | n/a |
+| 160 | [`POB_15YMAS_PRIM_COM`](#pob_15ymas_prim_com) | Population aged 15 and over with complete primary education (as highest level). | persons | Both | `P15PRI_CO` | 95.6 / 86.6 | 100.0 / 99.9 | 97 | n/a |
+| 161 | [`POB_15YMAS_SEC_INC`](#pob_15ymas_sec_inc) | Population aged 15 and over with incomplete lower secondary education. | persons | Both | `P15SEC_IN` | 95.6 / 86.6 | 100.0 / 99.9 | 23 | n/a |
+| 162 | [`POB_6A11`](#pob_6a11) | Population aged 6 to 11. | persons | Both | `P_6A11` | 95.6 / 86.6 | 100.0 / 99.9 | 114 | n/a |
+| 163 | [`POB_12A14`](#pob_12a14) | Population aged 12 to 14. | persons | Both | `P_12A14` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 164 | [`POB_6A11_NOASIS`](#pob_6a11_noasis) | Population aged 6 to 11 not attending school. | persons | Both | `P6A11_NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 165 | [`POB_12A14_NOASIS`](#pob_12a14_noasis) | Population aged 12 to 14 not attending school. | persons | Both | `P12A14NOA` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 166 | [`POB_15A17`](#pob_15a17) | Population aged 15 to 17. | persons | Both | `P_15A17` | 95.6 / 86.6 | 100.0 / 99.9 | 57 | n/a |
+| 167 | [`POB_18A24`](#pob_18a24) | Population aged 18 to 24. | persons | Both | `P_18A24` | 95.6 / 86.6 | 100.0 / 99.9 | 126 | n/a |
+| 168 | [`POB_15A17_ASIS`](#pob_15a17_asis) | Population aged 15 to 17 attending school. | persons | Both | `P15A17A` | 95.6 / 86.6 | 100.0 / 99.9 | 41 | n/a |
+| 169 | [`POB_18A24_ASIS`](#pob_18a24_asis) | Population aged 18 to 24 attending school. | persons | Both | `P18A24A` | 95.6 / 86.6 | 100.0 / 99.9 | 34 | n/a |
+| 170 | [`POB_PEA`](#pob_pea) | Economically active population aged 12 and over. | persons | Both | `PEA` | 95.6 / 86.6 | 100.0 / 99.9 | 547 | n/a |
+| 171 | [`POB_PEA_F`](#pob_pea_f) | Economically active women aged 12 and over. | persons | Both | `PEA_F` | 95.6 / 86.6 | 100.0 / 99.9 | 210 | n/a |
+| 172 | [`POB_INAC`](#pob_inac) | Economically inactive population aged 12 and over. | persons | Both | `PE_INAC` | 95.6 / 86.6 | 100.0 / 99.9 | 349 | n/a |
+| 173 | [`POB_INAC_F`](#pob_inac_f) | Economically inactive women aged 12 and over. | persons | Both | `PE_INAC_F` | 95.6 / 86.6 | 100.0 / 99.9 | 244 | n/a |
+| 174 | [`POB_DESOCUP`](#pob_desocup) | Unemployed population aged 12 and over. | persons | Both | `PDESOCUP` | 95.6 / 86.6 | 100.0 / 99.9 | 7 | n/a |
+| 175 | [`HOGARES`](#hogares) | Total census households. | households | Both | `TOTHOG` | 95.6 / 86.6 | 100.0 / 99.9 | 330 | n/a |
+| 176 | [`HOGARES_JEFA`](#hogares_jefa) | Census households whose reference person is a woman. | households | Both | `HOGJEF_F` | 95.6 / 86.6 | 100.0 / 99.9 | 98 | n/a |
+| 177 | [`VIV_OCUPANTES`](#viv_ocupantes) | Occupants of inhabited private dwellings. | persons | Both | `OCUPVIVPAR` | 95.6 / 86.6 | 100.0 / 99.9 | 1,154 | n/a |
+| 178 | [`VIV_SIN_DRENAJE`](#viv_sin_drenaje) | Dwellings without drainage. | dwellings | Both | `VPH_NODREN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 179 | [`VIV_SIN_ELECTRICIDAD`](#viv_sin_electricidad) | Dwellings without electricity. | dwellings | Both | `VPH_S_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 180 | [`VIV_SIN_AGUA`](#viv_sin_agua) | Dwellings without piped water inside the dwelling or its plot. | dwellings | Both | `VPH_AGUAFV` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
+| 181 | [`VIV_PISO_TIERRA`](#viv_piso_tierra) | Dwellings with a dirt floor. | dwellings | Both | `VPH_PISOTI` | 95.6 / 86.6 | 100.0 / 99.9 | 4 | n/a |
+| 182 | [`VIV_1CUARTO`](#viv_1cuarto) | Dwellings with a single room. | dwellings | Both | `VPH_1CUART` | 95.6 / 86.6 | 100.0 / 99.9 | 9 | n/a |
+| 183 | [`VIV_EXCUSADO`](#viv_excusado) | Dwellings with a toilet or sanitary facility. | dwellings | Both | `VPH_EXCSA` | 95.6 / 86.6 | 100.0 / 99.9 | 301 | n/a |
+| 184 | [`VIV_LETRINA`](#viv_letrina) | Dwellings with a latrine (pit or hole). | dwellings | Both | `VPH_LETR` | 95.6 / 86.6 | 100.0 / 99.9 | 1 | n/a |
+| 185 | [`VIV_TINACO`](#viv_tinaco) | Dwellings with a rooftop water tank (tinaco). | dwellings | Both | `VPH_TINACO` | 95.6 / 86.6 | 100.0 / 99.9 | 147 | n/a |
+| 186 | [`VIV_CISTERNA`](#viv_cisterna) | Dwellings with a cistern. | dwellings | Both | `VPH_CISTER` | 95.6 / 86.6 | 100.0 / 99.9 | 24 | n/a |
+| 187 | [`VIV_REFRI`](#viv_refri) | Dwellings with a refrigerator. | dwellings | Both | `VPH_REFRI` | 95.6 / 86.6 | 100.0 / 99.9 | 277 | n/a |
+| 188 | [`VIV_LAVADORA`](#viv_lavadora) | Dwellings with a washing machine. | dwellings | Both | `VPH_LAVAD` | 95.6 / 86.6 | 100.0 / 99.9 | 220 | n/a |
+| 189 | [`VIV_AUTO`](#viv_auto) | Dwellings with a car or pickup truck. | dwellings | Both | `VPH_AUTOM` | 95.6 / 86.6 | 100.0 / 99.9 | 131 | n/a |
+| 190 | [`VIV_RADIO`](#viv_radio) | Dwellings with a radio. | dwellings | Both | `VPH_RADIO` | 95.6 / 86.6 | 100.0 / 99.9 | 201 | n/a |
+| 191 | [`VIV_TELEFONO`](#viv_telefono) | Dwellings with a landline telephone. | dwellings | Both | `VPH_TELEF` | 95.6 / 86.6 | 100.0 / 99.9 | 61 | n/a |
+| 192 | [`VIV_CELULAR`](#viv_celular) | Dwellings with a mobile phone. | dwellings | Both | `VPH_CEL` | 95.6 / 86.6 | 100.0 / 99.9 | 278 | n/a |
+| 193 | [`VIV_INTERNET`](#viv_internet) | Dwellings with internet. | dwellings | Both | `VPH_INTER` | 95.6 / 86.6 | 100.0 / 99.9 | 112 | n/a |
+| 194 | [`VIV_COMPU`](#viv_compu) | Dwellings with a computer, laptop or tablet. | dwellings | Both | `VPH_PC` | 95.6 / 86.6 | 100.0 / 99.9 | 73 | n/a |
+| 195 | [`VIV_SIN_RADIO_TV`](#viv_sin_radio_tv) | Dwellings with neither radio nor television. | dwellings | Both | `VPH_SINRTV` | 95.6 / 86.6 | 100.0 / 99.9 | 10 | n/a |
+| 196 | [`VIV_SIN_TEL_CEL`](#viv_sin_tel_cel) | Dwellings with neither landline nor mobile phone. | dwellings | Both | `VPH_SINLTC` | 95.6 / 86.6 | 100.0 / 99.9 | 16 | n/a |
+| 197 | [`VIV_SIN_TIC`](#viv_sin_tic) | Dwellings without information and communication technologies. | dwellings | Both | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
+| 198 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Dwellings with no goods at all. | dwellings | Both | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
 
 ### Metadata
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 210 | [`YEAR_GEOMETRY`](#year_geometry) | Reference year of the geometry. | year | Both | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 211 | [`YEAR_CENSUS`](#year_census) | Reference year of the census. | year | Both | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 212 | [`YEAR_CONEVAL`](#year_coneval) | Reference year of CONEVAL's GRS. | year | Both | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 213 | [`YEAR_DENUE`](#year_denue) | DENUE version. | year-month | Both | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 214 | [`YEAR_HIDRO`](#year_hidro) | Reference year of the water body layer. | year | Both | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 215 | [`YEAR_USV`](#year_usv) | Reference year of the land use and vegetation layer. | year | Both | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
-| 216 | [`YEAR_CLUES`](#year_clues) | Cut-off of the CLUES catalog of health facilities. | year-month | Both | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 217 | [`YEAR_CEM`](#year_cem) | Publication year of the Continuo de Elevaciones Mexicano 4.0. | year | Both | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
-| 218 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Year of edition 2.0 of the 1:50,000 Hydrographic Network. | year | Both | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
-| 219 | [`YEAR_COSTA`](#year_costa) | Year of the CONABIO coastline layer. | year | Both | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 220 | [`YEAR_CENAPRED`](#year_cenapred) | Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos. | year | Both | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
-| 221 | [`YEAR_ICMM`](#year_icmm) | Edition of the Ingreso Corriente para los Municipios de México. | year | Both | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
+| 199 | [`YEAR_GEOMETRY`](#year_geometry) | Reference year of the geometry. | year | Both | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 200 | [`YEAR_CENSUS`](#year_census) | Reference year of the census. | year | Both | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 201 | [`YEAR_CONEVAL`](#year_coneval) | Reference year of CONEVAL's GRS. | year | Both | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
+| 202 | [`YEAR_DENUE`](#year_denue) | DENUE version. | year-month | Both | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 203 | [`YEAR_HIDRO`](#year_hidro) | Reference year of the water body layer. | year | Both | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 204 | [`YEAR_USV`](#year_usv) | Reference year of the land use and vegetation layer. | year | Both | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
+| 205 | [`YEAR_CLUES`](#year_clues) | Cut-off of the CLUES catalog of health facilities. | year-month | Both | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 206 | [`YEAR_CEM`](#year_cem) | Publication year of the Continuo de Elevaciones Mexicano 4.0. | year | Both | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
+| 207 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Year of edition 2.0 of the 1:50,000 Hydrographic Network. | year | Both | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
+| 208 | [`YEAR_COSTA`](#year_costa) | Year of the CONABIO coastline layer. | year | Both | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
+| 209 | [`YEAR_CENAPRED`](#year_cenapred) | Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos. | year | Both | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
+| 210 | [`YEAR_ICMM`](#year_icmm) | Edition of the Ingreso Corriente para los Municipios de México. | year | Both | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
+
+### Geometry
+
+| # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
+|---|---|---|---|---|---|---|---|---|---|
+| 211 | [`geom`](#geom) | Polygon or multipolygon of the AGEB. | EPSG:4326 | Both | `geometry` |  /  |  /  |  | n/a |
 
 ## ageb_integrada column cards
 
@@ -406,7 +401,7 @@ One card per column, in CSV order.
 <a id="id_ageb"></a>
 #### 1. `ID_AGEB`
 
-Unique AGEB key: state (2) + municipality (3) + locality (4) + AGEB (4).
+AGEB key.
 
 | Field | Value |
 |---|---|
@@ -415,258 +410,16 @@ Unique AGEB key: state (2) + municipality (3) + locality (4) + AGEB (4).
 | Unit | code |
 | Scope | Both |
 | Source | MG2020 |
-| Source variable | `CVEGEO` |
-| Derivation | Urban: 13-character CVEGEO. Rural: CVE_ENT + CVE_MUN + '0000' + CVE_AGEB. |
 | Empty values | Never |
 | Suggested dimension | Identification |
 | Suggested direction | n/a |
 | Script | 03_boundaries.R |
 | Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
 | Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | Always read as text: it has leading zeros and CVE_AGEB is alphanumeric. See D-03. |
-
-<a id="ambito"></a>
-#### 2. `AMBITO`
-
-Setting of the AGEB, according to the Marco Geoestadístico layer it comes from.
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | categorical |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `layer {ENT}a / {ENT}ar` |
-| Derivation | 'Urbana' if it comes from {ENT}a.shp; 'Rural' if it comes from {ENT}ar.shp. |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | Values: Urbana (urban), Rural. Population sources differ by setting (D-11). |
-
-<a id="cve_ent"></a>
-#### 3. `CVE_ENT`
-
-State (entidad federativa) code.
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | text |
-| Unit | code |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `CVE_ENT` |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | 01 to 32. |
-
-<a id="nom_ent"></a>
-#### 4. `NOM_ENT`
-
-State name.
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | text |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `ENTITY_NAMES` |
-| Derivation | Fixed catalog in 00_config.R. |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | Without accents (e.g. 'Ciudad de Mexico', 'Nuevo Leon'). |
-
-<a id="cve_mun"></a>
-#### 5. `CVE_MUN`
-
-Municipality or territorial demarcation code (3 digits, unique only within the state).
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | text |
-| Unit | code |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `CVE_MUN` |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | The full municipal code is CVE_ENT + CVE_MUN. |
-
-<a id="nom_mun"></a>
-#### 6. `NOM_MUN`
-
-Municipality name.
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | text |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `NOMGEO (layer {ENT}mun)` |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-
-<a id="cve_loc"></a>
-#### 7. `CVE_LOC`
-
-Locality code (4 digits). '0000' by convention in rural AGEB.
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | text |
-| Unit | code |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `CVE_LOC` |
-| Derivation | Rural: '0000' (a rural AGEB does not belong to a single locality). |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | See D-03. |
-
-<a id="nom_loc"></a>
-#### 8. `NOM_LOC`
-
-Locality name.
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | text |
-| Scope | Both |
-| Source | MG2020 / CPV2020_ITER |
-| Source variable | `NOMGEO (layer {ENT}l) / NOM_LOC (ITER)` |
-| Derivation | Urban: locality name in the MG. Rural: ITER name if the AGEB has a single locality; '(varias localidades)' (several localities) if it has more. |
-| Empty values | E: uninhabited rural AGEB (no localities) |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 04_census_urban.R; 05_census_rural.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | The NOM_LOC of the urban census is unusable: it always reads 'Total AGEB urbana' (D-06). |
-
-<a id="cve_ageb"></a>
-#### 9. `CVE_AGEB`
-
-AGEB code (4 alphanumeric characters).
-
-| Field | Value |
-|---|---|
-| Block | Identification |
-| Type | text |
-| Unit | code |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `CVE_AGEB` |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-
-<a id="area_km2"></a>
-#### 10. `AREA_KM2`
-
-Area of the AGEB.
-
-| Field | Value |
-|---|---|
-| Block | Geometry |
-| Type | decimal |
-| Unit | km² |
-| Decimals | 6 |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `geometry` |
-| Derivation | Polygon area in EPSG:6372 (LCC ITRF2008) after st_make_valid(). |
-| Empty values | Never |
-| Suggested dimension | Context |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 0.3529 |
-| Range | 0.000333 – 6,420 |
-| Notes | National minimum 0.0003 km²; rural AGEB can exceed 6,000 km². |
-
-<a id="centroide_lon"></a>
-#### 11. `CENTROIDE_LON`
-
-Longitude of a representative point inside the AGEB.
-
-| Field | Value |
-|---|---|
-| Block | Geometry |
-| Type | decimal |
-| Unit | decimal degrees (EPSG:4326) |
-| Decimals | 6 |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `geometry` |
-| Derivation | st_point_on_surface() in EPSG:6372, transformed to EPSG:4326. |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | -100.4 |
-| Range | -118.3 – -86.71 |
-| Notes | Not the geometric centroid: it is guaranteed to fall inside the polygon (D-07). |
-
-<a id="centroide_lat"></a>
-#### 12. `CENTROIDE_LAT`
-
-Latitude of a representative point inside the AGEB.
-
-| Field | Value |
-|---|---|
-| Block | Geometry |
-| Type | decimal |
-| Unit | decimal degrees (EPSG:4326) |
-| Decimals | 6 |
-| Scope | Both |
-| Source | MG2020 |
-| Source variable | `geometry` |
-| Derivation | Same as CENTROIDE_LON. |
-| Empty values | Never |
-| Suggested dimension | Identification |
-| Suggested direction | n/a |
-| Script | 03_boundaries.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 20.64 |
-| Range | 14.59 – 32.72 |
+| Notes | The table's only identification column: entity, municipality, locality, setting, area and interior point come from joining ageb_ids on this key. |
 
 <a id="pob_total"></a>
-#### 13. `POB_TOTAL`
+#### 2. `POB_TOTAL`
 
 Total usually resident population.
 
@@ -690,7 +443,7 @@ Total usually resident population.
 | Notes | Never suppressed by INEGI. The national sum matches the Census exactly: 126,014,024 (D-12). |
 
 <a id="pob_reportada"></a>
-#### 14. `POB_REPORTADA`
+#### 3. `POB_REPORTADA`
 
 Population whose characteristics the census does publish.
 
@@ -714,7 +467,7 @@ Population whose characteristics the census does publish.
 | Notes | See D-14. |
 
 <a id="pct_pob_reportada"></a>
-#### 15. `PCT_POB_REPORTADA`
+#### 4. `PCT_POB_REPORTADA`
 
 Share of the AGEB population whose characteristics the census publishes.
 
@@ -739,7 +492,7 @@ Share of the AGEB population whose characteristics the census publishes.
 | Notes | Use it as a reliability weight or filter for the shares, especially in rural areas. |
 
 <a id="n_celdas_imputadas"></a>
-#### 16. `N_CELDAS_IMPUTADAS`
+#### 5. `N_CELDAS_IMPUTADAS`
 
 Number of census cells in the AGEB imputed as 1.5 because they were suppressed ('*').
 
@@ -762,7 +515,7 @@ Number of census cells in the AGEB imputed as 1.5 because they were suppressed (
 | Notes | Always 0 in rural AGEB (ITER does publish 1 and 2). Nationally: 253,460 cells in 55,573 urban AGEB (D-15). |
 
 <a id="pob_hombres"></a>
-#### 17. `POB_HOMBRES`
+#### 6. `POB_HOMBRES`
 
 Male population.
 
@@ -786,7 +539,7 @@ Male population.
 | Notes | Can be 1.5 in urban AGEB (imputation). |
 
 <a id="pob_mujeres"></a>
-#### 18. `POB_MUJERES`
+#### 7. `POB_MUJERES`
 
 Female population.
 
@@ -809,7 +562,7 @@ Female population.
 | Range | 0 – 23,939 |
 
 <a id="pct_hombres"></a>
-#### 19. `PCT_HOMBRES`
+#### 8. `PCT_HOMBRES`
 
 Share of men.
 
@@ -834,7 +587,7 @@ Share of men.
 | Range | 0 – 100 |
 
 <a id="pct_mujeres"></a>
-#### 20. `PCT_MUJERES`
+#### 9. `PCT_MUJERES`
 
 Share of women.
 
@@ -859,7 +612,7 @@ Share of women.
 | Range | 0 – 100 |
 
 <a id="dens_pob_km2"></a>
-#### 21. `DENS_POB_KM2`
+#### 10. `DENS_POB_KM2`
 
 Population density.
 
@@ -884,7 +637,7 @@ Population density.
 | Notes | In rural AGEB it divides by the whole territory, not by the inhabited area. |
 
 <a id="pob_por_viv"></a>
-#### 22. `POB_POR_VIV`
+#### 11. `POB_POR_VIV`
 
 Persons per inhabited private dwelling.
 
@@ -909,7 +662,7 @@ Persons per inhabited private dwelling.
 | Notes | Uses total population, not occupants. In tiny AGEB with imputed dwellings it yields extreme values (52 AGEB > 10; max 679): filter by size. |
 
 <a id="viv_part_hab"></a>
-#### 23. `VIV_PART_HAB`
+#### 12. `VIV_PART_HAB`
 
 Total inhabited private dwellings.
 
@@ -933,7 +686,7 @@ Total inhabited private dwellings.
 | Notes | Includes dwellings with no occupant information, which is why it is NOT the denominator of housing shares (D-18). In 781 urban AGEB with population 0 it is 1.5 through imputation; no share is affected. |
 
 <a id="viv_caract"></a>
-#### 24. `VIV_CARACT`
+#### 13. `VIV_CARACT`
 
 Inhabited private dwellings whose characteristics were captured (estimate). Denominator of every housing share.
 
@@ -957,7 +710,7 @@ Inhabited private dwellings whose characteristics were captured (estimate). Deno
 | Notes | The census does not publish this universe (CONEVAL does use it). It is the largest of its lower bounds, capped by TVIVPARHAB. See D-18. |
 
 <a id="viv_drenaje"></a>
-#### 25. `VIV_DRENAJE`
+#### 14. `VIV_DRENAJE`
 
 Dwellings with drainage (public sewer, septic tank, ravine, river, lake or sea).
 
@@ -980,7 +733,7 @@ Dwellings with drainage (public sewer, septic tank, ravine, river, lake or sea).
 | Range | 0 – 9,111 |
 
 <a id="viv_electricidad"></a>
-#### 26. `VIV_ELECTRICIDAD`
+#### 15. `VIV_ELECTRICIDAD`
 
 Dwellings with electricity.
 
@@ -1003,7 +756,7 @@ Dwellings with electricity.
 | Range | 0 – 10,011 |
 
 <a id="pct_drenaje"></a>
-#### 27. `PCT_DRENAJE`
+#### 16. `PCT_DRENAJE`
 
 Share of dwellings with drainage.
 
@@ -1029,7 +782,7 @@ Share of dwellings with drainage.
 | Notes | Its denominator changed (formerly TVIVPARHAB). For the deprivation use PCT_VIV_SIN_DRENAJE, which is not 100 − this value (D-19). |
 
 <a id="pct_electric"></a>
-#### 28. `PCT_ELECTRIC`
+#### 17. `PCT_ELECTRIC`
 
 Share of dwellings with electricity.
 
@@ -1055,7 +808,7 @@ Share of dwellings with electricity.
 | Notes | Same as PCT_DRENAJE; for the deprivation use PCT_VIV_SIN_ELECTRIC. |
 
 <a id="pct_pob_0a5"></a>
-#### 29. `PCT_POB_0A5`
+#### 18. `PCT_POB_0A5`
 
 Share of population aged 0 to 5.
 
@@ -1081,7 +834,7 @@ Share of population aged 0 to 5.
 | Notes | Heat, waterborne disease and dependence during evacuation. |
 
 <a id="pct_pob_65ymas"></a>
-#### 30. `PCT_POB_65YMAS`
+#### 19. `PCT_POB_65YMAS`
 
 Share of population aged 65 and over.
 
@@ -1107,7 +860,7 @@ Share of population aged 65 and over.
 | Notes | Heat mortality, reduced mobility. |
 
 <a id="pct_pob_disc"></a>
-#### 31. `PCT_POB_DISC`
+#### 20. `PCT_POB_DISC`
 
 Share of population with a disability.
 
@@ -1133,7 +886,7 @@ Share of population with a disability.
 | Notes | Disability = much difficulty with, or inability to, see, hear, walk, remember, care for oneself or communicate. |
 
 <a id="pct_pob_hli"></a>
-#### 32. `PCT_POB_HLI`
+#### 21. `PCT_POB_HLI`
 
 Share of population aged 3 and over who speak an indigenous language.
 
@@ -1159,7 +912,7 @@ Share of population aged 3 and over who speak an indigenous language.
 | Notes | Proxy of structural marginalization. For the language barrier to warnings, PCT_POB_HLI_NHE is better. |
 
 <a id="pct_pob_hli_nhe"></a>
-#### 33. `PCT_POB_HLI_NHE`
+#### 22. `PCT_POB_HLI_NHE`
 
 Share of population aged 3 and over who speak an indigenous language and do not speak Spanish.
 
@@ -1185,7 +938,7 @@ Share of population aged 3 and over who speak an indigenous language and do not 
 | Notes | Direct barrier to receiving official warnings and alerts. National median 0 %: highly concentrated. |
 
 <a id="pct_hog_jefa"></a>
-#### 34. `PCT_HOG_JEFA`
+#### 23. `PCT_HOG_JEFA`
 
 Share of census households whose reference person is a woman.
 
@@ -1211,7 +964,7 @@ Share of census households whose reference person is a woman.
 | Notes | Common in the social vulnerability literature, but its direction is debatable; decide when building the index. |
 
 <a id="pct_pob_sin_salud"></a>
-#### 35. `PCT_POB_SIN_SALUD`
+#### 24. `PCT_POB_SIN_SALUD`
 
 Share of population without health service affiliation.
 
@@ -1237,7 +990,7 @@ Share of population without health service affiliation.
 | Notes | Equivalent of RZ_SSALUD. |
 
 <a id="pct_analf"></a>
-#### 36. `PCT_ANALF`
+#### 25. `PCT_ANALF`
 
 Share of population aged 15 and over who are illiterate.
 
@@ -1263,7 +1016,7 @@ Share of population aged 15 and over who are illiterate.
 | Notes | Equivalent of RZ_ANALF. |
 
 <a id="pct_edu_bas_inc"></a>
-#### 37. `PCT_EDU_BAS_INC`
+#### 26. `PCT_EDU_BAS_INC`
 
 Share of population aged 15 and over with incomplete basic education.
 
@@ -1289,7 +1042,7 @@ Share of population aged 15 and over with incomplete basic education.
 | Notes | Equivalent of RZ_EBINC. Capped at 100 because it adds four possibly imputed cells (D-20). |
 
 <a id="pct_noasis_6a14"></a>
-#### 38. `PCT_NOASIS_6A14`
+#### 27. `PCT_NOASIS_6A14`
 
 Share of population aged 6 to 14 not attending school.
 
@@ -1315,7 +1068,7 @@ Share of population aged 6 to 14 not attending school.
 | Notes | Equivalent of RZ_INA614. |
 
 <a id="pct_noasis_15a24"></a>
-#### 39. `PCT_NOASIS_15A24`
+#### 28. `PCT_NOASIS_15A24`
 
 Share of population aged 15 to 24 not attending school.
 
@@ -1341,7 +1094,7 @@ Share of population aged 15 to 24 not attending school.
 | Notes | Equivalent of RZ_INA1524. It is a difference: it includes those who did not specify attendance. National median 56 %: weakly discriminating for vulnerability. |
 
 <a id="pct_pea"></a>
-#### 40. `PCT_PEA`
+#### 29. `PCT_PEA`
 
 Labour force participation rate: share of the population aged 12 and over with a specified activity status who are economically active.
 
@@ -1367,7 +1120,7 @@ Labour force participation rate: share of the population aged 12 and over with a
 | Notes | Does not divide by P_12YMAS: the unspecified share is 0.2–0.5 % per state but reaches 27 % in some AGEB. Summed from Oaxaca's AGEB it gives 57.03 %, equal to the ITER state total. The census does not capture income; this is the closest economic signal. |
 
 <a id="pct_pea_f"></a>
-#### 41. `PCT_PEA_F`
+#### 30. `PCT_PEA_F`
 
 Female labour force participation rate: share of women aged 12 and over with a specified activity status who are economically active.
 
@@ -1393,7 +1146,7 @@ Female labour force participation rate: share of women aged 12 and over with a s
 | Notes | Discriminates more than PCT_PEA across AGEB (Oaxaca: 34 % rural against 48 % urban). Correlates with PCT_HOG_JEFA and with educational lag; check collinearity when building the index. |
 
 <a id="pct_desocup"></a>
-#### 42. `PCT_DESOCUP`
+#### 31. `PCT_DESOCUP`
 
 Unemployment rate: share of the economically active population with no job who looked for one.
 
@@ -1419,7 +1172,7 @@ Unemployment rate: share of the economically active population with no job who l
 | Notes | Weakly discriminating: informal work counts as employment and the census rate is low (1.7–2.3 % per state). In urban AGEB the count is often 1–2 and imputed as 1.5 (D-15), so in small AGEB it is noise. |
 
 <a id="pct_viv_sin_drenaje"></a>
-#### 43. `PCT_VIV_SIN_DRENAJE`
+#### 32. `PCT_VIV_SIN_DRENAJE`
 
 Share of dwellings without drainage.
 
@@ -1445,7 +1198,7 @@ Share of dwellings without drainage.
 | Notes | Equivalent of RZ_SDREN. Direct count, not 100 − PCT_DRENAJE (D-19). |
 
 <a id="pct_viv_sin_electric"></a>
-#### 44. `PCT_VIV_SIN_ELECTRIC`
+#### 33. `PCT_VIV_SIN_ELECTRIC`
 
 Share of dwellings without electricity.
 
@@ -1471,7 +1224,7 @@ Share of dwellings without electricity.
 | Notes | Equivalent of RZ_SELEC. |
 
 <a id="pct_viv_sin_agua"></a>
-#### 45. `PCT_VIV_SIN_AGUA`
+#### 34. `PCT_VIV_SIN_AGUA`
 
 Share of dwellings without piped water inside the dwelling or its plot.
 
@@ -1497,7 +1250,7 @@ Share of dwellings without piped water inside the dwelling or its plot.
 | Notes | Equivalent of RZ_SAGUA. Water stress and drought. |
 
 <a id="pct_viv_piso_tierra"></a>
-#### 46. `PCT_VIV_PISO_TIERRA`
+#### 35. `PCT_VIV_PISO_TIERRA`
 
 Share of dwellings with a dirt floor.
 
@@ -1523,7 +1276,7 @@ Share of dwellings with a dirt floor.
 | Notes | Equivalent of RZ_PISOT. Proxy of housing precariousness in the face of flooding. |
 
 <a id="pct_viv_1cuarto"></a>
-#### 47. `PCT_VIV_1CUARTO`
+#### 36. `PCT_VIV_1CUARTO`
 
 Share of dwellings with a single room.
 
@@ -1549,7 +1302,7 @@ Share of dwellings with a single room.
 | Notes | Overcrowding and indoor heat. |
 
 <a id="pct_viv_sin_sanitario"></a>
-#### 48. `PCT_VIV_SIN_SANITARIO`
+#### 37. `PCT_VIV_SIN_SANITARIO`
 
 Share of dwellings with no toilet, sanitary facility or latrine.
 
@@ -1575,7 +1328,7 @@ Share of dwellings with no toilet, sanitary facility or latrine.
 | Notes | Equivalent of RZ_SEXCUS. The only complement: no direct count exists. As in CONEVAL, a latrine counts as a sanitary facility (D-19). |
 
 <a id="pct_viv_tinaco"></a>
-#### 49. `PCT_VIV_TINACO`
+#### 38. `PCT_VIV_TINACO`
 
 Share of dwellings with a rooftop water tank (tinaco).
 
@@ -1601,7 +1354,7 @@ Share of dwellings with a rooftop water tank (tinaco).
 | Notes | Water storage against supply cuts and drought. |
 
 <a id="pct_viv_cisterna"></a>
-#### 50. `PCT_VIV_CISTERNA`
+#### 39. `PCT_VIV_CISTERNA`
 
 Share of dwellings with a cistern.
 
@@ -1626,7 +1379,7 @@ Share of dwellings with a cistern.
 | Range | 0 – 100 |
 
 <a id="pct_viv_refri"></a>
-#### 51. `PCT_VIV_REFRI`
+#### 40. `PCT_VIV_REFRI`
 
 Share of dwellings with a refrigerator.
 
@@ -1652,7 +1405,7 @@ Share of dwellings with a refrigerator.
 | Notes | RZ_SREFRI = 100 − this value (CONEVAL publishes the deprivation). |
 
 <a id="pct_viv_lavadora"></a>
-#### 52. `PCT_VIV_LAVADORA`
+#### 41. `PCT_VIV_LAVADORA`
 
 Share of dwellings with a washing machine.
 
@@ -1678,7 +1431,7 @@ Share of dwellings with a washing machine.
 | Notes | RZ_SLAVAD = 100 − this value. |
 
 <a id="pct_viv_auto"></a>
-#### 53. `PCT_VIV_AUTO`
+#### 42. `PCT_VIV_AUTO`
 
 Share of dwellings with a car or pickup truck.
 
@@ -1704,7 +1457,7 @@ Share of dwellings with a car or pickup truck.
 | Notes | Evacuation capacity. |
 
 <a id="pct_viv_radio"></a>
-#### 54. `PCT_VIV_RADIO`
+#### 43. `PCT_VIV_RADIO`
 
 Share of dwellings with a radio.
 
@@ -1730,7 +1483,7 @@ Share of dwellings with a radio.
 | Notes | Early-warning channel that does not depend on the power grid or on data networks. |
 
 <a id="pct_viv_telefono"></a>
-#### 55. `PCT_VIV_TELEFONO`
+#### 44. `PCT_VIV_TELEFONO`
 
 Share of dwellings with a landline telephone.
 
@@ -1756,7 +1509,7 @@ Share of dwellings with a landline telephone.
 | Notes | RZ_STELF = 100 − this value. |
 
 <a id="pct_viv_celular"></a>
-#### 56. `PCT_VIV_CELULAR`
+#### 45. `PCT_VIV_CELULAR`
 
 Share of dwellings with a mobile phone.
 
@@ -1782,7 +1535,7 @@ Share of dwellings with a mobile phone.
 | Notes | RZ_SCEL = 100 − this value. |
 
 <a id="pct_viv_internet"></a>
-#### 57. `PCT_VIV_INTERNET`
+#### 46. `PCT_VIV_INTERNET`
 
 Share of dwellings with internet.
 
@@ -1808,7 +1561,7 @@ Share of dwellings with internet.
 | Notes | RZ_SINTER = 100 − this value. |
 
 <a id="pct_viv_compu"></a>
-#### 58. `PCT_VIV_COMPU`
+#### 47. `PCT_VIV_COMPU`
 
 Share of dwellings with a computer, laptop or tablet.
 
@@ -1834,7 +1587,7 @@ Share of dwellings with a computer, laptop or tablet.
 | Notes | RZ_SCOMPU = 100 − this value. |
 
 <a id="pct_viv_sin_radio_tv"></a>
-#### 59. `PCT_VIV_SIN_RADIO_TV`
+#### 48. `PCT_VIV_SIN_RADIO_TV`
 
 Share of dwellings with neither radio nor television.
 
@@ -1859,7 +1612,7 @@ Share of dwellings with neither radio nor television.
 | Range | 0 – 100 |
 
 <a id="pct_viv_sin_tel_cel"></a>
-#### 60. `PCT_VIV_SIN_TEL_CEL`
+#### 49. `PCT_VIV_SIN_TEL_CEL`
 
 Share of dwellings with neither landline nor mobile phone.
 
@@ -1884,7 +1637,7 @@ Share of dwellings with neither landline nor mobile phone.
 | Range | 0 – 100 |
 
 <a id="pct_viv_sin_tic"></a>
-#### 61. `PCT_VIV_SIN_TIC`
+#### 50. `PCT_VIV_SIN_TIC`
 
 Share of dwellings with no information and communication technology at all.
 
@@ -1910,7 +1663,7 @@ Share of dwellings with no information and communication technology at all.
 | Notes | No radio, TV, computer, landline, mobile phone, internet, pay TV, streaming or games console. Highly correlated with PCT_VIV_SIN_BIENES. |
 
 <a id="pct_viv_sin_bienes"></a>
-#### 62. `PCT_VIV_SIN_BIENES`
+#### 51. `PCT_VIV_SIN_BIENES`
 
 Share of dwellings with no goods at all.
 
@@ -1936,7 +1689,7 @@ Share of dwellings with no goods at all.
 | Notes | No refrigerator, washing machine, microwave, vehicle, bicycle or any ICT. |
 
 <a id="graproes"></a>
-#### 63. `GRAPROES`
+#### 52. `GRAPROES`
 
 Average years of schooling of the population aged 15 and over.
 
@@ -1962,7 +1715,7 @@ Average years of schooling of the population aged 15 and over.
 | Notes | Averages are not summed: they are turned into totals and divided again (D-17). INEGI excludes those who did not specify their grade; here the denominator includes them, a minor difference. |
 
 <a id="pro_ocup_c"></a>
-#### 64. `PRO_OCUP_C`
+#### 53. `PRO_OCUP_C`
 
 Average occupants per room in inhabited private dwellings.
 
@@ -1988,7 +1741,7 @@ Average occupants per room in inhabited private dwellings.
 | Notes | Stand-in for RZ_HACIN (the census does not publish the count of overcrowded dwellings). Not validated against CONEVAL because one is an average and the other a share. |
 
 <a id="grs_grado"></a>
-#### 65. `GRS_GRADO`
+#### 54. `GRS_GRADO`
 
 CONEVAL's Social Lag Grade (Grado de Rezago Social) of the urban AGEB.
 
@@ -2009,7 +1762,7 @@ CONEVAL's Social Lag Grade (Grado de Rezago Social) of the urban AGEB.
 | Notes | Values: Muy bajo, Bajo, Medio, Alto, Muy alto (very low to very high). There is no continuous index (IRS) per AGEB (D-23). |
 
 <a id="grs_num"></a>
-#### 66. `GRS_NUM`
+#### 55. `GRS_NUM`
 
 Social Lag Grade, numerically coded.
 
@@ -2033,7 +1786,7 @@ Social Lag Grade, numerically coded.
 | Notes | Ordinal: do not average it as if it were continuous. |
 
 <a id="rz_analf"></a>
-#### 67. `RZ_ANALF`
+#### 56. `RZ_ANALF`
 
 CONEVAL: % of population aged 15 or over who are illiterate.
 
@@ -2058,7 +1811,7 @@ CONEVAL: % of population aged 15 or over who are illiterate.
 | Notes | Census equivalent: PCT_ANALF. |
 
 <a id="rz_ina614"></a>
-#### 68. `RZ_INA614`
+#### 57. `RZ_INA614`
 
 CONEVAL: % of population aged 6 to 14 not attending school.
 
@@ -2083,7 +1836,7 @@ CONEVAL: % of population aged 6 to 14 not attending school.
 | Notes | Equivalent: PCT_NOASIS_6A14. |
 
 <a id="rz_ina1524"></a>
-#### 69. `RZ_INA1524`
+#### 58. `RZ_INA1524`
 
 CONEVAL: % of population aged 15 to 24 not attending school.
 
@@ -2108,7 +1861,7 @@ CONEVAL: % of population aged 15 to 24 not attending school.
 | Notes | Equivalent: PCT_NOASIS_15A24. |
 
 <a id="rz_ebinc"></a>
-#### 70. `RZ_EBINC`
+#### 59. `RZ_EBINC`
 
 CONEVAL: % of population aged 15 or over with incomplete basic education.
 
@@ -2133,7 +1886,7 @@ CONEVAL: % of population aged 15 or over with incomplete basic education.
 | Notes | Equivalent: PCT_EDU_BAS_INC. |
 
 <a id="rz_ssalud"></a>
-#### 71. `RZ_SSALUD`
+#### 60. `RZ_SSALUD`
 
 CONEVAL: % of population without health service entitlement.
 
@@ -2158,7 +1911,7 @@ CONEVAL: % of population without health service entitlement.
 | Notes | Equivalent: PCT_POB_SIN_SALUD. |
 
 <a id="rz_hacin"></a>
-#### 72. `RZ_HACIN`
+#### 61. `RZ_HACIN`
 
 CONEVAL: % of overcrowded dwellings.
 
@@ -2183,7 +1936,7 @@ CONEVAL: % of overcrowded dwellings.
 | Notes | No exact equivalent; PRO_OCUP_C is the closest stand-in. |
 
 <a id="rz_sagua"></a>
-#### 73. `RZ_SAGUA`
+#### 62. `RZ_SAGUA`
 
 CONEVAL: % of dwellings without piped water from the public network.
 
@@ -2208,7 +1961,7 @@ CONEVAL: % of dwellings without piped water from the public network.
 | Notes | Equivalent: PCT_VIV_SIN_AGUA. |
 
 <a id="rz_sexcus"></a>
-#### 74. `RZ_SEXCUS`
+#### 63. `RZ_SEXCUS`
 
 CONEVAL: % of dwellings without a toilet or sanitary facility.
 
@@ -2233,7 +1986,7 @@ CONEVAL: % of dwellings without a toilet or sanitary facility.
 | Notes | Equivalent: PCT_VIV_SIN_SANITARIO. |
 
 <a id="rz_sdren"></a>
-#### 75. `RZ_SDREN`
+#### 64. `RZ_SDREN`
 
 CONEVAL: % of dwellings without drainage.
 
@@ -2258,7 +2011,7 @@ CONEVAL: % of dwellings without drainage.
 | Notes | Equivalent: PCT_VIV_SIN_DRENAJE. |
 
 <a id="rz_selec"></a>
-#### 76. `RZ_SELEC`
+#### 65. `RZ_SELEC`
 
 CONEVAL: % of dwellings without electricity.
 
@@ -2283,7 +2036,7 @@ CONEVAL: % of dwellings without electricity.
 | Notes | Equivalent: PCT_VIV_SIN_ELECTRIC. |
 
 <a id="rz_pisot"></a>
-#### 77. `RZ_PISOT`
+#### 66. `RZ_PISOT`
 
 CONEVAL: % of dwellings with a dirt floor.
 
@@ -2308,7 +2061,7 @@ CONEVAL: % of dwellings with a dirt floor.
 | Notes | Equivalent: PCT_VIV_PISO_TIERRA. |
 
 <a id="rz_slavad"></a>
-#### 78. `RZ_SLAVAD`
+#### 67. `RZ_SLAVAD`
 
 CONEVAL: % of dwellings without a washing machine.
 
@@ -2333,7 +2086,7 @@ CONEVAL: % of dwellings without a washing machine.
 | Notes | Equivalent: 100 − PCT_VIV_LAVADORA. |
 
 <a id="rz_srefri"></a>
-#### 79. `RZ_SREFRI`
+#### 68. `RZ_SREFRI`
 
 CONEVAL: % of dwellings without a refrigerator.
 
@@ -2358,7 +2111,7 @@ CONEVAL: % of dwellings without a refrigerator.
 | Notes | Equivalent: 100 − PCT_VIV_REFRI. |
 
 <a id="rz_stelf"></a>
-#### 80. `RZ_STELF`
+#### 69. `RZ_STELF`
 
 CONEVAL: % of dwellings without a landline telephone.
 
@@ -2383,7 +2136,7 @@ CONEVAL: % of dwellings without a landline telephone.
 | Notes | Equivalent: 100 − PCT_VIV_TELEFONO. |
 
 <a id="rz_scel"></a>
-#### 81. `RZ_SCEL`
+#### 70. `RZ_SCEL`
 
 CONEVAL: % of dwellings without a mobile phone.
 
@@ -2408,7 +2161,7 @@ CONEVAL: % of dwellings without a mobile phone.
 | Notes | Equivalent: 100 − PCT_VIV_CELULAR. |
 
 <a id="rz_scompu"></a>
-#### 82. `RZ_SCOMPU`
+#### 71. `RZ_SCOMPU`
 
 CONEVAL: % of dwellings without a computer, laptop or tablet.
 
@@ -2433,7 +2186,7 @@ CONEVAL: % of dwellings without a computer, laptop or tablet.
 | Notes | Equivalent: 100 − PCT_VIV_COMPU. |
 
 <a id="rz_sinter"></a>
-#### 83. `RZ_SINTER`
+#### 72. `RZ_SINTER`
 
 CONEVAL: % of dwellings without internet.
 
@@ -2458,7 +2211,7 @@ CONEVAL: % of dwellings without internet.
 | Notes | Equivalent: 100 − PCT_VIV_INTERNET. |
 
 <a id="denue_tot"></a>
-#### 84. `DENUE_TOT`
+#### 73. `DENUE_TOT`
 
 Economic units registered in DENUE.
 
@@ -2482,7 +2235,7 @@ Economic units registered in DENUE.
 | Notes | Includes every SCIAN sector. DENUE is from 2026-05, not 2020 (D-26). |
 
 <a id="den_manuf"></a>
-#### 85. `DEN_MANUF`
+#### 74. `DEN_MANUF`
 
 Manufacturing economic units.
 
@@ -2505,7 +2258,7 @@ Manufacturing economic units.
 | Range | 0 – 948 |
 
 <a id="den_com"></a>
-#### 86. `DEN_COM`
+#### 75. `DEN_COM`
 
 Trade economic units.
 
@@ -2529,7 +2282,7 @@ Trade economic units.
 | Notes | Proxy of access to supplies. |
 
 <a id="den_serv"></a>
-#### 87. `DEN_SERV`
+#### 76. `DEN_SERV`
 
 Service economic units.
 
@@ -2553,7 +2306,7 @@ Service economic units.
 | Notes | Includes DEN_EDU: the counts are not additive. |
 
 <a id="den_edu"></a>
-#### 88. `DEN_EDU`
+#### 77. `DEN_EDU`
 
 Educational service economic units.
 
@@ -2577,7 +2330,7 @@ Educational service economic units.
 | Notes | Subset of DEN_SERV. Identical to SCHOOL_TOT across the country. |
 
 <a id="den_gob"></a>
-#### 89. `DEN_GOB`
+#### 78. `DEN_GOB`
 
 Units of legislative, governmental and judicial activities.
 
@@ -2601,7 +2354,7 @@ Units of legislative, governmental and judicial activities.
 | Notes | Proxy of institutional presence. |
 
 <a id="school_tot"></a>
-#### 90. `SCHOOL_TOT`
+#### 79. `SCHOOL_TOT`
 
 Schools (proxy of potential temporary shelters).
 
@@ -2625,7 +2378,7 @@ Schools (proxy of potential temporary shelters).
 | Notes | Currently identical to DEN_EDU (sector 61 only has subsector 611). They are not official shelters. |
 
 <a id="den_scian_11"></a>
-#### 91. `DEN_SCIAN_11`
+#### 80. `DEN_SCIAN_11`
 
 Economic units in SCIAN sector 11: Agriculture, animal production, forestry, fishing and hunting.
 
@@ -2649,7 +2402,7 @@ Economic units in SCIAN sector 11: Agriculture, animal production, forestry, fis
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_21"></a>
-#### 92. `DEN_SCIAN_21`
+#### 81. `DEN_SCIAN_21`
 
 Economic units in SCIAN sector 21: Mining.
 
@@ -2673,7 +2426,7 @@ Economic units in SCIAN sector 21: Mining.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_22"></a>
-#### 93. `DEN_SCIAN_22`
+#### 82. `DEN_SCIAN_22`
 
 Economic units in SCIAN sector 22: Electric power generation and distribution, water and pipeline gas supply.
 
@@ -2697,7 +2450,7 @@ Economic units in SCIAN sector 22: Electric power generation and distribution, w
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_23"></a>
-#### 94. `DEN_SCIAN_23`
+#### 83. `DEN_SCIAN_23`
 
 Economic units in SCIAN sector 23: Construction.
 
@@ -2721,7 +2474,7 @@ Economic units in SCIAN sector 23: Construction.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_31_33"></a>
-#### 95. `DEN_SCIAN_31_33`
+#### 84. `DEN_SCIAN_31_33`
 
 Economic units in SCIAN sector 31-33: Manufacturing.
 
@@ -2745,7 +2498,7 @@ Economic units in SCIAN sector 31-33: Manufacturing.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_43"></a>
-#### 96. `DEN_SCIAN_43`
+#### 85. `DEN_SCIAN_43`
 
 Economic units in SCIAN sector 43: Wholesale trade.
 
@@ -2769,7 +2522,7 @@ Economic units in SCIAN sector 43: Wholesale trade.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_46"></a>
-#### 97. `DEN_SCIAN_46`
+#### 86. `DEN_SCIAN_46`
 
 Economic units in SCIAN sector 46: Retail trade.
 
@@ -2793,7 +2546,7 @@ Economic units in SCIAN sector 46: Retail trade.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_48_49"></a>
-#### 98. `DEN_SCIAN_48_49`
+#### 87. `DEN_SCIAN_48_49`
 
 Economic units in SCIAN sector 48-49: Transportation, postal services and warehousing.
 
@@ -2817,7 +2570,7 @@ Economic units in SCIAN sector 48-49: Transportation, postal services and wareho
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_51"></a>
-#### 99. `DEN_SCIAN_51`
+#### 88. `DEN_SCIAN_51`
 
 Economic units in SCIAN sector 51: Information in mass media.
 
@@ -2841,7 +2594,7 @@ Economic units in SCIAN sector 51: Information in mass media.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_52"></a>
-#### 100. `DEN_SCIAN_52`
+#### 89. `DEN_SCIAN_52`
 
 Economic units in SCIAN sector 52: Financial and insurance services.
 
@@ -2865,7 +2618,7 @@ Economic units in SCIAN sector 52: Financial and insurance services.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_53"></a>
-#### 101. `DEN_SCIAN_53`
+#### 90. `DEN_SCIAN_53`
 
 Economic units in SCIAN sector 53: Real estate and rental and leasing.
 
@@ -2889,7 +2642,7 @@ Economic units in SCIAN sector 53: Real estate and rental and leasing.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_54"></a>
-#### 102. `DEN_SCIAN_54`
+#### 91. `DEN_SCIAN_54`
 
 Economic units in SCIAN sector 54: Professional, scientific and technical services.
 
@@ -2913,7 +2666,7 @@ Economic units in SCIAN sector 54: Professional, scientific and technical servic
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_55"></a>
-#### 103. `DEN_SCIAN_55`
+#### 92. `DEN_SCIAN_55`
 
 Economic units in SCIAN sector 55: Management of companies.
 
@@ -2937,7 +2690,7 @@ Economic units in SCIAN sector 55: Management of companies.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_56"></a>
-#### 104. `DEN_SCIAN_56`
+#### 93. `DEN_SCIAN_56`
 
 Economic units in SCIAN sector 56: Business support, waste management and remediation services.
 
@@ -2961,7 +2714,7 @@ Economic units in SCIAN sector 56: Business support, waste management and remedi
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_61"></a>
-#### 105. `DEN_SCIAN_61`
+#### 94. `DEN_SCIAN_61`
 
 Economic units in SCIAN sector 61: Educational services.
 
@@ -2985,7 +2738,7 @@ Economic units in SCIAN sector 61: Educational services.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_62"></a>
-#### 106. `DEN_SCIAN_62`
+#### 95. `DEN_SCIAN_62`
 
 Economic units in SCIAN sector 62: Health care and social assistance.
 
@@ -3009,7 +2762,7 @@ Economic units in SCIAN sector 62: Health care and social assistance.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_71"></a>
-#### 107. `DEN_SCIAN_71`
+#### 96. `DEN_SCIAN_71`
 
 Economic units in SCIAN sector 71: Arts, entertainment and recreation.
 
@@ -3033,7 +2786,7 @@ Economic units in SCIAN sector 71: Arts, entertainment and recreation.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_72"></a>
-#### 108. `DEN_SCIAN_72`
+#### 97. `DEN_SCIAN_72`
 
 Economic units in SCIAN sector 72: Accommodation and food services.
 
@@ -3057,7 +2810,7 @@ Economic units in SCIAN sector 72: Accommodation and food services.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_81"></a>
-#### 109. `DEN_SCIAN_81`
+#### 98. `DEN_SCIAN_81`
 
 Economic units in SCIAN sector 81: Other services except public administration.
 
@@ -3081,7 +2834,7 @@ Economic units in SCIAN sector 81: Other services except public administration.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="den_scian_93"></a>
-#### 110. `DEN_SCIAN_93`
+#### 99. `DEN_SCIAN_93`
 
 Economic units in SCIAN sector 93: Public administration.
 
@@ -3105,7 +2858,7 @@ Economic units in SCIAN sector 93: Public administration.
 | Notes | The 20 DEN_SCIAN_* add up exactly to DENUE_TOT. Wide form of denue_ageb_sector. |
 
 <a id="water_area"></a>
-#### 111. `WATER_AREA`
+#### 100. `WATER_AREA`
 
 Area of water bodies inside the AGEB.
 
@@ -3130,7 +2883,7 @@ Area of water bodies inside the AGEB.
 | Notes | Areal intersection, never a spatial join (D-27). |
 
 <a id="water_pct"></a>
-#### 112. `WATER_PCT`
+#### 101. `WATER_PCT`
 
 Share of the AGEB area covered by water bodies.
 
@@ -3155,7 +2908,7 @@ Share of the AGEB area covered by water bodies.
 | Notes | Does not measure flood hazard: only the presence of mapped surface water. |
 
 <a id="has_water"></a>
-#### 113. `HAS_WATER`
+#### 102. `HAS_WATER`
 
 Flag for the presence of water bodies in the AGEB.
 
@@ -3177,7 +2930,7 @@ Flag for the presence of water bodies in the AGEB.
 | Range | 0 – 1 |
 
 <a id="uso_dom"></a>
-#### 114. `USO_DOM`
+#### 103. `USO_DOM`
 
 Land use and vegetation class covering the largest area of the AGEB.
 
@@ -3198,7 +2951,7 @@ Land use and vegetation class covering the largest area of the AGEB.
 | Notes | 129 classes nationally; 'ASENTAMIENTOS HUMANOS' (human settlements) is the most frequent. Scale 1:250,000: little detail in small urban AGEB. |
 
 <a id="uso_pct"></a>
-#### 115. `USO_PCT`
+#### 104. `USO_PCT`
 
 Share of the AGEB covered by the dominant class.
 
@@ -3222,7 +2975,7 @@ Share of the AGEB covered by the dominant class.
 | Range | 0.08 – 100 |
 
 <a id="pct_urb"></a>
-#### 116. `PCT_URB`
+#### 105. `PCT_URB`
 
 Share of the AGEB classified as human settlement or urban area.
 
@@ -3248,7 +3001,7 @@ Share of the AGEB classified as human settlement or urban area.
 | Notes | Coarse proxy of built-up surface (heat island), limited by the 1:250,000 scale. |
 
 <a id="usv_pct_urbano"></a>
-#### 117. `USV_PCT_URBANO`
+#### 106. `USV_PCT_URBANO`
 
 Share of the AGEB covered by human settlements and urban area.
 
@@ -3274,7 +3027,7 @@ Share of the AGEB covered by human settlements and urban area.
 | Notes | ASENTAMIENTOS HUMANOS, ZONA URBANA. Equal to PCT_URB up to rounding. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_agua"></a>
-#### 118. `USV_PCT_AGUA`
+#### 107. `USV_PCT_AGUA`
 
 Share of the AGEB covered by water bodies and aquaculture.
 
@@ -3300,7 +3053,7 @@ Share of the AGEB covered by water bodies and aquaculture.
 | Notes | CUERPO DE AGUA, ACUÍCOLA. Complements WATER_PCT (INEGI hydrology 1:50,000), which is finer. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_secundaria"></a>
-#### 119. `USV_PCT_SECUNDARIA`
+#### 108. `USV_PCT_SECUNDARIA`
 
 Share of the AGEB covered by secondary vegetation (tree, shrub or herbaceous) of any formation.
 
@@ -3326,7 +3079,7 @@ Share of the AGEB covered by secondary vegetation (tree, shrub or herbaceous) of
 | Notes | Every 'VEGETACIÓN SECUNDARIA ...' class. Kept apart from its original formation because it signals degradation. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_agricola"></a>
-#### 120. `USV_PCT_AGRICOLA`
+#### 109. `USV_PCT_AGRICOLA`
 
 Share of the AGEB covered by irrigated, rain-fed or moisture agriculture.
 
@@ -3352,7 +3105,7 @@ Share of the AGEB covered by irrigated, rain-fed or moisture agriculture.
 | Notes | Every 'AGRICULTURA ...' class. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_pastizal_inducido"></a>
-#### 121. `USV_PCT_PASTIZAL_INDUCIDO`
+#### 110. `USV_PCT_PASTIZAL_INDUCIDO`
 
 Share of the AGEB covered by cultivated or induced grassland (livestock use).
 
@@ -3378,7 +3131,7 @@ Share of the AGEB covered by cultivated or induced grassland (livestock use).
 | Notes | PASTIZAL CULTIVADO, PASTIZAL INDUCIDO. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_bosque"></a>
-#### 122. `USV_PCT_BOSQUE`
+#### 111. `USV_PCT_BOSQUE`
 
 Share of the AGEB covered by primary forest (conifer, oak, cloud, gallery, planted).
 
@@ -3404,7 +3157,7 @@ Share of the AGEB covered by primary forest (conifer, oak, cloud, gallery, plant
 | Notes | 'BOSQUE ...' classes, including planted and induced forest. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_selva"></a>
-#### 123. `USV_PCT_SELVA`
+#### 112. `USV_PCT_SELVA`
 
 Share of the AGEB covered by primary tropical forest.
 
@@ -3430,7 +3183,7 @@ Share of the AGEB covered by primary tropical forest.
 | Notes | 'SELVA ...' classes. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_matorral"></a>
-#### 124. `USV_PCT_MATORRAL`
+#### 113. `USV_PCT_MATORRAL`
 
 Share of the AGEB covered by scrubland and xerophytic vegetation.
 
@@ -3456,7 +3209,7 @@ Share of the AGEB covered by scrubland and xerophytic vegetation.
 | Notes | MATORRAL ..., MEZQUITAL ..., CHAPARRAL, sandy desert, gypsophilous and halophilous-xerophytic vegetation. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_pastizal"></a>
-#### 125. `USV_PCT_PASTIZAL`
+#### 114. `USV_PCT_PASTIZAL`
 
 Share of the AGEB covered by natural grassland, meadow and savanna.
 
@@ -3482,7 +3235,7 @@ Share of the AGEB covered by natural grassland, meadow and savanna.
 | Notes | PASTIZAL NATURAL, HALÓFILO, GIPSÓFILO; PRADERA DE ALTA MONTAÑA; SABANA, SABANOIDE. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_hidrofila"></a>
-#### 126. `USV_PCT_HIDROFILA`
+#### 115. `USV_PCT_HIDROFILA`
 
 Share of the AGEB covered by hydrophytic vegetation (mangrove, reed, popal, gallery, petén).
 
@@ -3508,7 +3261,7 @@ Share of the AGEB covered by hydrophytic vegetation (mangrove, reed, popal, gall
 | Notes | MANGLAR, TULAR, POPAL, halophilous-hydrophytic, gallery and petén vegetation. Gallery forest stays in BOSQUE and SELVA. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_sin_veg"></a>
-#### 127. `USV_PCT_SIN_VEG`
+#### 116. `USV_PCT_SIN_VEG`
 
 Share of the AGEB covered by areas with no apparent vegetation or devoid of vegetation.
 
@@ -3534,7 +3287,7 @@ Share of the AGEB covered by areas with no apparent vegetation or devoid of vege
 | Notes | SIN VEGETACIÓN APARENTE, DESPROVISTO DE VEGETACIÓN. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="usv_pct_otra"></a>
-#### 128. `USV_PCT_OTRA`
+#### 117. `USV_PCT_OTRA`
 
 Share of the AGEB covered by other formations (coastal dunes, palm groves).
 
@@ -3560,7 +3313,7 @@ Share of the AGEB covered by other formations (coastal dunes, palm groves).
 | Notes | VEGETACIÓN DE DUNAS COSTERAS, PALMAR NATURAL, PALMAR INDUCIDO. The 12 USV_PCT_* add up to ≤ 100 (less if the layer does not cover the whole AGEB). |
 
 <a id="dist_hosp_km"></a>
-#### 129. `DIST_HOSP_KM`
+#### 118. `DIST_HOSP_KM`
 
 Distance to the nearest operating hospital (second or third level of care), public or private.
 
@@ -3586,7 +3339,7 @@ Distance to the nearest operating hospital (second or third level of care), publ
 | Notes | Straight-line distance, not travel time: it understates access problems in mountain areas. Includes 3,645 private hospitals, many of them small clinics; for people without social security use DIST_HOSP_PUB_KM. |
 
 <a id="dist_hosp_pub_km"></a>
-#### 130. `DIST_HOSP_PUB_KM`
+#### 119. `DIST_HOSP_PUB_KM`
 
 Distance to the nearest operating public hospital (second or third level of care).
 
@@ -3612,7 +3365,7 @@ Distance to the nearest operating public hospital (second or third level of care
 | Notes | Straight-line distance, not travel time: it understates access problems in mountain areas. Always ≥ DIST_HOSP_KM (check health_public_hospital_not_nearer). |
 
 <a id="dist_1nivel_pub_km"></a>
-#### 131. `DIST_1NIVEL_PUB_KM`
+#### 120. `DIST_1NIVEL_PUB_KM`
 
 Distance to the nearest operating public first-level care unit (health centre, family medicine unit, rural medical unit).
 
@@ -3638,7 +3391,7 @@ Distance to the nearest operating public first-level care unit (health centre, f
 | Notes | Straight-line distance, not travel time: it understates access problems in mountain areas. Almost always short (median < 1 km in urban AGEB); it discriminates mostly among rural AGEB. |
 
 <a id="dist_origen"></a>
-#### 132. `DIST_ORIGEN`
+#### 121. `DIST_ORIGEN`
 
 Point from which distances to health facilities, streams and the coast were measured.
 
@@ -3658,7 +3411,7 @@ Point from which distances to health facilities, streams and the coast were meas
 | Notes | Values: Localidades (localities), Punto interior (interior point). Every urban AGEB uses the interior point; a rural one with Punto interior is uninhabited. For relief (ELEV_M, slopes) the same rule uses the whole polygon instead of the interior point, and 150 m discs instead of the locality points. |
 
 <a id="elev_m"></a>
-#### 133. `ELEV_M`
+#### 122. `ELEV_M`
 
 Mean elevation of the inhabited ground above mean sea level.
 
@@ -3684,7 +3437,7 @@ Mean elevation of the inhabited ground above mean sea level.
 | Notes | Referenced to the Mexican Gravimetric Geoid 2010. Can be slightly negative on coastal plains. Together with DIST_COSTA_KM it identifies low-lying coastal areas. |
 
 <a id="pend_media_grad"></a>
-#### 134. `PEND_MEDIA_GRAD`
+#### 123. `PEND_MEDIA_GRAD`
 
 Mean slope of the inhabited ground.
 
@@ -3710,7 +3463,7 @@ Mean slope of the inhabited ground.
 | Notes | CEM 4.0 is radar-derived (ALOS PALSAR): in dense cities it partly follows rooftops, so urban slope reads somewhat rough. |
 
 <a id="pct_pend_15"></a>
-#### 135. `PCT_PEND_15`
+#### 124. `PCT_PEND_15`
 
 Share of the inhabited ground with slope above 15 degrees.
 
@@ -3736,7 +3489,7 @@ Share of the inhabited ground with slope above 15 degrees.
 | Notes | 15° is a common threshold for moderate susceptibility to mass movement. |
 
 <a id="pct_pend_30"></a>
-#### 136. `PCT_PEND_30`
+#### 125. `PCT_PEND_30`
 
 Share of the inhabited ground with slope above 30 degrees.
 
@@ -3762,7 +3515,7 @@ Share of the inhabited ground with slope above 30 degrees.
 | Notes | Always ≤ PCT_PEND_15 (check terrain_slope_consistent). Median 0: highly concentrated in the mountains. |
 
 <a id="dist_cauce_km"></a>
-#### 137. `DIST_CAUCE_KM`
+#### 126. `DIST_CAUCE_KM`
 
 Straight-line distance to the nearest stream of Strahler order 3 or higher.
 
@@ -3788,7 +3541,7 @@ Straight-line distance to the nearest stream of Strahler order 3 or higher.
 | Notes | At 1:50,000 almost any point lies a few hundred metres from a first-order gully; the order filter keeps streams with an appreciable catchment. Use it together with DESNIVEL_CAUCE_M: close and only slightly above is what signals risk. |
 
 <a id="desnivel_cauce_m"></a>
-#### 138. `DESNIVEL_CAUCE_M`
+#### 127. `DESNIVEL_CAUCE_M`
 
 Height of the inhabited ground above the nearest water: the bed of the order ≥ 3 stream or the sea, whichever is closer.
 
@@ -3813,7 +3566,7 @@ Height of the inhabited ground above the nearest water: the bed of the order ≥
 | Notes | Approximation of HAND (height above nearest drainage) using the stream nearest in plan, not the one on the actual flow path: it can be negative if that stream runs in the next valley. It does not account for levees, channel capacity or rainfall. |
 
 <a id="dist_costa_km"></a>
-#### 139. `DIST_COSTA_KM`
+#### 128. `DIST_COSTA_KM`
 
 Straight-line distance to the coastline.
 
@@ -3839,7 +3592,7 @@ Straight-line distance to the coastline.
 | Notes | Coastal lagoons count only where the CONABIO layer draws them as coast. For storm surge, combine with ELEV_M (e.g. < 10 m). |
 
 <a id="amz_inund"></a>
-#### 140. `AMZ_INUND`
+#### 129. `AMZ_INUND`
 
 Flood hazard grade of the municipality the AGEB belongs to.
 
@@ -3863,7 +3616,7 @@ Flood hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). Nationally almost uniform across the five classes (492–496 municipalities each). |
 
 <a id="amz_sequia"></a>
-#### 141. `AMZ_SEQUIA`
+#### 130. `AMZ_SEQUIA`
 
 Drought hazard grade of the municipality the AGEB belongs to.
 
@@ -3887,7 +3640,7 @@ Drought hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). Heavily skewed: only 9 municipalities are Muy alto and 1,082 are Bajo. |
 
 <a id="amz_onda_cal"></a>
-#### 142. `AMZ_ONDA_CAL`
+#### 131. `AMZ_ONDA_CAL`
 
 Heat-wave hazard grade of the municipality the AGEB belongs to.
 
@@ -3911,7 +3664,7 @@ Heat-wave hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). It is the heat hazard available at this scale; it does not replace an intra-urban heat-island indicator. |
 
 <a id="amz_ciclon"></a>
-#### 143. `AMZ_CICLON`
+#### 132. `AMZ_CICLON`
 
 Tropical cyclone hazard grade of the municipality the AGEB belongs to.
 
@@ -3935,7 +3688,7 @@ Tropical cyclone hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). |
 
 <a id="amz_desliz"></a>
-#### 144. `AMZ_DESLIZ`
+#### 133. `AMZ_DESLIZ`
 
 Landslide susceptibility grade of the municipality the AGEB belongs to.
 
@@ -3959,7 +3712,7 @@ Landslide susceptibility grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). Terrain susceptibility, not a hazard with a return period. 1,692 of 2,469 municipalities are Alto, so on its own it discriminates little. |
 
 <a id="amz_torm_elec"></a>
-#### 145. `AMZ_TORM_ELEC`
+#### 134. `AMZ_TORM_ELEC`
 
 Thunderstorm hazard grade of the municipality the AGEB belongs to.
 
@@ -3983,7 +3736,7 @@ Thunderstorm hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). |
 
 <a id="amz_granizo"></a>
-#### 146. `AMZ_GRANIZO`
+#### 135. `AMZ_GRANIZO`
 
 Hail hazard grade of the municipality the AGEB belongs to.
 
@@ -4007,7 +3760,7 @@ Hail hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). |
 
 <a id="amz_temp_baja"></a>
-#### 147. `AMZ_TEMP_BAJA`
+#### 136. `AMZ_TEMP_BAJA`
 
 Low-temperature hazard grade of the municipality the AGEB belongs to.
 
@@ -4031,7 +3784,7 @@ Low-temperature hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). |
 
 <a id="amz_nevada"></a>
-#### 148. `AMZ_NEVADA`
+#### 137. `AMZ_NEVADA`
 
 Snowfall hazard grade of the municipality the AGEB belongs to.
 
@@ -4055,7 +3808,7 @@ Snowfall hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). 2,318 of 2,469 municipalities are Muy bajo: informative only in the north and in high mountain areas. |
 
 <a id="amz_sismo"></a>
-#### 149. `AMZ_SISMO`
+#### 138. `AMZ_SISMO`
 
 Seismic hazard grade of the municipality the AGEB belongs to.
 
@@ -4079,7 +3832,7 @@ Seismic hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). Not a climate hazard; included for multi-hazard analysis. The Muy bajo class is used in no municipality. |
 
 <a id="amz_volcan"></a>
-#### 150. `AMZ_VOLCAN`
+#### 139. `AMZ_VOLCAN`
 
 Volcanic hazard grade of the municipality the AGEB belongs to.
 
@@ -4103,7 +3856,7 @@ Volcanic hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). The only column where 0 = 'Sin Peligro' (1,138 municipalities), a real absence of hazard, not missing data. Not a climate hazard. |
 
 <a id="amz_sus_tox"></a>
-#### 151. `AMZ_SUS_TOX`
+#### 140. `AMZ_SUS_TOX`
 
 Toxic-substance hazard grade of the municipality the AGEB belongs to.
 
@@ -4127,7 +3880,7 @@ Toxic-substance hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). Technological risk, not climate. 0 = 'Sin peligro': the municipality registers no facility handling those substances, it is not missing data. |
 
 <a id="amz_sus_infla"></a>
-#### 152. `AMZ_SUS_INFLA`
+#### 141. `AMZ_SUS_INFLA`
 
 Flammable-substance hazard grade of the municipality the AGEB belongs to.
 
@@ -4151,7 +3904,7 @@ Flammable-substance hazard grade of the municipality the AGEB belongs to.
 | Notes | Municipal resolution: every AGEB in the municipality shares the value. It is an ordinal class, not a physical magnitude, and its scale is not comparable with another hazard. It stays out of the vulnerability index (D-30). Technological risk, not climate. 0 = 'Sin peligro': the municipality registers no facility handling those substances, it is not missing data. |
 
 <a id="cen_resil"></a>
-#### 153. `CEN_RESIL`
+#### 142. `CEN_RESIL`
 
 Resilience grade of the municipality according to CENAPRED.
 
@@ -4175,7 +3928,7 @@ Resilience grade of the municipality according to CENAPRED.
 | Notes | CENAPRED's own municipal judgement, not an input to the index: published to contrast with what this database computes per AGEB, like GRS_GRADO (D-23). A higher value means more resilience, that is, less vulnerability. |
 
 <a id="cen_vuln_cc"></a>
-#### 154. `CEN_VULN_CC`
+#### 143. `CEN_VULN_CC`
 
 Municipality classified by CENAPRED as vulnerable to climate change.
 
@@ -4198,7 +3951,7 @@ Municipality classified by CENAPRED as vulnerable to climate change.
 | Notes | 319 municipalities marked Sí. CENAPRED does not publish the cut-off criterion with this layer; use it as a contrast, not as an input. |
 
 <a id="ing_mun_hog_trim"></a>
-#### 155. `ING_MUN_HOG_TRIM`
+#### 144. `ING_MUN_HOG_TRIM`
 
 Mean quarterly current income per household of the municipality the AGEB belongs to.
 
@@ -4224,7 +3977,7 @@ Mean quarterly current income per household of the municipality the AGEB belongs
 | Notes | Municipal resolution: every AGEB in the municipality shares the value and there is no within-municipality variation. It is a mean (pulled up by the highest-income households), at current prices of August–November 2022; divide by 3 for monthly income. The census asks no income question, so this is the only income measure in the database. |
 
 <a id="ing_mun_lim_inf"></a>
-#### 156. `ING_MUN_LIM_INF`
+#### 145. `ING_MUN_LIM_INF`
 
 Lower bound of the 90% confidence interval of ING_MUN_HOG_TRIM.
 
@@ -4250,7 +4003,7 @@ Lower bound of the 90% confidence interval of ING_MUN_HOG_TRIM.
 | Notes | Equals ING_MUN_HOG_TRIM − 1.645 × standard error. Use it to decide whether two municipalities really differ. |
 
 <a id="ing_mun_lim_sup"></a>
-#### 157. `ING_MUN_LIM_SUP`
+#### 146. `ING_MUN_LIM_SUP`
 
 Upper bound of the 90% confidence interval of ING_MUN_HOG_TRIM.
 
@@ -4276,7 +4029,7 @@ Upper bound of the 90% confidence interval of ING_MUN_HOG_TRIM.
 | Notes | Equals ING_MUN_HOG_TRIM + 1.645 × standard error. |
 
 <a id="ing_mun_cv"></a>
-#### 158. `ING_MUN_CV`
+#### 147. `ING_MUN_CV`
 
 Coefficient of variation of ING_MUN_HOG_TRIM.
 
@@ -4302,7 +4055,7 @@ Coefficient of variation of ING_MUN_HOG_TRIM.
 | Notes | INEGI rates precision as high with CV < 15, moderate with 15–30 and low with 30 or more. In the 2022 edition every municipality stays below 12.4 (high); the highest are small Oaxaca municipalities. |
 
 <a id="pob_0a2"></a>
-#### 159. `POB_0A2`
+#### 148. `POB_0A2`
 
 Population aged 0 to 2.
 
@@ -4326,7 +4079,7 @@ Population aged 0 to 2.
 | Notes | Counts are published for re-aggregation to other geographies: sum numerators and denominators, never shares. |
 
 <a id="pob_3a5"></a>
-#### 160. `POB_3A5`
+#### 149. `POB_3A5`
 
 Population aged 3 to 5.
 
@@ -4349,7 +4102,7 @@ Population aged 3 to 5.
 | Range | 0 – 3,516 |
 
 <a id="pob_65ymas"></a>
-#### 161. `POB_65YMAS`
+#### 150. `POB_65YMAS`
 
 Population aged 65 and over.
 
@@ -4372,7 +4125,7 @@ Population aged 65 and over.
 | Range | 0 – 2,798 |
 
 <a id="pob_disc"></a>
-#### 162. `POB_DISC`
+#### 151. `POB_DISC`
 
 Population with a disability.
 
@@ -4395,7 +4148,7 @@ Population with a disability.
 | Range | 0 – 2,027 |
 
 <a id="pob_3ymas"></a>
-#### 163. `POB_3YMAS`
+#### 152. `POB_3YMAS`
 
 Population aged 3 and over.
 
@@ -4418,7 +4171,7 @@ Population aged 3 and over.
 | Range | 0 – 40,670 |
 
 <a id="pob_hli"></a>
-#### 164. `POB_HLI`
+#### 153. `POB_HLI`
 
 Population aged 3 and over who speak an indigenous language.
 
@@ -4441,7 +4194,7 @@ Population aged 3 and over who speak an indigenous language.
 | Range | 0 – 40,047 |
 
 <a id="pob_hli_nhe"></a>
-#### 165. `POB_HLI_NHE`
+#### 154. `POB_HLI_NHE`
 
 Population aged 3 and over who speak an indigenous language and do not speak Spanish.
 
@@ -4464,7 +4217,7 @@ Population aged 3 and over who speak an indigenous language and do not speak Spa
 | Range | 0 – 19,724 |
 
 <a id="pob_sin_salud"></a>
-#### 166. `POB_SIN_SALUD`
+#### 155. `POB_SIN_SALUD`
 
 Population without health service affiliation.
 
@@ -4487,7 +4240,7 @@ Population without health service affiliation.
 | Range | 0 – 12,520 |
 
 <a id="pob_15ymas"></a>
-#### 167. `POB_15YMAS`
+#### 156. `POB_15YMAS`
 
 Population aged 15 and over.
 
@@ -4510,7 +4263,7 @@ Population aged 15 and over.
 | Range | 0 – 26,914 |
 
 <a id="pob_15ymas_analf"></a>
-#### 168. `POB_15YMAS_ANALF`
+#### 157. `POB_15YMAS_ANALF`
 
 Illiterate population aged 15 and over.
 
@@ -4533,7 +4286,7 @@ Illiterate population aged 15 and over.
 | Range | 0 – 8,748 |
 
 <a id="pob_15ymas_sin_esc"></a>
-#### 169. `POB_15YMAS_SIN_ESC`
+#### 158. `POB_15YMAS_SIN_ESC`
 
 Population aged 15 and over with no schooling (or preschool only).
 
@@ -4556,7 +4309,7 @@ Population aged 15 and over with no schooling (or preschool only).
 | Range | 0 – 8,377 |
 
 <a id="pob_15ymas_prim_inc"></a>
-#### 170. `POB_15YMAS_PRIM_INC`
+#### 159. `POB_15YMAS_PRIM_INC`
 
 Population aged 15 and over with incomplete primary education.
 
@@ -4579,7 +4332,7 @@ Population aged 15 and over with incomplete primary education.
 | Range | 0 – 4,023 |
 
 <a id="pob_15ymas_prim_com"></a>
-#### 171. `POB_15YMAS_PRIM_COM`
+#### 160. `POB_15YMAS_PRIM_COM`
 
 Population aged 15 and over with complete primary education (as highest level).
 
@@ -4602,7 +4355,7 @@ Population aged 15 and over with complete primary education (as highest level).
 | Range | 0 – 12,855 |
 
 <a id="pob_15ymas_sec_inc"></a>
-#### 172. `POB_15YMAS_SEC_INC`
+#### 161. `POB_15YMAS_SEC_INC`
 
 Population aged 15 and over with incomplete lower secondary education.
 
@@ -4625,7 +4378,7 @@ Population aged 15 and over with incomplete lower secondary education.
 | Range | 0 – 1,477 |
 
 <a id="pob_6a11"></a>
-#### 173. `POB_6A11`
+#### 162. `POB_6A11`
 
 Population aged 6 to 11.
 
@@ -4648,7 +4401,7 @@ Population aged 6 to 11.
 | Range | 0 – 7,164 |
 
 <a id="pob_12a14"></a>
-#### 174. `POB_12A14`
+#### 163. `POB_12A14`
 
 Population aged 12 to 14.
 
@@ -4671,7 +4424,7 @@ Population aged 12 to 14.
 | Range | 0 – 3,241 |
 
 <a id="pob_6a11_noasis"></a>
-#### 175. `POB_6A11_NOASIS`
+#### 164. `POB_6A11_NOASIS`
 
 Population aged 6 to 11 not attending school.
 
@@ -4694,7 +4447,7 @@ Population aged 6 to 11 not attending school.
 | Range | 0 – 591 |
 
 <a id="pob_12a14_noasis"></a>
-#### 176. `POB_12A14_NOASIS`
+#### 165. `POB_12A14_NOASIS`
 
 Population aged 12 to 14 not attending school.
 
@@ -4717,7 +4470,7 @@ Population aged 12 to 14 not attending school.
 | Range | 0 – 1,578 |
 
 <a id="pob_15a17"></a>
-#### 177. `POB_15A17`
+#### 166. `POB_15A17`
 
 Population aged 15 to 17.
 
@@ -4740,7 +4493,7 @@ Population aged 15 to 17.
 | Range | 0 – 3,030 |
 
 <a id="pob_18a24"></a>
-#### 178. `POB_18A24`
+#### 167. `POB_18A24`
 
 Population aged 18 to 24.
 
@@ -4763,7 +4516,7 @@ Population aged 18 to 24.
 | Range | 0 – 5,695 |
 
 <a id="pob_15a17_asis"></a>
-#### 179. `POB_15A17_ASIS`
+#### 168. `POB_15A17_ASIS`
 
 Population aged 15 to 17 attending school.
 
@@ -4786,7 +4539,7 @@ Population aged 15 to 17 attending school.
 | Range | 0 – 1,865 |
 
 <a id="pob_18a24_asis"></a>
-#### 180. `POB_18A24_ASIS`
+#### 169. `POB_18A24_ASIS`
 
 Population aged 18 to 24 attending school.
 
@@ -4809,7 +4562,7 @@ Population aged 18 to 24 attending school.
 | Range | 0 – 1,924 |
 
 <a id="pob_pea"></a>
-#### 181. `POB_PEA`
+#### 170. `POB_PEA`
 
 Economically active population aged 12 and over.
 
@@ -4832,7 +4585,7 @@ Economically active population aged 12 and over.
 | Range | 0 – 17,516 |
 
 <a id="pob_pea_f"></a>
-#### 182. `POB_PEA_F`
+#### 171. `POB_PEA_F`
 
 Economically active women aged 12 and over.
 
@@ -4855,7 +4608,7 @@ Economically active women aged 12 and over.
 | Range | 0 – 7,228 |
 
 <a id="pob_inac"></a>
-#### 183. `POB_INAC`
+#### 172. `POB_INAC`
 
 Economically inactive population aged 12 and over.
 
@@ -4878,7 +4631,7 @@ Economically inactive population aged 12 and over.
 | Range | 0 – 16,310 |
 
 <a id="pob_inac_f"></a>
-#### 184. `POB_INAC_F`
+#### 173. `POB_INAC_F`
 
 Economically inactive women aged 12 and over.
 
@@ -4901,7 +4654,7 @@ Economically inactive women aged 12 and over.
 | Range | 0 – 12,961 |
 
 <a id="pob_desocup"></a>
-#### 185. `POB_DESOCUP`
+#### 174. `POB_DESOCUP`
 
 Unemployed population aged 12 and over.
 
@@ -4924,7 +4677,7 @@ Unemployed population aged 12 and over.
 | Range | 0 – 697 |
 
 <a id="hogares"></a>
-#### 186. `HOGARES`
+#### 175. `HOGARES`
 
 Total census households.
 
@@ -4948,7 +4701,7 @@ Total census households.
 | Notes | The census counts one household per private dwelling. |
 
 <a id="hogares_jefa"></a>
-#### 187. `HOGARES_JEFA`
+#### 176. `HOGARES_JEFA`
 
 Census households whose reference person is a woman.
 
@@ -4971,7 +4724,7 @@ Census households whose reference person is a woman.
 | Range | 0 – 3,134 |
 
 <a id="viv_ocupantes"></a>
-#### 188. `VIV_OCUPANTES`
+#### 177. `VIV_OCUPANTES`
 
 Occupants of inhabited private dwellings.
 
@@ -4994,7 +4747,7 @@ Occupants of inhabited private dwellings.
 | Range | 0 – 44,154 |
 
 <a id="viv_sin_drenaje"></a>
-#### 189. `VIV_SIN_DRENAJE`
+#### 178. `VIV_SIN_DRENAJE`
 
 Dwellings without drainage.
 
@@ -5018,7 +4771,7 @@ Dwellings without drainage.
 | Notes | Denominator for re-aggregating housing shares: VIV_CARACT. |
 
 <a id="viv_sin_electricidad"></a>
-#### 190. `VIV_SIN_ELECTRICIDAD`
+#### 179. `VIV_SIN_ELECTRICIDAD`
 
 Dwellings without electricity.
 
@@ -5041,7 +4794,7 @@ Dwellings without electricity.
 | Range | 0 – 1,877 |
 
 <a id="viv_sin_agua"></a>
-#### 191. `VIV_SIN_AGUA`
+#### 180. `VIV_SIN_AGUA`
 
 Dwellings without piped water inside the dwelling or its plot.
 
@@ -5064,7 +4817,7 @@ Dwellings without piped water inside the dwelling or its plot.
 | Range | 0 – 3,068 |
 
 <a id="viv_piso_tierra"></a>
-#### 192. `VIV_PISO_TIERRA`
+#### 181. `VIV_PISO_TIERRA`
 
 Dwellings with a dirt floor.
 
@@ -5087,7 +4840,7 @@ Dwellings with a dirt floor.
 | Range | 0 – 5,095 |
 
 <a id="viv_1cuarto"></a>
-#### 193. `VIV_1CUARTO`
+#### 182. `VIV_1CUARTO`
 
 Dwellings with a single room.
 
@@ -5110,7 +4863,7 @@ Dwellings with a single room.
 | Range | 0 – 2,454 |
 
 <a id="viv_excusado"></a>
-#### 194. `VIV_EXCUSADO`
+#### 183. `VIV_EXCUSADO`
 
 Dwellings with a toilet or sanitary facility.
 
@@ -5133,7 +4886,7 @@ Dwellings with a toilet or sanitary facility.
 | Range | 0 – 9,079 |
 
 <a id="viv_letrina"></a>
-#### 195. `VIV_LETRINA`
+#### 184. `VIV_LETRINA`
 
 Dwellings with a latrine (pit or hole).
 
@@ -5156,7 +4909,7 @@ Dwellings with a latrine (pit or hole).
 | Range | 0 – 6,397 |
 
 <a id="viv_tinaco"></a>
-#### 196. `VIV_TINACO`
+#### 185. `VIV_TINACO`
 
 Dwellings with a rooftop water tank (tinaco).
 
@@ -5179,7 +4932,7 @@ Dwellings with a rooftop water tank (tinaco).
 | Range | 0 – 6,969 |
 
 <a id="viv_cisterna"></a>
-#### 197. `VIV_CISTERNA`
+#### 186. `VIV_CISTERNA`
 
 Dwellings with a cistern.
 
@@ -5202,7 +4955,7 @@ Dwellings with a cistern.
 | Range | 0 – 7,317 |
 
 <a id="viv_refri"></a>
-#### 198. `VIV_REFRI`
+#### 187. `VIV_REFRI`
 
 Dwellings with a refrigerator.
 
@@ -5225,7 +4978,7 @@ Dwellings with a refrigerator.
 | Range | 0 – 8,813 |
 
 <a id="viv_lavadora"></a>
-#### 199. `VIV_LAVADORA`
+#### 188. `VIV_LAVADORA`
 
 Dwellings with a washing machine.
 
@@ -5248,7 +5001,7 @@ Dwellings with a washing machine.
 | Range | 0 – 8,242 |
 
 <a id="viv_auto"></a>
-#### 200. `VIV_AUTO`
+#### 189. `VIV_AUTO`
 
 Dwellings with a car or pickup truck.
 
@@ -5271,7 +5024,7 @@ Dwellings with a car or pickup truck.
 | Range | 0 – 6,072 |
 
 <a id="viv_radio"></a>
-#### 201. `VIV_RADIO`
+#### 190. `VIV_RADIO`
 
 Dwellings with a radio.
 
@@ -5294,7 +5047,7 @@ Dwellings with a radio.
 | Range | 0 – 6,684 |
 
 <a id="viv_telefono"></a>
-#### 202. `VIV_TELEFONO`
+#### 191. `VIV_TELEFONO`
 
 Dwellings with a landline telephone.
 
@@ -5317,7 +5070,7 @@ Dwellings with a landline telephone.
 | Range | 0 – 6,196 |
 
 <a id="viv_celular"></a>
-#### 203. `VIV_CELULAR`
+#### 192. `VIV_CELULAR`
 
 Dwellings with a mobile phone.
 
@@ -5340,7 +5093,7 @@ Dwellings with a mobile phone.
 | Range | 0 – 8,715 |
 
 <a id="viv_internet"></a>
-#### 204. `VIV_INTERNET`
+#### 193. `VIV_INTERNET`
 
 Dwellings with internet.
 
@@ -5363,7 +5116,7 @@ Dwellings with internet.
 | Range | 0 – 7,512 |
 
 <a id="viv_compu"></a>
-#### 205. `VIV_COMPU`
+#### 194. `VIV_COMPU`
 
 Dwellings with a computer, laptop or tablet.
 
@@ -5386,7 +5139,7 @@ Dwellings with a computer, laptop or tablet.
 | Range | 0 – 6,919 |
 
 <a id="viv_sin_radio_tv"></a>
-#### 206. `VIV_SIN_RADIO_TV`
+#### 195. `VIV_SIN_RADIO_TV`
 
 Dwellings with neither radio nor television.
 
@@ -5409,7 +5162,7 @@ Dwellings with neither radio nor television.
 | Range | 0 – 5,191 |
 
 <a id="viv_sin_tel_cel"></a>
-#### 207. `VIV_SIN_TEL_CEL`
+#### 196. `VIV_SIN_TEL_CEL`
 
 Dwellings with neither landline nor mobile phone.
 
@@ -5432,7 +5185,7 @@ Dwellings with neither landline nor mobile phone.
 | Range | 0 – 6,762 |
 
 <a id="viv_sin_tic"></a>
-#### 208. `VIV_SIN_TIC`
+#### 197. `VIV_SIN_TIC`
 
 Dwellings without information and communication technologies.
 
@@ -5455,7 +5208,7 @@ Dwellings without information and communication technologies.
 | Range | 0 – 4,695 |
 
 <a id="viv_sin_bienes"></a>
-#### 209. `VIV_SIN_BIENES`
+#### 198. `VIV_SIN_BIENES`
 
 Dwellings with no goods at all.
 
@@ -5478,7 +5231,7 @@ Dwellings with no goods at all.
 | Range | 0 – 4,215 |
 
 <a id="year_geometry"></a>
-#### 210. `YEAR_GEOMETRY`
+#### 199. `YEAR_GEOMETRY`
 
 Reference year of the geometry.
 
@@ -5501,7 +5254,7 @@ Reference year of the geometry.
 | Range | 2,020 – 2,020 |
 
 <a id="year_census"></a>
-#### 211. `YEAR_CENSUS`
+#### 200. `YEAR_CENSUS`
 
 Reference year of the census.
 
@@ -5524,7 +5277,7 @@ Reference year of the census.
 | Range | 2,020 – 2,020 |
 
 <a id="year_coneval"></a>
-#### 212. `YEAR_CONEVAL`
+#### 201. `YEAR_CONEVAL`
 
 Reference year of CONEVAL's GRS.
 
@@ -5547,7 +5300,7 @@ Reference year of CONEVAL's GRS.
 | Range | 2,020 – 2,020 |
 
 <a id="year_denue"></a>
-#### 213. `YEAR_DENUE`
+#### 202. `YEAR_DENUE`
 
 DENUE version.
 
@@ -5569,7 +5322,7 @@ DENUE version.
 | Notes | Set by hand in 00_config.R: update it if DENUE is downloaded again. |
 
 <a id="year_hidro"></a>
-#### 214. `YEAR_HIDRO`
+#### 203. `YEAR_HIDRO`
 
 Reference year of the water body layer.
 
@@ -5593,7 +5346,7 @@ Reference year of the water body layer.
 | Notes | 1:50,000 topographic series III, surveyed 2013–2018. |
 
 <a id="year_usv"></a>
-#### 215. `YEAR_USV`
+#### 204. `YEAR_USV`
 
 Reference year of the land use and vegetation layer.
 
@@ -5617,7 +5370,7 @@ Reference year of the land use and vegetation layer.
 | Notes | Series VII, published in 2021 with base-year 2018 imagery. |
 
 <a id="year_clues"></a>
-#### 216. `YEAR_CLUES`
+#### 205. `YEAR_CLUES`
 
 Cut-off of the CLUES catalog of health facilities.
 
@@ -5639,7 +5392,7 @@ Cut-off of the CLUES catalog of health facilities.
 | Notes | Set by hand in 00_config.R together with URL_CLUES and CLUES_FILE: update all three if another cut-off is downloaded. |
 
 <a id="year_cem"></a>
-#### 217. `YEAR_CEM`
+#### 206. `YEAR_CEM`
 
 Publication year of the Continuo de Elevaciones Mexicano 4.0.
 
@@ -5663,7 +5416,7 @@ Publication year of the Continuo de Elevaciones Mexicano 4.0.
 | Notes | ALOS PALSAR radar imagery from 2006–2011. |
 
 <a id="year_red_hidro"></a>
-#### 218. `YEAR_RED_HIDRO`
+#### 207. `YEAR_RED_HIDRO`
 
 Year of edition 2.0 of the 1:50,000 Hydrographic Network.
 
@@ -5687,7 +5440,7 @@ Year of edition 2.0 of the 1:50,000 Hydrographic Network.
 | Notes | Built on 1:50,000 topographic sheets from 1995–2002 depending on the sub-basin. |
 
 <a id="year_costa"></a>
-#### 219. `YEAR_COSTA`
+#### 208. `YEAR_COSTA`
 
 Year of the CONABIO coastline layer.
 
@@ -5711,7 +5464,7 @@ Year of the CONABIO coastline layer.
 | Notes | RapidEye imagery from 2011–2014. |
 
 <a id="year_cenapred"></a>
-#### 220. `YEAR_CENAPRED`
+#### 209. `YEAR_CENAPRED`
 
 Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos.
 
@@ -5735,7 +5488,7 @@ Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgo
 | Notes | The sociodemographic indicators CENAPRED built these grades from come from the 2020 census; 2023 is the publication cut-off. |
 
 <a id="year_icmm"></a>
-#### 221. `YEAR_ICMM`
+#### 210. `YEAR_ICMM`
 
 Edition of the Ingreso Corriente para los Municipios de México.
 
@@ -5759,7 +5512,7 @@ Edition of the Ingreso Corriente para los Municipios de México.
 | Notes | ENIGH 2022 fieldwork: 21 August to 28 November 2022. Published by INEGI on 2024-11-14. |
 
 <a id="geom"></a>
-#### 222. `geom`
+#### 211. `geom`
 
 Polygon or multipolygon of the AGEB.
 
@@ -5777,6 +5530,26 @@ Polygon or multipolygon of the AGEB.
 | Suggested direction | n/a |
 | Script | 14_integrate.R |
 | Notes | To compute areas or distances, reproject to EPSG:6372. |
+
+<a id="tabla-ageb-ids"></a>
+## Table ageb_ids
+
+`data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `ID_AGEB` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here.
+
+| # | Variable | Description | Type | Unit | Source | Derivation | Notes |
+|---|---|---|---|---|---|---|---|
+| 1 | `ID_AGEB` | Unique AGEB key: state (2) + municipality (3) + locality (4) + AGEB (4). | text | code | MG2020 | Urban: 13-character CVEGEO. Rural: CVE_ENT + CVE_MUN + '0000' + CVE_AGEB. | The database's primary key: every table joins to ageb_ids on this column. Always read as text: it has leading zeros and CVE_AGEB is alphanumeric. See D-03. |
+| 2 | `AMBITO` | Setting of the AGEB, according to the Marco Geoestadístico layer it comes from. | categorical |  | MG2020 | 'Urbana' if it comes from {ENT}a.shp; 'Rural' if it comes from {ENT}ar.shp. | Values: Urbana (urban), Rural. Population sources differ by setting (D-11). |
+| 3 | `CVE_ENT` | State (entidad federativa) code. | text | code | MG2020 |  | 01 to 32. |
+| 4 | `NOM_ENT` | State name. | text |  | PIPELINE | Fixed catalog in 00_config.R. | Without accents (e.g. 'Ciudad de Mexico', 'Nuevo Leon'). |
+| 5 | `CVE_MUN` | Municipality or territorial demarcation code (3 digits, unique only within the state). | text | code | MG2020 |  | The full municipal code is CVE_ENT + CVE_MUN. |
+| 6 | `NOM_MUN` | Municipality name. | text |  | MG2020 |  |  |
+| 7 | `CVE_LOC` | Locality code (4 digits). '0000' by convention in rural AGEB. | text | code | MG2020 | Rural: '0000' (a rural AGEB does not belong to a single locality). | See D-03. |
+| 8 | `NOM_LOC` | Locality name. | text |  | MG2020 / CPV2020_ITER | Urban: locality name in the MG. Rural: ITER name if the AGEB has a single locality; '(varias localidades)' (several localities) if it has more. | The NOM_LOC of the urban census is unusable: it always reads 'Total AGEB urbana' (D-06). |
+| 9 | `CVE_AGEB` | AGEB code (4 alphanumeric characters). | text | code | MG2020 |  |  |
+| 10 | `AREA_KM2` | Area of the AGEB. | decimal | km² | MG2020 | Polygon area in EPSG:6372 (LCC ITRF2008) after st_make_valid(). | National minimum 0.0003 km²; rural AGEB can exceed 6,000 km². |
+| 11 | `CENTROIDE_LON` | Longitude of a representative point inside the AGEB. | decimal | decimal degrees (EPSG:4326) | MG2020 | st_point_on_surface() in EPSG:6372, transformed to EPSG:4326. | Not the geometric centroid: it is guaranteed to fall inside the polygon (D-07). |
+| 12 | `CENTROIDE_LAT` | Latitude of a representative point inside the AGEB. | decimal | decimal degrees (EPSG:4326) | MG2020 | Same as CENTROIDE_LON. |  |
 
 <a id="tabla-denue-establishments"></a>
 ## Table denue_establishments
@@ -5815,6 +5588,5 @@ Polygon or multipolygon of the AGEB.
 | 1 | `ID_AGEB` | AGEB key. | text | code | MG2020 |  | Long format: one row per AGEB × land use class present. |
 | 2 | `USO_CLASE` | Land use and vegetation class. | categorical |  | INEGI_USV7 |  |  |
 | 3 | `CLASS_AREA_KM2` | Area of the class inside the AGEB. | decimal | km² | PIPELINE | Area (EPSG:6372) of the intersection AGEB ∩ USV, dissolved by AGEB and class. | Dissolving before measuring avoids double counting overlapping polygons (D-28). |
-| 4 | `AREA_KM2` | Total area of the AGEB. | decimal | km² | MG2020 | Copy from ageb_integrada. |  |
-| 5 | `CLASS_PCT` | Share of the AGEB covered by the class. | decimal | % | PIPELINE | min(100, 100 × CLASS_AREA_KM2 / AREA_KM2). | The classes of an AGEB can add up to less than 100 if the USV layer does not cover it completely. |
+| 4 | `CLASS_PCT` | Share of the AGEB covered by the class. | decimal | % | PIPELINE | min(100, 100 × CLASS_AREA_KM2 / AREA_KM2). | The classes of an AGEB can add up to less than 100 if the USV layer does not cover it completely. |
 

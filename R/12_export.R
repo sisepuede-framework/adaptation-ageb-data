@@ -1,13 +1,13 @@
-# 12_export.R -- the published indicator schema: the column list, its rounding
-# and the contract that keeps both data dictionaries in step with it.
+# 12_export.R -- the published schema: the column list, its rounding and the
+# split between what identifies an AGEB and what is measured about it.
 #
 # Nothing is written from here any more. This block used to publish one CSV of
 # these columns per entity, plus the geometry and three detail tables; all of
 # them are now layers of base_ageb_{ENT}.gpkg (14_integrate.R), which calls
 # published_table() for the values below so the database carries exactly them.
 # The dictionary contract that used to live here moved there too, because these
-# columns are no longer a table of their own: they are the first 189 of
-# ageb_integrada.
+# columns are no longer one table: ID_COLUMNS becomes ageb_ids and the rest,
+# keyed by ID_AGEB alone, becomes ageb_integrada.
 
 # Census counts published after the headline indicators, for re-aggregation to
 # other geographies. The six excluded here already appear earlier in the schema.
@@ -19,9 +19,17 @@ CENSUS_COUNT_COLS <- setdiff(
 # Declared in order rather than derived from the data, so the published schema
 # is stable and a missing upstream column fails loudly instead of vanishing.
 # The census catalogs it draws on live in 04_census_urban.R and 10_build.R.
-CSV_COLUMNS <- c(
+# Who the AGEB is and where it sits: the keys, the names they stand for, and
+# the two descriptors read straight off the polygon. Published once, as the
+# ageb_ids table, so every other table carries only ID_AGEB and joins back to
+# this one (14_integrate.R). ID_AGEB leads the list because it is the key.
+ID_COLUMNS <- c(
   "ID_AGEB", "AMBITO", "CVE_ENT", "NOM_ENT", "CVE_MUN", "NOM_MUN",
-  "CVE_LOC", "NOM_LOC", "CVE_AGEB", "AREA_KM2", "CENTROIDE_LON", "CENTROIDE_LAT",
+  "CVE_LOC", "NOM_LOC", "CVE_AGEB", "AREA_KM2", "CENTROIDE_LON", "CENTROIDE_LAT"
+)
+
+CSV_COLUMNS <- c(
+  ID_COLUMNS,
   "POB_TOTAL", "POB_REPORTADA", "PCT_POB_REPORTADA", "N_CELDAS_IMPUTADAS",
   "POB_HOMBRES", "POB_MUJERES", "PCT_HOMBRES", "PCT_MUJERES",
   "DENS_POB_KM2", "POB_POR_VIV",
@@ -56,6 +64,13 @@ ROUND_DIGITS <- c(
   setNames(rep(2, length(CENSUS_SHARE_COLS) + length(CENSUS_AVG_COLS)),
            c(CENSUS_SHARE_COLS, CENSUS_AVG_COLS))
 )
+
+# Who the AGEB is, for one entity: the slice of the published table that becomes
+# the national ageb_ids. Taken from the same rounded values as everything else,
+# so the ID table cannot describe an AGEB differently than the data tables do.
+ids_table <- function(ent) {
+  published_table(ent) |> select(all_of(ID_COLUMNS))
+}
 
 # The published indicator columns of one entity: schema order, rounded.
 # 14_integrate.R builds the ageb_integrada table on top of this, so the

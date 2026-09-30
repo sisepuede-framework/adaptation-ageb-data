@@ -15,9 +15,12 @@
 suppressPackageStartupMessages({ library(dplyr); library(readr); library(purrr) })
 
 # Every entity's integrated table; there is no national file to read since
-# 14_integrate.R publishes one database per entity.
+# 14_integrate.R publishes one database per entity. AMBITO, which splits the
+# coverage figures below into urban and rural, is no longer in that table: it
+# identifies the AGEB, so it lives in the national ID table and is joined on.
 data_paths <- sort(Sys.glob(file.path("data", "processed", "ageb_integrada_*.csv")))
 data_label <- "data/processed/ageb_integrada_{ENT}.csv"
+ids_path   <- file.path("data", "processed", "ageb_ids.csv")
 
 # English CSV headers -> the internal (Spanish) field names used below.
 EN_FIELDS <- c(
@@ -31,10 +34,13 @@ EN_FIELDS <- c(
 
 # --- Coverage measured across every entity (shared by both languages) ------
 stats <- NULL
-if (length(data_paths) > 0) {
+if (length(data_paths) > 0 && file.exists(ids_path)) {
   df <- map_dfr(data_paths, read_csv, progress = FALSE, col_types = cols(
-    .default = col_guess(), ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
-    CVE_LOC = "c", CVE_AGEB = "c", YEAR_DENUE = "c", YEAR_CLUES = "c"))
+    .default = col_guess(), ID_AGEB = "c", YEAR_DENUE = "c", YEAR_CLUES = "c")) |>
+    left_join(read_csv(ids_path, progress = FALSE, col_types = cols(
+        .default = col_guess(), ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
+        CVE_LOC = "c", CVE_AGEB = "c")),
+      by = "ID_AGEB")
   urb <- df$AMBITO == "Urbana"
   rur_hab <- df$AMBITO == "Rural" & df$POB_TOTAL > 0
   # Coverage is measured on inhabited AGEB: uninhabited ones cannot carry a
@@ -121,7 +127,8 @@ TEXT <- list(
     table_word = "Tabla", tables_title = "Tablas", file_word = "Archivo",
     cols_word = "Columnas",
     table_desc = c(
-      ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.",
+      ageb_ids               = "`data/processed/ageb_ids.csv`, un solo archivo para todo el país: una fila por AGEB, y la única copia que existe. Es la tabla de relación de toda la base. `ID_AGEB` es la clave primaria y las demás tablas traen solo esa columna: entidad, municipio, localidad, ámbito, superficie y punto interior se obtienen uniendo aquí.",
+      ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `ID_AGEB` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.",
       denue_establishments   = "`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_establishments`, y `data/processed/detail/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE.",
       denue_ageb_sector      = "`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_ageb_sector`, y `data/processed/detail/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN.",
       ageb_landuse_detail    = "`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_landuse_detail`, y `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo."),
@@ -143,7 +150,7 @@ TEXT <- list(
              pob = "Población con dato (urbana / rural)",
              med = "Mediana (AGEB habitadas)", rango = "Rango", NOTAS = "Notas"),
     head_secondary = "| # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |",
-    message_nostats = ", no coverage stats: national CSV not found"
+    message_nostats = ", no coverage stats: the published CSVs were not found"
   ),
   en = list(
     dict_path = "docs/data_dictionary.csv",
@@ -204,7 +211,8 @@ TEXT <- list(
     table_word = "Table", tables_title = "Tables", file_word = "File",
     cols_word = "Columns",
     table_desc = c(
-      ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.",
+      ageb_ids               = "`data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `ID_AGEB` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here.",
+      ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.",
       denue_establishments   = "`data/processed/base_ageb_{ENT}.gpkg`, layer `denue_establishments`, and `data/processed/detail/denue_establishments_{ENT}.csv`. One row per DENUE establishment.",
       denue_ageb_sector      = "`data/processed/base_ageb_{ENT}.gpkg`, layer `denue_ageb_sector`, and `data/processed/detail/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector.",
       ageb_landuse_detail    = "`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_landuse_detail`, and `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. One row per AGEB × land use class."),
@@ -226,7 +234,7 @@ TEXT <- list(
              pob = "Population with value (urban / rural)",
              med = "Median (inhabited AGEB)", rango = "Range", NOTAS = "Notes"),
     head_secondary = "| # | Variable | Description | Type | Unit | Source | Derivation | Notes |",
-    message_nostats = ", no coverage stats: national CSV not found"
+    message_nostats = ", no coverage stats: the published CSVs were not found"
   )
 )
 
@@ -239,9 +247,14 @@ render <- function(lang) {
 
   lines <- c(T$intro, "",
              "```r",
-             "readr::read_csv(\"data/processed/ageb_integrada_20.csv\",",
-             "                col_types = readr::cols(ID_AGEB = \"c\", CVE_ENT = \"c\", CVE_MUN = \"c\",",
-             "                                        CVE_LOC = \"c\", CVE_AGEB = \"c\"))",
+             "ids  <- readr::read_csv(\"data/processed/ageb_ids.csv\",",
+             "                        col_types = readr::cols(ID_AGEB = \"c\", CVE_ENT = \"c\",",
+             "                                                CVE_MUN = \"c\", CVE_LOC = \"c\",",
+             "                                                CVE_AGEB = \"c\"))",
+             "ageb <- readr::read_csv(\"data/processed/ageb_integrada_20.csv\",",
+             "                        col_types = readr::cols(ID_AGEB = \"c\"))",
+             "",
+             "dplyr::left_join(ageb, ids, by = \"ID_AGEB\")",
              "```",
              "")
 

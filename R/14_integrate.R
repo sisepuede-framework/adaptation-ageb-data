@@ -7,14 +7,27 @@
 # directly -- plus a flat CSV of its main layer for readers without GIS:
 #
 #   data/processed/base_ageb_{ENT}.gpkg
-#     ageb_integrada          polygons, one row per AGEB: the 189 published
-#                             indicator columns plus the wide DENUE and
-#                             land-use blocks
+#     ageb_integrada          polygons, one row per AGEB: ID_AGEB plus the
+#                             published indicators, including the wide DENUE
+#                             and land-use blocks
 #     denue_establishments    points, one row per DENUE establishment
 #     denue_ageb_sector       AGEB x SCIAN sector (long)
 #     ageb_landuse_detail     AGEB x land-use class (long)
 #     diccionario_datos, data_dictionary   the dictionaries, so the file is
 #                             self-describing
+#
+# ID_AGEB is the key of every table and the only identifier any of them carries.
+# Which entity, municipality or locality an AGEB belongs to, and how large it
+# is, is stated in exactly one place -- data/processed/ageb_ids.csv, one file
+# for the whole country -- and read from there by joining on ID_AGEB. Nothing
+# else repeats it, including the state databases: a copy of the ID table in
+# each of the 32 would be the same 32 answers to a question with one answer,
+# and the first thing to go stale after a name is corrected.
+#
+# So a query that needs a municipality name joins ageb_ids, and a correction to
+# that name is made once. The cost is that base_ageb_{ENT}.gpkg on its own can
+# map any indicator but cannot label it with a municipality; the reader is told
+# where the names are by the dictionary the file carries.
 #
 # Quality control is deliberately absent: it is how the build is checked, not
 # part of what is handed over. It keeps its own quality_control_report_{ENT}.csv
@@ -22,6 +35,12 @@
 #   data/processed/ageb_integrada_{ENT}.csv  the ageb_integrada layer, no geometry
 #   data/processed/detail/{table}_{ENT}.csv  the three detail tables, flat, for
 #                             readers without GIS
+#   data/processed/ageb_ids.csv  the ID table, for the whole country and written
+#                             once: the single file every table keyed by
+#                             ID_AGEB alone is joined against. Splitting it by
+#                             entity, or copying it into each database, would
+#                             put the same rows in 32 places; at twelve narrow
+#                             columns the whole country is a few megabytes
 #
 # There is no national version on purpose. The 32 entities in one GeoPackage
 # come to ~1.4 GB, slow to open and awkward to move around, and the work that
@@ -89,6 +108,11 @@ INTEGRATED_COLUMNS <- local({
 })
 INTEGRATED_EXTRA_COLS <- setdiff(INTEGRATED_COLUMNS, CSV_COLUMNS)
 
+# What ageb_integrada actually carries: the key and the measurements. The other
+# eleven ID_COLUMNS live in ageb_ids, one row per AGEB, instead of being
+# repeated on every table that mentions an AGEB.
+INDICATOR_COLUMNS <- c("ID_AGEB", setdiff(INTEGRATED_COLUMNS, ID_COLUMNS))
+
 # Classes of one AGEB can overlap by slivers in the USYV layer, so the shares
 # may sum to a hair over 100; more than this means a class was counted twice.
 USV_SUM_TOL_PCT <- 1
@@ -102,34 +126,51 @@ integrated_csv <- function(ent) {
 
 # docs/diccionario_datos.csv (Spanish) and docs/data_dictionary.csv (English)
 # document every published column. They are the same rows in the same order,
-# the English one naming its key columns TABLE / ORDER, and table
-# ageb_integrada must list this layer exactly: the 221 columns in layer order,
-# then the geometry column that sf writes last. A column added without its
-# dictionary row, or a row left behind after a column is dropped, stops the
-# build, so neither dictionary can drift from the schema.
-INTEGRATED_DOC_COLS <- c(INTEGRATED_COLUMNS, "geom")
-
-check_integrated_dictionary <- function() {
-  for (d in list(c("diccionario_datos.csv", "TABLA", "ORDEN"),
-                 c("data_dictionary.csv", "TABLE", "ORDER"))) {
+# the English one naming its key columns TABLE / ORDER, and each of them must
+# list every layer exactly: its columns in layer order, then the geometry
+# column, which sf names geom on the way into the GeoPackage. A column added
+# without its dictionary row, or a row left behind after a column is dropped,
+# stops the build, so neither dictionary can drift from the schema.
+#
+# Every layer is checked as it is written rather than the wide one alone, so
+# moving a column between tables cannot pass unnoticed in either direction.
+read_dictionaries <- function() {
+  lapply(list(c("diccionario_datos.csv", "TABLA", "ORDEN"),
+              c("data_dictionary.csv", "TABLE", "ORDER")), function(d) {
     path <- file.path(PROJECT_ROOT, "docs", d[1])
     if (!file.exists(path)) stop("data dictionary not found: ", path, call. = FALSE)
-    dict <- read_csv(path, progress = FALSE,
-                     col_types = cols(.default = col_character()))
-    rows <- dict[dict[[d[2]]] == "ageb_integrada", ]
+    list(name = d[1], table = d[2], order = d[3],
+         rows = read_csv(path, progress = FALSE,
+                         col_types = cols(.default = col_character())))
+  })
+}
 
-    undocumented <- setdiff(INTEGRATED_DOC_COLS, rows$VARIABLE)
-    stale <- setdiff(rows$VARIABLE, INTEGRATED_DOC_COLS)
+layer_columns <- function(obj) {
+  if (inherits(obj, "sf")) {
+    c(setdiff(names(obj), attr(obj, "sf_column")), "geom")
+  } else {
+    names(obj)
+  }
+}
+
+check_layer_dictionary <- function(dicts, layer, cols) {
+  for (d in dicts) {
+    rows <- d$rows[d$rows[[d$table]] == layer, ]
+    if (nrow(rows) == 0) {
+      stop("docs/", d$name, " documents no table called ", layer, call. = FALSE)
+    }
+    undocumented <- setdiff(cols, rows$VARIABLE)
+    stale <- setdiff(rows$VARIABLE, cols)
     if (length(undocumented) > 0 || length(stale) > 0) {
-      stop("docs/", d[1], " is out of sync with the ageb_integrada layer",
+      stop("docs/", d$name, " is out of sync with the ", layer, " layer",
            if (length(undocumented) > 0) paste0("; undocumented: ",
              paste(undocumented, collapse = ", ")),
            if (length(stale) > 0) paste0("; no longer published: ",
              paste(stale, collapse = ", ")), call. = FALSE)
     }
-    if (!identical(rows$VARIABLE, INTEGRATED_DOC_COLS) ||
-        !identical(as.integer(rows[[d[3]]]), seq_along(INTEGRATED_DOC_COLS))) {
-      stop("docs/", d[1], ": table ageb_integrada lists the columns in a ",
+    if (!identical(rows$VARIABLE, cols) ||
+        !identical(as.integer(rows[[d$order]]), seq_along(cols))) {
+      stop("docs/", d$name, ": table ", layer, " lists the columns in a ",
            "different order than the layer", call. = FALSE)
     }
   }
@@ -187,6 +228,13 @@ integrate_landuse_groups <- function(detail, ids) {
 INTEGRATED_LAYERS <- c("ageb_integrada", "denue_establishments",
                        "denue_ageb_sector", "ageb_landuse_detail")
 
+# What the dictionary embedded in each database describes: its own layers, plus
+# ageb_ids. That table is not in the file -- it is national, written once -- but
+# a reader holding only base_ageb_20.gpkg has to be able to find out that the
+# municipality names exist and where, so it is documented here rather than left
+# to be guessed from a column that is missing.
+DOCUMENTED_LAYERS <- c("ageb_ids", INTEGRATED_LAYERS)
+
 # Everything the integrated database of one entity reads; if any of these is
 # newer than the database, it is stale.
 integrated_inputs <- function(ent) {
@@ -241,9 +289,11 @@ build_integrated <- function(ent) {
     return(invisible(gpkg))
   }
   log_step("integrated database ", ent)
-  check_integrated_dictionary()
+  dicts <- read_dictionaries()
 
-  ageb <- integrate_entity(ent)
+  # Only what was measured: who the AGEB is went to the national ageb_ids, built
+  # from this same published table by build_ids_national().
+  ageb <- integrate_entity(ent) |> select(all_of(INDICATOR_COLUMNS))
 
   geom <- sf::st_read(interim_path("ageb_geom", ent, "gpkg"), quiet = TRUE) |>
     sf::st_transform(CRS_OUTPUT) |>
@@ -254,14 +304,15 @@ build_integrated <- function(ent) {
          call. = FALSE)
   }
   ageb_sf <- geom |> left_join(ageb, by = "ID_AGEB") |>
-    select(all_of(INTEGRATED_COLUMNS), everything())
+    select(all_of(INDICATOR_COLUMNS), everything())
 
   # Written under a temporary name and moved into place at the end, so an
   # interrupted run never leaves a half-written file where readers expect the
   # whole database.
   tmp <- sub("[.]gpkg$", ".partial.gpkg", gpkg)
   unlink(tmp)
-  write_layer <- function(obj, layer) {
+  write_layer <- function(obj, layer, check = TRUE) {
+    if (check) check_layer_dictionary(dicts, layer, layer_columns(obj))
     sf::st_write(obj, tmp, layer = layer, driver = "GPKG", quiet = TRUE,
                  append = FALSE)
     log_msg("  ", layer, ": ", format(nrow(obj), big.mark = ","), " rows")
@@ -289,15 +340,19 @@ build_integrated <- function(ent) {
   write_detail(est_sf, "denue_establishments")
 
   write_detail(readRDS(interim_path("denue_sector", ent)), "denue_ageb_sector")
-  write_detail(readRDS(interim_path("landuse_detail", ent)), "ageb_landuse_detail")
+
+  # AREA_KM2 -- the area of the whole AGEB, repeated on each of its land-use
+  # classes -- is dropped here: it is the AGEB's, not the class's, so it belongs
+  # to ageb_ids. CLASS_PCT already carries the ratio the column was there for.
+  write_detail(readRDS(interim_path("landuse_detail", ent)) |>
+                 select(-any_of("AREA_KM2")), "ageb_landuse_detail")
 
   # Trimmed to the layers this file actually holds, so the embedded copy never
-  # describes a table the reader does not have; docs/ keeps the full version,
-  # which also covers the quality-control tables.
+  # describes a table the reader does not have.
   for (d in c("diccionario_datos", "data_dictionary")) {
     dict <- read_csv(file.path(PROJECT_ROOT, "docs", paste0(d, ".csv")),
                      col_types = cols(.default = col_character()), progress = FALSE)
-    write_layer(dict[dict[[1]] %in% INTEGRATED_LAYERS, ], d)
+    write_layer(dict[dict[[1]] %in% DOCUMENTED_LAYERS, ], d, check = FALSE)
   }
 
   # On Windows the rename fails while another program (QGIS) holds the file.
@@ -308,7 +363,33 @@ build_integrated <- function(ent) {
   write_csv(ageb, csv, na = "")
 
   log_msg("  ", format(nrow(ageb), big.mark = ","), " AGEB x ",
-          length(INTEGRATED_COLUMNS), " columns -> ", basename(gpkg),
+          length(INDICATOR_COLUMNS), " columns -> ", basename(gpkg),
           " and ", basename(csv))
   invisible(gpkg)
+}
+
+# The ID table: national, and the only copy. Every other table is keyed by
+# ID_AGEB alone, and what you join to resolve that key should be one file rather
+# than something you first assemble out of 32.
+#
+# Built from the same published tables the databases are built from, so it says
+# the same thing they do; an entity whose interim table is missing is skipped
+# and the log says how many went in.
+build_ids_national <- function(ents) {
+  have <- ents[file.exists(interim_path("complete", ents))]
+  if (length(have) == 0) {
+    log_msg("national ID table skipped: no entity is built")
+    return(invisible(NULL))
+  }
+  ids <- map_dfr(have, ids_table) |> arrange(ID_AGEB)
+  if (anyDuplicated(ids$ID_AGEB) > 0) {
+    stop("national ID table: ID_AGEB is not unique across entities (",
+         sum(duplicated(ids$ID_AGEB)), " repeated)", call. = FALSE)
+  }
+  check_layer_dictionary(read_dictionaries(), "ageb_ids", names(ids))
+  out <- file.path(DIR_PROCESSED, "ageb_ids.csv")
+  write_csv(ids, out, na = "")
+  log_step("national ID table: ", format(nrow(ids), big.mark = ","), " AGEB from ",
+           length(have), " entities -> ", basename(out))
+  invisible(out)
 }
