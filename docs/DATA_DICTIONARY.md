@@ -66,7 +66,8 @@ dplyr::left_join(ageb, ids, by = "ID_AGEB")
 | Table | File | Columns |
 |---|---|---|
 | [ageb_ids](#tabla-ageb-ids) | `data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `ID_AGEB` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here. | 12 |
-| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary. | 211 |
+| [fuentes](#tabla-fuentes) | `data/processed/fuentes.csv`, a single file for the whole country: one row per source and the edition of it the pipeline read. Kept out of the database because it does not vary by AGEB; these were the `YEAR_*` columns of `ageb_integrada`, holding the same value on all 81,451 rows. | 3 |
+| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary. | 199 |
 | [denue_establishments](#tabla-denue-establishments) | `data/processed/base_ageb_{ENT}.gpkg`, layer `denue_establishments`, and `data/processed/detail/denue_establishments_{ENT}.csv`. One row per DENUE establishment. | 8 |
 | [denue_ageb_sector](#tabla-denue-ageb-sector) | `data/processed/base_ageb_{ENT}.gpkg`, layer `denue_ageb_sector`, and `data/processed/detail/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector. | 3 |
 | [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_landuse_detail`, and `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. One row per AGEB × land use class. | 4 |
@@ -76,7 +77,7 @@ dplyr::left_join(ageb, ids, by = "ID_AGEB")
 
 `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.
 
-Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generated on 2026-09-30). Coverage is measured on **inhabited** AGEB, as the % of AGEB with a value and as the % of their population; the median and range are also measured on inhabited AGEB.
+Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generated on 2026-10-01). Coverage is measured on **inhabited** AGEB, as the % of AGEB with a value and as the % of their population; the median and range are also measured on inhabited AGEB.
 
 ### Identification
 
@@ -89,20 +90,20 @@ Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,45
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
 | 2 | [`POB_TOTAL`](#pob_total) | Total usually resident population. | persons | Both | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,027 | n/a |
-| 6 | [`POB_HOMBRES`](#pob_hombres) | Male population. | persons | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 565 | n/a |
-| 7 | [`POB_MUJERES`](#pob_mujeres) | Female population. | persons | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 592 | n/a |
-| 8 | [`PCT_HOMBRES`](#pct_hombres) | Share of men. | % | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 48.94 | n/a |
-| 9 | [`PCT_MUJERES`](#pct_mujeres) | Share of women. | % | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 51.06 | n/a |
-| 10 | [`DENS_POB_KM2`](#dens_pob_km2) | Population density. | persons/km² | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2,560 | ± |
-| 11 | [`POB_POR_VIV`](#pob_por_viv) | Persons per inhabited private dwelling. | persons/dwelling | Both |  | 95.5 / 86.6 | 100.0 / 99.9 | 3.55 | + |
+| 3 | [`POB_HOMBRES`](#pob_hombres) | Male population. | persons | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 565 | n/a |
+| 4 | [`POB_MUJERES`](#pob_mujeres) | Female population. | persons | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 592 | n/a |
+| 5 | [`PCT_HOMBRES`](#pct_hombres) | Share of men. | % | Both | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 48.94 | n/a |
+| 6 | [`PCT_MUJERES`](#pct_mujeres) | Share of women. | % | Both | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 51.06 | n/a |
+| 7 | [`DENS_POB_KM2`](#dens_pob_km2) | Population density. | persons/km² | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2,560 | ± |
+| 8 | [`POB_POR_VIV`](#pob_por_viv) | Persons per inhabited private dwelling. | persons/dwelling | Both |  | 95.5 / 86.6 | 100.0 / 99.9 | 3.55 | + |
 
 ### Reliability
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 3 | [`POB_REPORTADA`](#pob_reportada) | Population whose characteristics the census does publish. | persons | Both | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,021 | n/a |
-| 4 | [`PCT_POB_REPORTADA`](#pct_pob_reportada) | Share of the AGEB population whose characteristics the census publishes. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 100 | n/a |
-| 5 | [`N_CELDAS_IMPUTADAS`](#n_celdas_imputadas) | Number of census cells in the AGEB imputed as 1.5 because they were suppressed ('*'). | cells | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 9 | [`POB_REPORTADA`](#pob_reportada) | Population whose characteristics the census does publish. | persons | Both | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,021 | n/a |
+| 10 | [`PCT_POB_REPORTADA`](#pct_pob_reportada) | Share of the AGEB population whose characteristics the census publishes. | % | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 100 | n/a |
+| 11 | [`N_CELDAS_IMPUTADAS`](#n_celdas_imputadas) | Number of census cells in the AGEB imputed as 1.5 because they were suppressed ('*'). | cells | Both |  | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
 
 ### Housing
 
@@ -114,72 +115,72 @@ Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,45
 | 15 | [`VIV_ELECTRICIDAD`](#viv_electricidad) | Dwellings with electricity. | dwellings | Both | `VPH_C_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 325 | n/a |
 | 16 | [`PCT_DRENAJE`](#pct_drenaje) | Share of dwellings with drainage. | % | Both | `VPH_DRENAJ` | 95.5 / 86.6 | 100.0 / 99.9 | 99.59 | − |
 | 17 | [`PCT_ELECTRIC`](#pct_electric) | Share of dwellings with electricity. | % | Both | `VPH_C_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 99.89 | − |
-| 32 | [`PCT_VIV_SIN_DRENAJE`](#pct_viv_sin_drenaje) | Share of dwellings without drainage. | % | Both | `VPH_NODREN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.34 | + |
-| 33 | [`PCT_VIV_SIN_ELECTRIC`](#pct_viv_sin_electric) | Share of dwellings without electricity. | % | Both | `VPH_S_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.1 | + |
-| 34 | [`PCT_VIV_SIN_AGUA`](#pct_viv_sin_agua) | Share of dwellings without piped water inside the dwelling or its plot. | % | Both | `VPH_AGUAFV` | 95.5 / 86.6 | 100.0 / 99.9 | 0.31 | + |
-| 35 | [`PCT_VIV_PISO_TIERRA`](#pct_viv_piso_tierra) | Share of dwellings with a dirt floor. | % | Both | `VPH_PISOTI` | 95.5 / 86.6 | 100.0 / 99.9 | 1.23 | + |
-| 36 | [`PCT_VIV_1CUARTO`](#pct_viv_1cuarto) | Share of dwellings with a single room. | % | Both | `VPH_1CUART` | 95.5 / 86.6 | 100.0 / 99.9 | 4.06 | + |
-| 37 | [`PCT_VIV_SIN_SANITARIO`](#pct_viv_sin_sanitario) | Share of dwellings with no toilet, sanitary facility or latrine. | % | Both | `VPH_EXCSA + VPH_LETR` | 95.5 / 86.6 | 100.0 / 99.9 | 0.2 | + |
+| 18 | [`PCT_VIV_SIN_DRENAJE`](#pct_viv_sin_drenaje) | Share of dwellings without drainage. | % | Both | `VPH_NODREN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.34 | + |
+| 19 | [`PCT_VIV_SIN_ELECTRIC`](#pct_viv_sin_electric) | Share of dwellings without electricity. | % | Both | `VPH_S_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.1 | + |
+| 20 | [`PCT_VIV_SIN_AGUA`](#pct_viv_sin_agua) | Share of dwellings without piped water inside the dwelling or its plot. | % | Both | `VPH_AGUAFV` | 95.5 / 86.6 | 100.0 / 99.9 | 0.31 | + |
+| 21 | [`PCT_VIV_PISO_TIERRA`](#pct_viv_piso_tierra) | Share of dwellings with a dirt floor. | % | Both | `VPH_PISOTI` | 95.5 / 86.6 | 100.0 / 99.9 | 1.23 | + |
+| 22 | [`PCT_VIV_1CUARTO`](#pct_viv_1cuarto) | Share of dwellings with a single room. | % | Both | `VPH_1CUART` | 95.5 / 86.6 | 100.0 / 99.9 | 4.06 | + |
+| 23 | [`PCT_VIV_SIN_SANITARIO`](#pct_viv_sin_sanitario) | Share of dwellings with no toilet, sanitary facility or latrine. | % | Both | `VPH_EXCSA + VPH_LETR` | 95.5 / 86.6 | 100.0 / 99.9 | 0.2 | + |
 
 ### Sensitivity
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 18 | [`PCT_POB_0A5`](#pct_pob_0a5) | Share of population aged 0 to 5. | % | Both | `P_0A2 + P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 10.01 | + |
-| 19 | [`PCT_POB_65YMAS`](#pct_pob_65ymas) | Share of population aged 65 and over. | % | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 7.21 | + |
-| 20 | [`PCT_POB_DISC`](#pct_pob_disc) | Share of population with a disability. | % | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 4.6 | + |
-| 21 | [`PCT_POB_HLI`](#pct_pob_hli) | Share of population aged 3 and over who speak an indigenous language. | % | Both | `P3YM_HLI` | 95.5 / 86.6 | 100.0 / 99.9 | 0.47 | + |
-| 22 | [`PCT_POB_HLI_NHE`](#pct_pob_hli_nhe) | Share of population aged 3 and over who speak an indigenous language and do not speak Spanish. | % | Both | `P3HLINHE` | 95.5 / 86.6 | 100.0 / 99.9 | 0 | + |
-| 23 | [`PCT_HOG_JEFA`](#pct_hog_jefa) | Share of census households whose reference person is a woman. | % | Both | `HOGJEF_F` | 95.5 / 86.6 | 100.0 / 99.9 | 31.04 | + |
+| 24 | [`PCT_POB_0A5`](#pct_pob_0a5) | Share of population aged 0 to 5. | % | Both | `P_0A2 + P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 10.01 | + |
+| 25 | [`PCT_POB_65YMAS`](#pct_pob_65ymas) | Share of population aged 65 and over. | % | Both | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 7.21 | + |
+| 26 | [`PCT_POB_DISC`](#pct_pob_disc) | Share of population with a disability. | % | Both | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 4.6 | + |
+| 27 | [`PCT_POB_HLI`](#pct_pob_hli) | Share of population aged 3 and over who speak an indigenous language. | % | Both | `P3YM_HLI` | 95.5 / 86.6 | 100.0 / 99.9 | 0.47 | + |
+| 28 | [`PCT_POB_HLI_NHE`](#pct_pob_hli_nhe) | Share of population aged 3 and over who speak an indigenous language and do not speak Spanish. | % | Both | `P3HLINHE` | 95.5 / 86.6 | 100.0 / 99.9 | 0 | + |
+| 29 | [`PCT_HOG_JEFA`](#pct_hog_jefa) | Share of census households whose reference person is a woman. | % | Both | `HOGJEF_F` | 95.5 / 86.6 | 100.0 / 99.9 | 31.04 | + |
 
 ### Social lag
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 24 | [`PCT_POB_SIN_SALUD`](#pct_pob_sin_salud) | Share of population without health service affiliation. | % | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 23.44 | + |
-| 25 | [`PCT_ANALF`](#pct_analf) | Share of population aged 15 and over who are illiterate. | % | Both | `P15YM_AN` | 95.5 / 86.6 | 100.0 / 99.9 | 3.23 | + |
-| 26 | [`PCT_EDU_BAS_INC`](#pct_edu_bas_inc) | Share of population aged 15 and over with incomplete basic education. | % | Both | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` | 95.5 / 86.6 | 100.0 / 99.9 | 31.82 | + |
-| 27 | [`PCT_NOASIS_6A14`](#pct_noasis_6a14) | Share of population aged 6 to 14 not attending school. | % | Both | `P6A11_NOA + P12A14NOA` | 94.8 / 84.0 | 100.0 / 99.9 | 4.7 | + |
-| 28 | [`PCT_NOASIS_15A24`](#pct_noasis_15a24) | Share of population aged 15 to 24 not attending school. | % | Both | `P_15A17 + P_18A24 − P15A17A − P18A24A` | 94.7 / 84.7 | 100.0 / 99.9 | 55.7 | ± |
-| 52 | [`GRAPROES`](#graproes) | Average years of schooling of the population aged 15 and over. | years completed | Both | `GRAPROES` | 95.5 / 86.6 | 100.0 / 99.9 | 9.08 | − |
-| 53 | [`PRO_OCUP_C`](#pro_ocup_c) | Average occupants per room in inhabited private dwellings. | occupants/room | Both | `PRO_OCUP_C` | 95.5 / 86.6 | 100.0 / 99.9 | 1.02 | + |
+| 30 | [`PCT_POB_SIN_SALUD`](#pct_pob_sin_salud) | Share of population without health service affiliation. | % | Both | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 23.44 | + |
+| 31 | [`PCT_ANALF`](#pct_analf) | Share of population aged 15 and over who are illiterate. | % | Both | `P15YM_AN` | 95.5 / 86.6 | 100.0 / 99.9 | 3.23 | + |
+| 32 | [`PCT_EDU_BAS_INC`](#pct_edu_bas_inc) | Share of population aged 15 and over with incomplete basic education. | % | Both | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` | 95.5 / 86.6 | 100.0 / 99.9 | 31.82 | + |
+| 33 | [`PCT_NOASIS_6A14`](#pct_noasis_6a14) | Share of population aged 6 to 14 not attending school. | % | Both | `P6A11_NOA + P12A14NOA` | 94.8 / 84.0 | 100.0 / 99.9 | 4.7 | + |
+| 34 | [`PCT_NOASIS_15A24`](#pct_noasis_15a24) | Share of population aged 15 to 24 not attending school. | % | Both | `P_15A17 + P_18A24 − P15A17A − P18A24A` | 94.7 / 84.7 | 100.0 / 99.9 | 55.7 | ± |
+| 35 | [`GRAPROES`](#graproes) | Average years of schooling of the population aged 15 and over. | years completed | Both | `GRAPROES` | 95.5 / 86.6 | 100.0 / 99.9 | 9.08 | − |
+| 36 | [`PRO_OCUP_C`](#pro_ocup_c) | Average occupants per room in inhabited private dwellings. | occupants/room | Both | `PRO_OCUP_C` | 95.5 / 86.6 | 100.0 / 99.9 | 1.02 | + |
 
 ### Employment
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 29 | [`PCT_PEA`](#pct_pea) | Labour force participation rate: share of the population aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA / (PEA + PE_INAC)` | 95.5 / 86.6 | 100.0 / 99.9 | 61.9 | − |
-| 30 | [`PCT_PEA_F`](#pct_pea_f) | Female labour force participation rate: share of women aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA_F / (PEA_F + PE_INAC_F)` | 95.5 / 86.4 | 100.0 / 99.9 | 48.72 | − |
-| 31 | [`PCT_DESOCUP`](#pct_desocup) | Unemployment rate: share of the economically active population with no job who looked for one. | % | Both | `PDESOCUP / PEA` | 95.5 / 86.5 | 100.0 / 99.9 | 1.38 | + |
+| 37 | [`PCT_PEA`](#pct_pea) | Labour force participation rate: share of the population aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA / (PEA + PE_INAC)` | 95.5 / 86.6 | 100.0 / 99.9 | 61.9 | − |
+| 38 | [`PCT_PEA_F`](#pct_pea_f) | Female labour force participation rate: share of women aged 12 and over with a specified activity status who are economically active. | % | Both | `PEA_F / (PEA_F + PE_INAC_F)` | 95.5 / 86.4 | 100.0 / 99.9 | 48.72 | − |
+| 39 | [`PCT_DESOCUP`](#pct_desocup) | Unemployment rate: share of the economically active population with no job who looked for one. | % | Both | `PDESOCUP / PEA` | 95.5 / 86.5 | 100.0 / 99.9 | 1.38 | + |
 
 ### Water and storage
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 38 | [`PCT_VIV_TINACO`](#pct_viv_tinaco) | Share of dwellings with a rooftop water tank (tinaco). | % | Both | `VPH_TINACO` | 95.5 / 86.6 | 100.0 / 99.9 | 71.75 | − |
-| 39 | [`PCT_VIV_CISTERNA`](#pct_viv_cisterna) | Share of dwellings with a cistern. | % | Both | `VPH_CISTER` | 95.5 / 86.6 | 100.0 / 99.9 | 13.04 | − |
+| 40 | [`PCT_VIV_TINACO`](#pct_viv_tinaco) | Share of dwellings with a rooftop water tank (tinaco). | % | Both | `VPH_TINACO` | 95.5 / 86.6 | 100.0 / 99.9 | 71.75 | − |
+| 41 | [`PCT_VIV_CISTERNA`](#pct_viv_cisterna) | Share of dwellings with a cistern. | % | Both | `VPH_CISTER` | 95.5 / 86.6 | 100.0 / 99.9 | 13.04 | − |
 
 ### Goods and mobility
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 40 | [`PCT_VIV_REFRI`](#pct_viv_refri) | Share of dwellings with a refrigerator. | % | Both | `VPH_REFRI` | 95.5 / 86.6 | 100.0 / 99.9 | 92.38 | − |
-| 41 | [`PCT_VIV_LAVADORA`](#pct_viv_lavadora) | Share of dwellings with a washing machine. | % | Both | `VPH_LAVAD` | 95.5 / 86.6 | 100.0 / 99.9 | 76.35 | − |
-| 42 | [`PCT_VIV_AUTO`](#pct_viv_auto) | Share of dwellings with a car or pickup truck. | % | Both | `VPH_AUTOM` | 95.5 / 86.6 | 100.0 / 99.9 | 47.03 | − |
-| 51 | [`PCT_VIV_SIN_BIENES`](#pct_viv_sin_bienes) | Share of dwellings with no goods at all. | % | Both | `VPH_SNBIEN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.28 | + |
+| 42 | [`PCT_VIV_REFRI`](#pct_viv_refri) | Share of dwellings with a refrigerator. | % | Both | `VPH_REFRI` | 95.5 / 86.6 | 100.0 / 99.9 | 92.38 | − |
+| 43 | [`PCT_VIV_LAVADORA`](#pct_viv_lavadora) | Share of dwellings with a washing machine. | % | Both | `VPH_LAVAD` | 95.5 / 86.6 | 100.0 / 99.9 | 76.35 | − |
+| 44 | [`PCT_VIV_AUTO`](#pct_viv_auto) | Share of dwellings with a car or pickup truck. | % | Both | `VPH_AUTOM` | 95.5 / 86.6 | 100.0 / 99.9 | 47.03 | − |
+| 45 | [`PCT_VIV_SIN_BIENES`](#pct_viv_sin_bienes) | Share of dwellings with no goods at all. | % | Both | `VPH_SNBIEN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.28 | + |
 
 ### Communication and warnings
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 43 | [`PCT_VIV_RADIO`](#pct_viv_radio) | Share of dwellings with a radio. | % | Both | `VPH_RADIO` | 95.5 / 86.6 | 100.0 / 99.9 | 68.03 | − |
-| 44 | [`PCT_VIV_TELEFONO`](#pct_viv_telefono) | Share of dwellings with a landline telephone. | % | Both | `VPH_TELEF` | 95.5 / 86.6 | 100.0 / 99.9 | 25 | − |
-| 45 | [`PCT_VIV_CELULAR`](#pct_viv_celular) | Share of dwellings with a mobile phone. | % | Both | `VPH_CEL` | 95.5 / 86.6 | 100.0 / 99.9 | 90.97 | − |
-| 46 | [`PCT_VIV_INTERNET`](#pct_viv_internet) | Share of dwellings with internet. | % | Both | `VPH_INTER` | 95.5 / 86.6 | 100.0 / 99.9 | 44.7 | − |
-| 47 | [`PCT_VIV_COMPU`](#pct_viv_compu) | Share of dwellings with a computer, laptop or tablet. | % | Both | `VPH_PC` | 95.5 / 86.6 | 100.0 / 99.9 | 28.57 | − |
-| 48 | [`PCT_VIV_SIN_RADIO_TV`](#pct_viv_sin_radio_tv) | Share of dwellings with neither radio nor television. | % | Both | `VPH_SINRTV` | 95.5 / 86.6 | 100.0 / 99.9 | 3.18 | + |
-| 49 | [`PCT_VIV_SIN_TEL_CEL`](#pct_viv_sin_tel_cel) | Share of dwellings with neither landline nor mobile phone. | % | Both | `VPH_SINLTC` | 95.5 / 86.6 | 100.0 / 99.9 | 5.66 | + |
-| 50 | [`PCT_VIV_SIN_TIC`](#pct_viv_sin_tic) | Share of dwellings with no information and communication technology at all. | % | Both | `VPH_SINTIC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.73 | + |
+| 46 | [`PCT_VIV_RADIO`](#pct_viv_radio) | Share of dwellings with a radio. | % | Both | `VPH_RADIO` | 95.5 / 86.6 | 100.0 / 99.9 | 68.03 | − |
+| 47 | [`PCT_VIV_TELEFONO`](#pct_viv_telefono) | Share of dwellings with a landline telephone. | % | Both | `VPH_TELEF` | 95.5 / 86.6 | 100.0 / 99.9 | 25 | − |
+| 48 | [`PCT_VIV_CELULAR`](#pct_viv_celular) | Share of dwellings with a mobile phone. | % | Both | `VPH_CEL` | 95.5 / 86.6 | 100.0 / 99.9 | 90.97 | − |
+| 49 | [`PCT_VIV_INTERNET`](#pct_viv_internet) | Share of dwellings with internet. | % | Both | `VPH_INTER` | 95.5 / 86.6 | 100.0 / 99.9 | 44.7 | − |
+| 50 | [`PCT_VIV_COMPU`](#pct_viv_compu) | Share of dwellings with a computer, laptop or tablet. | % | Both | `VPH_PC` | 95.5 / 86.6 | 100.0 / 99.9 | 28.57 | − |
+| 51 | [`PCT_VIV_SIN_RADIO_TV`](#pct_viv_sin_radio_tv) | Share of dwellings with neither radio nor television. | % | Both | `VPH_SINRTV` | 95.5 / 86.6 | 100.0 / 99.9 | 3.18 | + |
+| 52 | [`PCT_VIV_SIN_TEL_CEL`](#pct_viv_sin_tel_cel) | Share of dwellings with neither landline nor mobile phone. | % | Both | `VPH_SINLTC` | 95.5 / 86.6 | 100.0 / 99.9 | 5.66 | + |
+| 53 | [`PCT_VIV_SIN_TIC`](#pct_viv_sin_tic) | Share of dwellings with no information and communication technology at all. | % | Both | `VPH_SINTIC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.73 | + |
 
 ### CONEVAL validation
 
@@ -371,28 +372,11 @@ Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,45
 | 197 | [`VIV_SIN_TIC`](#viv_sin_tic) | Dwellings without information and communication technologies. | dwellings | Both | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
 | 198 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Dwellings with no goods at all. | dwellings | Both | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
 
-### Metadata
-
-| # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
-|---|---|---|---|---|---|---|---|---|---|
-| 199 | [`YEAR_GEOMETRY`](#year_geometry) | Reference year of the geometry. | year | Both | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 200 | [`YEAR_CENSUS`](#year_census) | Reference year of the census. | year | Both | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 201 | [`YEAR_CONEVAL`](#year_coneval) | Reference year of CONEVAL's GRS. | year | Both | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 202 | [`YEAR_DENUE`](#year_denue) | DENUE version. | year-month | Both | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 203 | [`YEAR_HIDRO`](#year_hidro) | Reference year of the water body layer. | year | Both | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 204 | [`YEAR_USV`](#year_usv) | Reference year of the land use and vegetation layer. | year | Both | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
-| 205 | [`YEAR_CLUES`](#year_clues) | Cut-off of the CLUES catalog of health facilities. | year-month | Both | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 206 | [`YEAR_CEM`](#year_cem) | Publication year of the Continuo de Elevaciones Mexicano 4.0. | year | Both | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
-| 207 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Year of edition 2.0 of the 1:50,000 Hydrographic Network. | year | Both | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
-| 208 | [`YEAR_COSTA`](#year_costa) | Year of the CONABIO coastline layer. | year | Both | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 209 | [`YEAR_CENAPRED`](#year_cenapred) | Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos. | year | Both | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
-| 210 | [`YEAR_ICMM`](#year_icmm) | Edition of the Ingreso Corriente para los Municipios de México. | year | Both | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
-
 ### Geometry
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 211 | [`geom`](#geom) | Polygon or multipolygon of the AGEB. | EPSG:4326 | Both | `geometry` |  /  |  /  |  | n/a |
+| 199 | [`geom`](#geom) | Polygon or multipolygon of the AGEB. | EPSG:4326 | Both | `geometry` |  /  |  /  |  | n/a |
 
 ## ageb_integrada column cards
 
@@ -442,80 +426,8 @@ Total usually resident population.
 | Range | 0 – 44,157 |
 | Notes | Never suppressed by INEGI. The national sum matches the Census exactly: 126,014,024 (D-12). |
 
-<a id="pob_reportada"></a>
-#### 3. `POB_REPORTADA`
-
-Population whose characteristics the census does publish.
-
-| Field | Value |
-|---|---|
-| Block | Reliability |
-| Type | decimal (count) |
-| Unit | persons |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `POBTOT` |
-| Derivation | Urban: POB_TOTAL, or 0 if the whole AGEB row is suppressed. Rural: sum of POBTOT over the localities that publish all characteristics. |
-| Empty values | Never |
-| Suggested dimension | Reliability |
-| Suggested direction | n/a |
-| Script | 04_census_urban.R; 05_census_rural.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 1,021 |
-| Range | 0 – 44,154 |
-| Notes | See D-14. |
-
-<a id="pct_pob_reportada"></a>
-#### 4. `PCT_POB_REPORTADA`
-
-Share of the AGEB population whose characteristics the census publishes.
-
-| Field | Value |
-|---|---|
-| Block | Reliability |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Derivation | 100 × POB_REPORTADA / POB_TOTAL. |
-| Universe | POB_TOTAL |
-| Empty values | D0: POB_TOTAL = 0 |
-| Suggested dimension | Reliability |
-| Suggested direction | n/a |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 100 |
-| Range | 0 – 100 |
-| Notes | Use it as a reliability weight or filter for the shares, especially in rural areas. |
-
-<a id="n_celdas_imputadas"></a>
-#### 5. `N_CELDAS_IMPUTADAS`
-
-Number of census cells in the AGEB imputed as 1.5 because they were suppressed ('*').
-
-| Field | Value |
-|---|---|
-| Block | Reliability |
-| Type | integer |
-| Unit | cells |
-| Scope | Both |
-| Source | PIPELINE |
-| Derivation | Count of '*' cells among the 52 counts in CENSUS_VARS, only in urban rows not wholly suppressed. |
-| Empty values | Never |
-| Suggested dimension | Reliability |
-| Suggested direction | n/a |
-| Script | 04_census_urban.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2 |
-| Range | 0 – 32 |
-| Notes | Always 0 in rural AGEB (ITER does publish 1 and 2). Nationally: 253,460 cells in 55,573 urban AGEB (D-15). |
-
 <a id="pob_hombres"></a>
-#### 6. `POB_HOMBRES`
+#### 3. `POB_HOMBRES`
 
 Male population.
 
@@ -539,7 +451,7 @@ Male population.
 | Notes | Can be 1.5 in urban AGEB (imputation). |
 
 <a id="pob_mujeres"></a>
-#### 7. `POB_MUJERES`
+#### 4. `POB_MUJERES`
 
 Female population.
 
@@ -562,7 +474,7 @@ Female population.
 | Range | 0 – 23,939 |
 
 <a id="pct_hombres"></a>
-#### 8. `PCT_HOMBRES`
+#### 5. `PCT_HOMBRES`
 
 Share of men.
 
@@ -587,7 +499,7 @@ Share of men.
 | Range | 0 – 100 |
 
 <a id="pct_mujeres"></a>
-#### 9. `PCT_MUJERES`
+#### 6. `PCT_MUJERES`
 
 Share of women.
 
@@ -612,7 +524,7 @@ Share of women.
 | Range | 0 – 100 |
 
 <a id="dens_pob_km2"></a>
-#### 10. `DENS_POB_KM2`
+#### 7. `DENS_POB_KM2`
 
 Population density.
 
@@ -637,7 +549,7 @@ Population density.
 | Notes | In rural AGEB it divides by the whole territory, not by the inhabited area. |
 
 <a id="pob_por_viv"></a>
-#### 11. `POB_POR_VIV`
+#### 8. `POB_POR_VIV`
 
 Persons per inhabited private dwelling.
 
@@ -660,6 +572,78 @@ Persons per inhabited private dwelling.
 | Median (inhabited AGEB) | 3.55 |
 | Range | 0 – 679 |
 | Notes | Uses total population, not occupants. In tiny AGEB with imputed dwellings it yields extreme values (52 AGEB > 10; max 679): filter by size. |
+
+<a id="pob_reportada"></a>
+#### 9. `POB_REPORTADA`
+
+Population whose characteristics the census does publish.
+
+| Field | Value |
+|---|---|
+| Block | Reliability |
+| Type | decimal (count) |
+| Unit | persons |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `POBTOT` |
+| Derivation | Urban: POB_TOTAL, or 0 if the whole AGEB row is suppressed. Rural: sum of POBTOT over the localities that publish all characteristics. |
+| Empty values | Never |
+| Suggested dimension | Reliability |
+| Suggested direction | n/a |
+| Script | 04_census_urban.R; 05_census_rural.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 1,021 |
+| Range | 0 – 44,154 |
+| Notes | See D-14. |
+
+<a id="pct_pob_reportada"></a>
+#### 10. `PCT_POB_REPORTADA`
+
+Share of the AGEB population whose characteristics the census publishes.
+
+| Field | Value |
+|---|---|
+| Block | Reliability |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Derivation | 100 × POB_REPORTADA / POB_TOTAL. |
+| Universe | POB_TOTAL |
+| Empty values | D0: POB_TOTAL = 0 |
+| Suggested dimension | Reliability |
+| Suggested direction | n/a |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 100 |
+| Range | 0 – 100 |
+| Notes | Use it as a reliability weight or filter for the shares, especially in rural areas. |
+
+<a id="n_celdas_imputadas"></a>
+#### 11. `N_CELDAS_IMPUTADAS`
+
+Number of census cells in the AGEB imputed as 1.5 because they were suppressed ('*').
+
+| Field | Value |
+|---|---|
+| Block | Reliability |
+| Type | integer |
+| Unit | cells |
+| Scope | Both |
+| Source | PIPELINE |
+| Derivation | Count of '*' cells among the 52 counts in CENSUS_VARS, only in urban rows not wholly suppressed. |
+| Empty values | Never |
+| Suggested dimension | Reliability |
+| Suggested direction | n/a |
+| Script | 04_census_urban.R |
+| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
+| Population with value (urban / rural) | 100.0 % / 100.0 % |
+| Median (inhabited AGEB) | 2 |
+| Range | 0 – 32 |
+| Notes | Always 0 in rural AGEB (ITER does publish 1 and 2). Nationally: 253,460 cells in 55,573 urban AGEB (D-15). |
 
 <a id="viv_part_hab"></a>
 #### 12. `VIV_PART_HAB`
@@ -807,372 +791,8 @@ Share of dwellings with electricity.
 | Range | 0 – 100 |
 | Notes | Same as PCT_DRENAJE; for the deprivation use PCT_VIV_SIN_ELECTRIC. |
 
-<a id="pct_pob_0a5"></a>
-#### 18. `PCT_POB_0A5`
-
-Share of population aged 0 to 5.
-
-| Field | Value |
-|---|---|
-| Block | Sensitivity |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `P_0A2 + P_3A5` |
-| Derivation | 100 × (POB_0A2 + POB_3A5) / POB_DEN_PERS. |
-| Universe | Population of the localities that publish the PERS group |
-| Empty values | S; D0 |
-| Suggested dimension | Sensitivity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 10.01 |
-| Range | 0 – 50 |
-| Notes | Heat, waterborne disease and dependence during evacuation. |
-
-<a id="pct_pob_65ymas"></a>
-#### 19. `PCT_POB_65YMAS`
-
-Share of population aged 65 and over.
-
-| Field | Value |
-|---|---|
-| Block | Sensitivity |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `POB65_MAS` |
-| Derivation | 100 × POB_65YMAS / POB_DEN_PERS. |
-| Universe | Same as PCT_POB_0A5 |
-| Empty values | S; D0 |
-| Suggested dimension | Sensitivity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 7.21 |
-| Range | 0 – 100 |
-| Notes | Heat mortality, reduced mobility. |
-
-<a id="pct_pob_disc"></a>
-#### 20. `PCT_POB_DISC`
-
-Share of population with a disability.
-
-| Field | Value |
-|---|---|
-| Block | Sensitivity |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `PCON_DISC` |
-| Derivation | 100 × POB_DISC / POB_DEN_PERS. |
-| Universe | Same as PCT_POB_0A5 |
-| Empty values | S; D0 |
-| Suggested dimension | Sensitivity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 4.6 |
-| Range | 0 – 88.07 |
-| Notes | Disability = much difficulty with, or inability to, see, hear, walk, remember, care for oneself or communicate. |
-
-<a id="pct_pob_hli"></a>
-#### 21. `PCT_POB_HLI`
-
-Share of population aged 3 and over who speak an indigenous language.
-
-| Field | Value |
-|---|---|
-| Block | Sensitivity |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `P3YM_HLI` |
-| Derivation | 100 × POB_HLI / POB_3YMAS. |
-| Universe | Population aged 3 and over |
-| Empty values | S; D0 |
-| Suggested dimension | Sensitivity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 0.47 |
-| Range | 0 – 100 |
-| Notes | Proxy of structural marginalization. For the language barrier to warnings, PCT_POB_HLI_NHE is better. |
-
-<a id="pct_pob_hli_nhe"></a>
-#### 22. `PCT_POB_HLI_NHE`
-
-Share of population aged 3 and over who speak an indigenous language and do not speak Spanish.
-
-| Field | Value |
-|---|---|
-| Block | Sensitivity |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `P3HLINHE` |
-| Derivation | 100 × POB_HLI_NHE / POB_3YMAS. |
-| Universe | Population aged 3 and over |
-| Empty values | S; D0 |
-| Suggested dimension | Sensitivity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 0 |
-| Range | 0 – 82.24 |
-| Notes | Direct barrier to receiving official warnings and alerts. National median 0 %: highly concentrated. |
-
-<a id="pct_hog_jefa"></a>
-#### 23. `PCT_HOG_JEFA`
-
-Share of census households whose reference person is a woman.
-
-| Field | Value |
-|---|---|
-| Block | Sensitivity |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `HOGJEF_F` |
-| Derivation | 100 × HOGARES_JEFA / HOGARES. |
-| Universe | Census households |
-| Empty values | S; D0 |
-| Suggested dimension | Sensitivity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 31.04 |
-| Range | 0 – 100 |
-| Notes | Common in the social vulnerability literature, but its direction is debatable; decide when building the index. |
-
-<a id="pct_pob_sin_salud"></a>
-#### 24. `PCT_POB_SIN_SALUD`
-
-Share of population without health service affiliation.
-
-| Field | Value |
-|---|---|
-| Block | Social lag |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `PSINDER` |
-| Derivation | 100 × POB_SIN_SALUD / POB_DEN_PERS. |
-| Universe | Same as PCT_POB_0A5 |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 23.44 |
-| Range | 0 – 100 |
-| Notes | Equivalent of RZ_SSALUD. |
-
-<a id="pct_analf"></a>
-#### 25. `PCT_ANALF`
-
-Share of population aged 15 and over who are illiterate.
-
-| Field | Value |
-|---|---|
-| Block | Social lag |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `P15YM_AN` |
-| Derivation | 100 × POB_15YMAS_ANALF / POB_15YMAS. |
-| Universe | Population aged 15 and over |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 3.23 |
-| Range | 0 – 100 |
-| Notes | Equivalent of RZ_ANALF. |
-
-<a id="pct_edu_bas_inc"></a>
-#### 26. `PCT_EDU_BAS_INC`
-
-Share of population aged 15 and over with incomplete basic education.
-
-| Field | Value |
-|---|---|
-| Block | Social lag |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` |
-| Derivation | min(100, 100 × (no schooling + incomplete primary + complete primary + incomplete lower secondary) / POB_15YMAS). |
-| Universe | Population aged 15 and over |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 31.82 |
-| Range | 0 – 100 |
-| Notes | Equivalent of RZ_EBINC. Capped at 100 because it adds four possibly imputed cells (D-20). |
-
-<a id="pct_noasis_6a14"></a>
-#### 27. `PCT_NOASIS_6A14`
-
-Share of population aged 6 to 14 not attending school.
-
-| Field | Value |
-|---|---|
-| Block | Social lag |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `P6A11_NOA + P12A14NOA` |
-| Derivation | 100 × (POB_6A11_NOASIS + POB_12A14_NOASIS) / (POB_6A11 + POB_12A14). |
-| Universe | Population aged 6 to 14 |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 94.8 % / 84.0 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 4.7 |
-| Range | 0 – 100 |
-| Notes | Equivalent of RZ_INA614. |
-
-<a id="pct_noasis_15a24"></a>
-#### 28. `PCT_NOASIS_15A24`
-
-Share of population aged 15 to 24 not attending school.
-
-| Field | Value |
-|---|---|
-| Block | Social lag |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `P_15A17 + P_18A24 − P15A17A − P18A24A` |
-| Derivation | max(0, 100 × (POB_15A17 + POB_18A24 − POB_15A17_ASIS − POB_18A24_ASIS) / (POB_15A17 + POB_18A24)). |
-| Universe | Population aged 15 to 24 |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | ± |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 94.7 % / 84.7 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 55.7 |
-| Range | 0 – 100 |
-| Notes | Equivalent of RZ_INA1524. It is a difference: it includes those who did not specify attendance. National median 56 %: weakly discriminating for vulnerability. |
-
-<a id="pct_pea"></a>
-#### 29. `PCT_PEA`
-
-Labour force participation rate: share of the population aged 12 and over with a specified activity status who are economically active.
-
-| Field | Value |
-|---|---|
-| Block | Employment |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `PEA / (PEA + PE_INAC)` |
-| Derivation | 100 × POB_PEA / (POB_PEA + POB_INAC). |
-| Universe | Population aged 12 and over with a specified activity status (PEA + PE_INAC) |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 61.9 |
-| Range | 0 – 100 |
-| Notes | Does not divide by P_12YMAS: the unspecified share is 0.2–0.5 % per state but reaches 27 % in some AGEB. Summed from Oaxaca's AGEB it gives 57.03 %, equal to the ITER state total. The census does not capture income; this is the closest economic signal. |
-
-<a id="pct_pea_f"></a>
-#### 30. `PCT_PEA_F`
-
-Female labour force participation rate: share of women aged 12 and over with a specified activity status who are economically active.
-
-| Field | Value |
-|---|---|
-| Block | Employment |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `PEA_F / (PEA_F + PE_INAC_F)` |
-| Derivation | 100 × POB_PEA_F / (POB_PEA_F + POB_INAC_F). |
-| Universe | Women aged 12 and over with a specified activity status |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.4 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 48.72 |
-| Range | 0 – 100 |
-| Notes | Discriminates more than PCT_PEA across AGEB (Oaxaca: 34 % rural against 48 % urban). Correlates with PCT_HOG_JEFA and with educational lag; check collinearity when building the index. |
-
-<a id="pct_desocup"></a>
-#### 31. `PCT_DESOCUP`
-
-Unemployment rate: share of the economically active population with no job who looked for one.
-
-| Field | Value |
-|---|---|
-| Block | Employment |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `PDESOCUP / PEA` |
-| Derivation | 100 × POB_DESOCUP / POB_PEA. |
-| Universe | Economically active population (PEA = POCUPADA + PDESOCUP) |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | + |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.5 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 1.38 |
-| Range | 0 – 100 |
-| Notes | Weakly discriminating: informal work counts as employment and the census rate is low (1.7–2.3 % per state). In urban AGEB the count is often 1–2 and imputed as 1.5 (D-15), so in small AGEB it is noise. |
-
 <a id="pct_viv_sin_drenaje"></a>
-#### 32. `PCT_VIV_SIN_DRENAJE`
+#### 18. `PCT_VIV_SIN_DRENAJE`
 
 Share of dwellings without drainage.
 
@@ -1198,7 +818,7 @@ Share of dwellings without drainage.
 | Notes | Equivalent of RZ_SDREN. Direct count, not 100 − PCT_DRENAJE (D-19). |
 
 <a id="pct_viv_sin_electric"></a>
-#### 33. `PCT_VIV_SIN_ELECTRIC`
+#### 19. `PCT_VIV_SIN_ELECTRIC`
 
 Share of dwellings without electricity.
 
@@ -1224,7 +844,7 @@ Share of dwellings without electricity.
 | Notes | Equivalent of RZ_SELEC. |
 
 <a id="pct_viv_sin_agua"></a>
-#### 34. `PCT_VIV_SIN_AGUA`
+#### 20. `PCT_VIV_SIN_AGUA`
 
 Share of dwellings without piped water inside the dwelling or its plot.
 
@@ -1250,7 +870,7 @@ Share of dwellings without piped water inside the dwelling or its plot.
 | Notes | Equivalent of RZ_SAGUA. Water stress and drought. |
 
 <a id="pct_viv_piso_tierra"></a>
-#### 35. `PCT_VIV_PISO_TIERRA`
+#### 21. `PCT_VIV_PISO_TIERRA`
 
 Share of dwellings with a dirt floor.
 
@@ -1276,7 +896,7 @@ Share of dwellings with a dirt floor.
 | Notes | Equivalent of RZ_PISOT. Proxy of housing precariousness in the face of flooding. |
 
 <a id="pct_viv_1cuarto"></a>
-#### 36. `PCT_VIV_1CUARTO`
+#### 22. `PCT_VIV_1CUARTO`
 
 Share of dwellings with a single room.
 
@@ -1302,7 +922,7 @@ Share of dwellings with a single room.
 | Notes | Overcrowding and indoor heat. |
 
 <a id="pct_viv_sin_sanitario"></a>
-#### 37. `PCT_VIV_SIN_SANITARIO`
+#### 23. `PCT_VIV_SIN_SANITARIO`
 
 Share of dwellings with no toilet, sanitary facility or latrine.
 
@@ -1327,369 +947,294 @@ Share of dwellings with no toilet, sanitary facility or latrine.
 | Range | 0 – 100 |
 | Notes | Equivalent of RZ_SEXCUS. The only complement: no direct count exists. As in CONEVAL, a latrine counts as a sanitary facility (D-19). |
 
-<a id="pct_viv_tinaco"></a>
-#### 38. `PCT_VIV_TINACO`
+<a id="pct_pob_0a5"></a>
+#### 24. `PCT_POB_0A5`
 
-Share of dwellings with a rooftop water tank (tinaco).
+Share of population aged 0 to 5.
 
 | Field | Value |
 |---|---|
-| Block | Water and storage |
+| Block | Sensitivity |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_TINACO` |
-| Derivation | 100 × VIV_TINACO / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `P_0A2 + P_3A5` |
+| Derivation | 100 × (POB_0A2 + POB_3A5) / POB_DEN_PERS. |
+| Universe | Population of the localities that publish the PERS group |
 | Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
+| Suggested dimension | Sensitivity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 10.01 |
+| Range | 0 – 50 |
+| Notes | Heat, waterborne disease and dependence during evacuation. |
+
+<a id="pct_pob_65ymas"></a>
+#### 25. `PCT_POB_65YMAS`
+
+Share of population aged 65 and over.
+
+| Field | Value |
+|---|---|
+| Block | Sensitivity |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `POB65_MAS` |
+| Derivation | 100 × POB_65YMAS / POB_DEN_PERS. |
+| Universe | Same as PCT_POB_0A5 |
+| Empty values | S; D0 |
+| Suggested dimension | Sensitivity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 7.21 |
+| Range | 0 – 100 |
+| Notes | Heat mortality, reduced mobility. |
+
+<a id="pct_pob_disc"></a>
+#### 26. `PCT_POB_DISC`
+
+Share of population with a disability.
+
+| Field | Value |
+|---|---|
+| Block | Sensitivity |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `PCON_DISC` |
+| Derivation | 100 × POB_DISC / POB_DEN_PERS. |
+| Universe | Same as PCT_POB_0A5 |
+| Empty values | S; D0 |
+| Suggested dimension | Sensitivity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 4.6 |
+| Range | 0 – 88.07 |
+| Notes | Disability = much difficulty with, or inability to, see, hear, walk, remember, care for oneself or communicate. |
+
+<a id="pct_pob_hli"></a>
+#### 27. `PCT_POB_HLI`
+
+Share of population aged 3 and over who speak an indigenous language.
+
+| Field | Value |
+|---|---|
+| Block | Sensitivity |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `P3YM_HLI` |
+| Derivation | 100 × POB_HLI / POB_3YMAS. |
+| Universe | Population aged 3 and over |
+| Empty values | S; D0 |
+| Suggested dimension | Sensitivity |
+| Suggested direction | + |
 | Script | 10_build.R |
 | Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 71.75 |
+| Median (inhabited AGEB) | 0.47 |
 | Range | 0 – 100 |
-| Notes | Water storage against supply cuts and drought. |
+| Notes | Proxy of structural marginalization. For the language barrier to warnings, PCT_POB_HLI_NHE is better. |
 
-<a id="pct_viv_cisterna"></a>
-#### 39. `PCT_VIV_CISTERNA`
+<a id="pct_pob_hli_nhe"></a>
+#### 28. `PCT_POB_HLI_NHE`
 
-Share of dwellings with a cistern.
+Share of population aged 3 and over who speak an indigenous language and do not speak Spanish.
 
 | Field | Value |
 |---|---|
-| Block | Water and storage |
+| Block | Sensitivity |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_CISTER` |
-| Derivation | 100 × VIV_CISTERNA / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `P3HLINHE` |
+| Derivation | 100 × POB_HLI_NHE / POB_3YMAS. |
+| Universe | Population aged 3 and over |
 | Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
+| Suggested dimension | Sensitivity |
+| Suggested direction | + |
 | Script | 10_build.R |
 | Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 13.04 |
-| Range | 0 – 100 |
+| Median (inhabited AGEB) | 0 |
+| Range | 0 – 82.24 |
+| Notes | Direct barrier to receiving official warnings and alerts. National median 0 %: highly concentrated. |
 
-<a id="pct_viv_refri"></a>
-#### 40. `PCT_VIV_REFRI`
+<a id="pct_hog_jefa"></a>
+#### 29. `PCT_HOG_JEFA`
 
-Share of dwellings with a refrigerator.
+Share of census households whose reference person is a woman.
 
 | Field | Value |
 |---|---|
-| Block | Goods and mobility |
+| Block | Sensitivity |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_REFRI` |
-| Derivation | 100 × VIV_REFRI / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `HOGJEF_F` |
+| Derivation | 100 × HOGARES_JEFA / HOGARES. |
+| Universe | Census households |
 | Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
+| Suggested dimension | Sensitivity |
+| Suggested direction | + |
 | Script | 10_build.R |
 | Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 92.38 |
+| Median (inhabited AGEB) | 31.04 |
 | Range | 0 – 100 |
-| Notes | RZ_SREFRI = 100 − this value (CONEVAL publishes the deprivation). |
+| Notes | Common in the social vulnerability literature, but its direction is debatable; decide when building the index. |
 
-<a id="pct_viv_lavadora"></a>
-#### 41. `PCT_VIV_LAVADORA`
+<a id="pct_pob_sin_salud"></a>
+#### 30. `PCT_POB_SIN_SALUD`
 
-Share of dwellings with a washing machine.
+Share of population without health service affiliation.
 
 | Field | Value |
 |---|---|
-| Block | Goods and mobility |
+| Block | Social lag |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_LAVAD` |
-| Derivation | 100 × VIV_LAVADORA / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `PSINDER` |
+| Derivation | 100 × POB_SIN_SALUD / POB_DEN_PERS. |
+| Universe | Same as PCT_POB_0A5 |
 | Empty values | S; D0 |
 | Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
+| Suggested direction | + |
 | Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Inhabited AGEB with value (urban / rural) | 95.6 % / 86.6 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 76.35 |
+| Median (inhabited AGEB) | 23.44 |
 | Range | 0 – 100 |
-| Notes | RZ_SLAVAD = 100 − this value. |
+| Notes | Equivalent of RZ_SSALUD. |
 
-<a id="pct_viv_auto"></a>
-#### 42. `PCT_VIV_AUTO`
+<a id="pct_analf"></a>
+#### 31. `PCT_ANALF`
 
-Share of dwellings with a car or pickup truck.
+Share of population aged 15 and over who are illiterate.
 
 | Field | Value |
 |---|---|
-| Block | Goods and mobility |
+| Block | Social lag |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_AUTOM` |
-| Derivation | 100 × VIV_AUTO / VIV_CARACT. |
-| Universe | VIV_CARACT |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 47.03 |
-| Range | 0 – 100 |
-| Notes | Evacuation capacity. |
-
-<a id="pct_viv_radio"></a>
-#### 43. `PCT_VIV_RADIO`
-
-Share of dwellings with a radio.
-
-| Field | Value |
-|---|---|
-| Block | Communication and warnings |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `VPH_RADIO` |
-| Derivation | 100 × VIV_RADIO / VIV_CARACT. |
-| Universe | VIV_CARACT |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 68.03 |
-| Range | 0 – 100 |
-| Notes | Early-warning channel that does not depend on the power grid or on data networks. |
-
-<a id="pct_viv_telefono"></a>
-#### 44. `PCT_VIV_TELEFONO`
-
-Share of dwellings with a landline telephone.
-
-| Field | Value |
-|---|---|
-| Block | Communication and warnings |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `VPH_TELEF` |
-| Derivation | 100 × VIV_TELEFONO / VIV_CARACT. |
-| Universe | VIV_CARACT |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 25 |
-| Range | 0 – 100 |
-| Notes | RZ_STELF = 100 − this value. |
-
-<a id="pct_viv_celular"></a>
-#### 45. `PCT_VIV_CELULAR`
-
-Share of dwellings with a mobile phone.
-
-| Field | Value |
-|---|---|
-| Block | Communication and warnings |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `VPH_CEL` |
-| Derivation | 100 × VIV_CELULAR / VIV_CARACT. |
-| Universe | VIV_CARACT |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 90.97 |
-| Range | 0 – 100 |
-| Notes | RZ_SCEL = 100 − this value. |
-
-<a id="pct_viv_internet"></a>
-#### 46. `PCT_VIV_INTERNET`
-
-Share of dwellings with internet.
-
-| Field | Value |
-|---|---|
-| Block | Communication and warnings |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `VPH_INTER` |
-| Derivation | 100 × VIV_INTERNET / VIV_CARACT. |
-| Universe | VIV_CARACT |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 44.7 |
-| Range | 0 – 100 |
-| Notes | RZ_SINTER = 100 − this value. |
-
-<a id="pct_viv_compu"></a>
-#### 47. `PCT_VIV_COMPU`
-
-Share of dwellings with a computer, laptop or tablet.
-
-| Field | Value |
-|---|---|
-| Block | Communication and warnings |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `VPH_PC` |
-| Derivation | 100 × VIV_COMPU / VIV_CARACT. |
-| Universe | VIV_CARACT |
-| Empty values | S; D0 |
-| Suggested dimension | Adaptive capacity |
-| Suggested direction | − |
-| Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
-| Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 28.57 |
-| Range | 0 – 100 |
-| Notes | RZ_SCOMPU = 100 − this value. |
-
-<a id="pct_viv_sin_radio_tv"></a>
-#### 48. `PCT_VIV_SIN_RADIO_TV`
-
-Share of dwellings with neither radio nor television.
-
-| Field | Value |
-|---|---|
-| Block | Communication and warnings |
-| Type | decimal |
-| Unit | % |
-| Decimals | 2 |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `VPH_SINRTV` |
-| Derivation | 100 × VIV_SIN_RADIO_TV / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `P15YM_AN` |
+| Derivation | 100 × POB_15YMAS_ANALF / POB_15YMAS. |
+| Universe | Population aged 15 and over |
 | Empty values | S; D0 |
 | Suggested dimension | Adaptive capacity |
 | Suggested direction | + |
 | Script | 10_build.R |
 | Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 3.18 |
+| Median (inhabited AGEB) | 3.23 |
 | Range | 0 – 100 |
+| Notes | Equivalent of RZ_ANALF. |
 
-<a id="pct_viv_sin_tel_cel"></a>
-#### 49. `PCT_VIV_SIN_TEL_CEL`
+<a id="pct_edu_bas_inc"></a>
+#### 32. `PCT_EDU_BAS_INC`
 
-Share of dwellings with neither landline nor mobile phone.
+Share of population aged 15 and over with incomplete basic education.
 
 | Field | Value |
 |---|---|
-| Block | Communication and warnings |
+| Block | Social lag |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_SINLTC` |
-| Derivation | 100 × VIV_SIN_TEL_CEL / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` |
+| Derivation | min(100, 100 × (no schooling + incomplete primary + complete primary + incomplete lower secondary) / POB_15YMAS). |
+| Universe | Population aged 15 and over |
 | Empty values | S; D0 |
 | Suggested dimension | Adaptive capacity |
 | Suggested direction | + |
 | Script | 10_build.R |
 | Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 5.66 |
+| Median (inhabited AGEB) | 31.82 |
 | Range | 0 – 100 |
+| Notes | Equivalent of RZ_EBINC. Capped at 100 because it adds four possibly imputed cells (D-20). |
 
-<a id="pct_viv_sin_tic"></a>
-#### 50. `PCT_VIV_SIN_TIC`
+<a id="pct_noasis_6a14"></a>
+#### 33. `PCT_NOASIS_6A14`
 
-Share of dwellings with no information and communication technology at all.
+Share of population aged 6 to 14 not attending school.
 
 | Field | Value |
 |---|---|
-| Block | Communication and warnings |
+| Block | Social lag |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_SINTIC` |
-| Derivation | 100 × VIV_SIN_TIC / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `P6A11_NOA + P12A14NOA` |
+| Derivation | 100 × (POB_6A11_NOASIS + POB_12A14_NOASIS) / (POB_6A11 + POB_12A14). |
+| Universe | Population aged 6 to 14 |
 | Empty values | S; D0 |
 | Suggested dimension | Adaptive capacity |
 | Suggested direction | + |
 | Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Inhabited AGEB with value (urban / rural) | 94.8 % / 84.0 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 0.73 |
+| Median (inhabited AGEB) | 4.7 |
 | Range | 0 – 100 |
-| Notes | No radio, TV, computer, landline, mobile phone, internet, pay TV, streaming or games console. Highly correlated with PCT_VIV_SIN_BIENES. |
+| Notes | Equivalent of RZ_INA614. |
 
-<a id="pct_viv_sin_bienes"></a>
-#### 51. `PCT_VIV_SIN_BIENES`
+<a id="pct_noasis_15a24"></a>
+#### 34. `PCT_NOASIS_15A24`
 
-Share of dwellings with no goods at all.
+Share of population aged 15 to 24 not attending school.
 
 | Field | Value |
 |---|---|
-| Block | Goods and mobility |
+| Block | Social lag |
 | Type | decimal |
 | Unit | % |
 | Decimals | 2 |
 | Scope | Both |
 | Source | PIPELINE |
-| Source variable | `VPH_SNBIEN` |
-| Derivation | 100 × VIV_SIN_BIENES / VIV_CARACT. |
-| Universe | VIV_CARACT |
+| Source variable | `P_15A17 + P_18A24 − P15A17A − P18A24A` |
+| Derivation | max(0, 100 × (POB_15A17 + POB_18A24 − POB_15A17_ASIS − POB_18A24_ASIS) / (POB_15A17 + POB_18A24)). |
+| Universe | Population aged 15 to 24 |
 | Empty values | S; D0 |
 | Suggested dimension | Adaptive capacity |
-| Suggested direction | + |
+| Suggested direction | ± |
 | Script | 10_build.R |
-| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Inhabited AGEB with value (urban / rural) | 94.7 % / 84.7 % |
 | Population with value (urban / rural) | 100.0 % / 99.9 % |
-| Median (inhabited AGEB) | 0.28 |
+| Median (inhabited AGEB) | 55.7 |
 | Range | 0 – 100 |
-| Notes | No refrigerator, washing machine, microwave, vehicle, bicycle or any ICT. |
+| Notes | Equivalent of RZ_INA1524. It is a difference: it includes those who did not specify attendance. National median 56 %: weakly discriminating for vulnerability. |
 
 <a id="graproes"></a>
-#### 52. `GRAPROES`
+#### 35. `GRAPROES`
 
 Average years of schooling of the population aged 15 and over.
 
@@ -1715,7 +1260,7 @@ Average years of schooling of the population aged 15 and over.
 | Notes | Averages are not summed: they are turned into totals and divided again (D-17). INEGI excludes those who did not specify their grade; here the denominator includes them, a minor difference. |
 
 <a id="pro_ocup_c"></a>
-#### 53. `PRO_OCUP_C`
+#### 36. `PRO_OCUP_C`
 
 Average occupants per room in inhabited private dwellings.
 
@@ -1739,6 +1284,445 @@ Average occupants per room in inhabited private dwellings.
 | Median (inhabited AGEB) | 1.02 |
 | Range | 0.16 – 6.83 |
 | Notes | Stand-in for RZ_HACIN (the census does not publish the count of overcrowded dwellings). Not validated against CONEVAL because one is an average and the other a share. |
+
+<a id="pct_pea"></a>
+#### 37. `PCT_PEA`
+
+Labour force participation rate: share of the population aged 12 and over with a specified activity status who are economically active.
+
+| Field | Value |
+|---|---|
+| Block | Employment |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `PEA / (PEA + PE_INAC)` |
+| Derivation | 100 × POB_PEA / (POB_PEA + POB_INAC). |
+| Universe | Population aged 12 and over with a specified activity status (PEA + PE_INAC) |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 61.9 |
+| Range | 0 – 100 |
+| Notes | Does not divide by P_12YMAS: the unspecified share is 0.2–0.5 % per state but reaches 27 % in some AGEB. Summed from Oaxaca's AGEB it gives 57.03 %, equal to the ITER state total. The census does not capture income; this is the closest economic signal. |
+
+<a id="pct_pea_f"></a>
+#### 38. `PCT_PEA_F`
+
+Female labour force participation rate: share of women aged 12 and over with a specified activity status who are economically active.
+
+| Field | Value |
+|---|---|
+| Block | Employment |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `PEA_F / (PEA_F + PE_INAC_F)` |
+| Derivation | 100 × POB_PEA_F / (POB_PEA_F + POB_INAC_F). |
+| Universe | Women aged 12 and over with a specified activity status |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.4 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 48.72 |
+| Range | 0 – 100 |
+| Notes | Discriminates more than PCT_PEA across AGEB (Oaxaca: 34 % rural against 48 % urban). Correlates with PCT_HOG_JEFA and with educational lag; check collinearity when building the index. |
+
+<a id="pct_desocup"></a>
+#### 39. `PCT_DESOCUP`
+
+Unemployment rate: share of the economically active population with no job who looked for one.
+
+| Field | Value |
+|---|---|
+| Block | Employment |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `PDESOCUP / PEA` |
+| Derivation | 100 × POB_DESOCUP / POB_PEA. |
+| Universe | Economically active population (PEA = POCUPADA + PDESOCUP) |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.5 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 1.38 |
+| Range | 0 – 100 |
+| Notes | Weakly discriminating: informal work counts as employment and the census rate is low (1.7–2.3 % per state). In urban AGEB the count is often 1–2 and imputed as 1.5 (D-15), so in small AGEB it is noise. |
+
+<a id="pct_viv_tinaco"></a>
+#### 40. `PCT_VIV_TINACO`
+
+Share of dwellings with a rooftop water tank (tinaco).
+
+| Field | Value |
+|---|---|
+| Block | Water and storage |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_TINACO` |
+| Derivation | 100 × VIV_TINACO / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 71.75 |
+| Range | 0 – 100 |
+| Notes | Water storage against supply cuts and drought. |
+
+<a id="pct_viv_cisterna"></a>
+#### 41. `PCT_VIV_CISTERNA`
+
+Share of dwellings with a cistern.
+
+| Field | Value |
+|---|---|
+| Block | Water and storage |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_CISTER` |
+| Derivation | 100 × VIV_CISTERNA / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 13.04 |
+| Range | 0 – 100 |
+
+<a id="pct_viv_refri"></a>
+#### 42. `PCT_VIV_REFRI`
+
+Share of dwellings with a refrigerator.
+
+| Field | Value |
+|---|---|
+| Block | Goods and mobility |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_REFRI` |
+| Derivation | 100 × VIV_REFRI / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 92.38 |
+| Range | 0 – 100 |
+| Notes | RZ_SREFRI = 100 − this value (CONEVAL publishes the deprivation). |
+
+<a id="pct_viv_lavadora"></a>
+#### 43. `PCT_VIV_LAVADORA`
+
+Share of dwellings with a washing machine.
+
+| Field | Value |
+|---|---|
+| Block | Goods and mobility |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_LAVAD` |
+| Derivation | 100 × VIV_LAVADORA / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 76.35 |
+| Range | 0 – 100 |
+| Notes | RZ_SLAVAD = 100 − this value. |
+
+<a id="pct_viv_auto"></a>
+#### 44. `PCT_VIV_AUTO`
+
+Share of dwellings with a car or pickup truck.
+
+| Field | Value |
+|---|---|
+| Block | Goods and mobility |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_AUTOM` |
+| Derivation | 100 × VIV_AUTO / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 47.03 |
+| Range | 0 – 100 |
+| Notes | Evacuation capacity. |
+
+<a id="pct_viv_sin_bienes"></a>
+#### 45. `PCT_VIV_SIN_BIENES`
+
+Share of dwellings with no goods at all.
+
+| Field | Value |
+|---|---|
+| Block | Goods and mobility |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_SNBIEN` |
+| Derivation | 100 × VIV_SIN_BIENES / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 0.28 |
+| Range | 0 – 100 |
+| Notes | No refrigerator, washing machine, microwave, vehicle, bicycle or any ICT. |
+
+<a id="pct_viv_radio"></a>
+#### 46. `PCT_VIV_RADIO`
+
+Share of dwellings with a radio.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_RADIO` |
+| Derivation | 100 × VIV_RADIO / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 68.03 |
+| Range | 0 – 100 |
+| Notes | Early-warning channel that does not depend on the power grid or on data networks. |
+
+<a id="pct_viv_telefono"></a>
+#### 47. `PCT_VIV_TELEFONO`
+
+Share of dwellings with a landline telephone.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_TELEF` |
+| Derivation | 100 × VIV_TELEFONO / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 25 |
+| Range | 0 – 100 |
+| Notes | RZ_STELF = 100 − this value. |
+
+<a id="pct_viv_celular"></a>
+#### 48. `PCT_VIV_CELULAR`
+
+Share of dwellings with a mobile phone.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_CEL` |
+| Derivation | 100 × VIV_CELULAR / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 90.97 |
+| Range | 0 – 100 |
+| Notes | RZ_SCEL = 100 − this value. |
+
+<a id="pct_viv_internet"></a>
+#### 49. `PCT_VIV_INTERNET`
+
+Share of dwellings with internet.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_INTER` |
+| Derivation | 100 × VIV_INTERNET / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 44.7 |
+| Range | 0 – 100 |
+| Notes | RZ_SINTER = 100 − this value. |
+
+<a id="pct_viv_compu"></a>
+#### 50. `PCT_VIV_COMPU`
+
+Share of dwellings with a computer, laptop or tablet.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_PC` |
+| Derivation | 100 × VIV_COMPU / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | − |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 28.57 |
+| Range | 0 – 100 |
+| Notes | RZ_SCOMPU = 100 − this value. |
+
+<a id="pct_viv_sin_radio_tv"></a>
+#### 51. `PCT_VIV_SIN_RADIO_TV`
+
+Share of dwellings with neither radio nor television.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_SINRTV` |
+| Derivation | 100 × VIV_SIN_RADIO_TV / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 3.18 |
+| Range | 0 – 100 |
+
+<a id="pct_viv_sin_tel_cel"></a>
+#### 52. `PCT_VIV_SIN_TEL_CEL`
+
+Share of dwellings with neither landline nor mobile phone.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_SINLTC` |
+| Derivation | 100 × VIV_SIN_TEL_CEL / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 5.66 |
+| Range | 0 – 100 |
+
+<a id="pct_viv_sin_tic"></a>
+#### 53. `PCT_VIV_SIN_TIC`
+
+Share of dwellings with no information and communication technology at all.
+
+| Field | Value |
+|---|---|
+| Block | Communication and warnings |
+| Type | decimal |
+| Unit | % |
+| Decimals | 2 |
+| Scope | Both |
+| Source | PIPELINE |
+| Source variable | `VPH_SINTIC` |
+| Derivation | 100 × VIV_SIN_TIC / VIV_CARACT. |
+| Universe | VIV_CARACT |
+| Empty values | S; D0 |
+| Suggested dimension | Adaptive capacity |
+| Suggested direction | + |
+| Script | 10_build.R |
+| Inhabited AGEB with value (urban / rural) | 95.5 % / 86.6 % |
+| Population with value (urban / rural) | 100.0 % / 99.9 % |
+| Median (inhabited AGEB) | 0.73 |
+| Range | 0 – 100 |
+| Notes | No radio, TV, computer, landline, mobile phone, internet, pay TV, streaming or games console. Highly correlated with PCT_VIV_SIN_BIENES. |
 
 <a id="grs_grado"></a>
 #### 54. `GRS_GRADO`
@@ -2486,7 +2470,7 @@ Economic units in SCIAN sector 31-33: Manufacturing.
 | Scope | Both |
 | Source | DENUE |
 | Source variable | `codigo_act` |
-| Derivation | Count of the AGEB's establishments whose SCIAN code starts with 31 or 33. |
+| Derivation | Count of the AGEB's establishments whose SCIAN code starts with 31, 32 or 33. |
 | Empty values | Never (0 = no establishments) |
 | Suggested dimension | Context |
 | Suggested direction | ± |
@@ -2919,7 +2903,7 @@ Flag for the presence of water bodies in the AGEB.
 | Unit | 0/1 |
 | Scope | Both |
 | Source | PIPELINE |
-| Derivation | 1 if WATER_AREA > 0; 0 otherwise. |
+| Derivation | 1 if the intersected area is greater than zero, 0 otherwise. Evaluated before rounding. |
 | Empty values | Never |
 | Suggested dimension | Exposure (context) |
 | Suggested direction | ± |
@@ -2928,6 +2912,7 @@ Flag for the presence of water bodies in the AGEB.
 | Population with value (urban / rural) | 100.0 % / 100.0 % |
 | Median (inhabited AGEB) | 0 |
 | Range | 0 – 1 |
+| Notes | It cannot be reproduced from the published WATER_AREA: 188 AGEB nationwide have HAS_WATER = 1 with WATER_AREA at 0, because the intersected area is below 5e-7 km² and rounding to 6 decimals turns it into zero. The reverse case does not occur: no AGEB with a published area greater than zero has HAS_WATER = 0. |
 
 <a id="uso_dom"></a>
 #### 103. `USO_DOM`
@@ -5230,289 +5215,8 @@ Dwellings with no goods at all.
 | Median (inhabited AGEB) | 1.5 |
 | Range | 0 – 4,215 |
 
-<a id="year_geometry"></a>
-#### 199. `YEAR_GEOMETRY`
-
-Reference year of the geometry.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$geometry` |
-| Derivation | Constant (2020). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,020 |
-| Range | 2,020 – 2,020 |
-
-<a id="year_census"></a>
-#### 200. `YEAR_CENSUS`
-
-Reference year of the census.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$census` |
-| Derivation | Constant (2020). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,020 |
-| Range | 2,020 – 2,020 |
-
-<a id="year_coneval"></a>
-#### 201. `YEAR_CONEVAL`
-
-Reference year of CONEVAL's GRS.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$coneval` |
-| Derivation | Constant (2020). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,020 |
-| Range | 2,020 – 2,020 |
-
-<a id="year_denue"></a>
-#### 202. `YEAR_DENUE`
-
-DENUE version.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | text |
-| Unit | year-month |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$denue` |
-| Derivation | Constant ('2026-05'). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | Set by hand in 00_config.R: update it if DENUE is downloaded again. |
-
-<a id="year_hidro"></a>
-#### 203. `YEAR_HIDRO`
-
-Reference year of the water body layer.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$hidro` |
-| Derivation | Constant (2018). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,018 |
-| Range | 2,018 – 2,018 |
-| Notes | 1:50,000 topographic series III, surveyed 2013–2018. |
-
-<a id="year_usv"></a>
-#### 204. `YEAR_USV`
-
-Reference year of the land use and vegetation layer.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$usv` |
-| Derivation | Constant (2021). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,021 |
-| Range | 2,021 – 2,021 |
-| Notes | Series VII, published in 2021 with base-year 2018 imagery. |
-
-<a id="year_clues"></a>
-#### 205. `YEAR_CLUES`
-
-Cut-off of the CLUES catalog of health facilities.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | text |
-| Unit | year-month |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$clues` |
-| Derivation | Constant ('2026-07'). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Notes | Set by hand in 00_config.R together with URL_CLUES and CLUES_FILE: update all three if another cut-off is downloaded. |
-
-<a id="year_cem"></a>
-#### 206. `YEAR_CEM`
-
-Publication year of the Continuo de Elevaciones Mexicano 4.0.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$cem` |
-| Derivation | Constant (2024). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,024 |
-| Range | 2,024 – 2,024 |
-| Notes | ALOS PALSAR radar imagery from 2006–2011. |
-
-<a id="year_red_hidro"></a>
-#### 207. `YEAR_RED_HIDRO`
-
-Year of edition 2.0 of the 1:50,000 Hydrographic Network.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$red_hidro` |
-| Derivation | Constant (2010). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,010 |
-| Range | 2,010 – 2,010 |
-| Notes | Built on 1:50,000 topographic sheets from 1995–2002 depending on the sub-basin. |
-
-<a id="year_costa"></a>
-#### 208. `YEAR_COSTA`
-
-Year of the CONABIO coastline layer.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | PIPELINE |
-| Source variable | `YEARS$costa` |
-| Derivation | Constant (2018). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 00_config.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,018 |
-| Range | 2,018 – 2,018 |
-| Notes | RapidEye imagery from 2011–2014. |
-
-<a id="year_cenapred"></a>
-#### 209. `YEAR_CENAPRED`
-
-Update of the Sistema de Indicadores Municipales of the Atlas Nacional de Riesgos.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | CENAPRED_SITU2023 |
-| Source variable | `YEARS$cenapred` |
-| Derivation | Constant (2023). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 13_hazard.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,023 |
-| Range | 2,023 – 2,023 |
-| Notes | The sociodemographic indicators CENAPRED built these grades from come from the 2020 census; 2023 is the publication cut-off. |
-
-<a id="year_icmm"></a>
-#### 210. `YEAR_ICMM`
-
-Edition of the Ingreso Corriente para los Municipios de México.
-
-| Field | Value |
-|---|---|
-| Block | Metadata |
-| Type | integer |
-| Unit | year |
-| Scope | Both |
-| Source | ICMM2022 |
-| Source variable | `YEARS$icmm` |
-| Derivation | Constant (2022). |
-| Empty values | Never |
-| Suggested dimension | Metadata |
-| Suggested direction | n/a |
-| Script | 13b_income.R |
-| Inhabited AGEB with value (urban / rural) | 100.0 % / 100.0 % |
-| Population with value (urban / rural) | 100.0 % / 100.0 % |
-| Median (inhabited AGEB) | 2,022 |
-| Range | 2,022 – 2,022 |
-| Notes | ENIGH 2022 fieldwork: 21 August to 28 November 2022. Published by INEGI on 2024-11-14. |
-
 <a id="geom"></a>
-#### 211. `geom`
+#### 199. `geom`
 
 Polygon or multipolygon of the AGEB.
 
@@ -5550,6 +5254,17 @@ Polygon or multipolygon of the AGEB.
 | 10 | `AREA_KM2` | Area of the AGEB. | decimal | km² | MG2020 | Polygon area in EPSG:6372 (LCC ITRF2008) after st_make_valid(). | National minimum 0.0003 km²; rural AGEB can exceed 6,000 km². |
 | 11 | `CENTROIDE_LON` | Longitude of a representative point inside the AGEB. | decimal | decimal degrees (EPSG:4326) | MG2020 | st_point_on_surface() in EPSG:6372, transformed to EPSG:4326. | Not the geometric centroid: it is guaranteed to fall inside the polygon (D-07). |
 | 12 | `CENTROIDE_LAT` | Latitude of a representative point inside the AGEB. | decimal | decimal degrees (EPSG:4326) | MG2020 | Same as CENTROIDE_LON. |  |
+
+<a id="tabla-fuentes"></a>
+## Table fuentes
+
+`data/processed/fuentes.csv`, a single file for the whole country: one row per source and the edition of it the pipeline read. Kept out of the database because it does not vary by AGEB; these were the `YEAR_*` columns of `ageb_integrada`, holding the same value on all 81,451 rows.
+
+| # | Variable | Description | Type | Unit | Source | Derivation | Notes |
+|---|---|---|---|---|---|---|---|
+| 1 | `FUENTE` | Source key. | text | code | PIPELINE | The source's name in YEARS (00_config.R), upper-cased. | The table's primary key. Values: GEOMETRY, CENSUS, CONEVAL, DENUE, HIDRO, USV, CLUES, CEM, RED_HIDRO, COSTA, CENAPRED, ICMM. This dictionary's own SOURCE column names the source in more detail (e.g. CPV2020_AGEB) and does not join to this key. |
+| 2 | `VERSION` | Edition of the source the pipeline read. | text | year or year-month | PIPELINE | The YEARS value for that source. | Text rather than integer because DENUE and CLUES are pinned to a month ('2026-05') and the rest to a year. These were the YEAR_* columns of ageb_integrada: being a property of the source and not of the AGEB, the same value was repeated on all 81,451 rows. |
+| 3 | `DESCRIPCION` | What the source is. | text |  | PIPELINE |  | One line per source; the detail of each variable is in its own row of this dictionary. |
 
 <a id="tabla-denue-establishments"></a>
 ## Table denue_establishments

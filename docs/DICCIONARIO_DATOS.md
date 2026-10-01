@@ -60,7 +60,8 @@ dplyr::left_join(ageb, ids, by = "ID_AGEB")
 | Tabla | Archivo | Columnas |
 |---|---|---|
 | [ageb_ids](#tabla-ageb-ids) | `data/processed/ageb_ids.csv`, un solo archivo para todo el país: una fila por AGEB, y la única copia que existe. Es la tabla de relación de toda la base. `ID_AGEB` es la clave primaria y las demás tablas traen solo esa columna: entidad, municipio, localidad, ámbito, superficie y punto interior se obtienen uniendo aquí. | 12 |
-| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `ID_AGEB` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario. | 211 |
+| [fuentes](#tabla-fuentes) | `data/processed/fuentes.csv`, un solo archivo para todo el país: una fila por fuente y la edición de ella que leyó el pipeline. Aparte de la base porque no varía por AGEB; antes eran las columnas `YEAR_*` de `ageb_integrada`, con el mismo valor en las 81,451 filas. | 3 |
+| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `ID_AGEB` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario. | 199 |
 | [denue_establishments](#tabla-denue-establishments) | `data/processed/base_ageb_{ENT}.gpkg`, capa `denue_establishments`, y `data/processed/detail/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE. | 8 |
 | [denue_ageb_sector](#tabla-denue-ageb-sector) | `data/processed/base_ageb_{ENT}.gpkg`, capa `denue_ageb_sector`, y `data/processed/detail/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN. | 3 |
 | [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_landuse_detail`, y `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo. | 4 |
@@ -70,7 +71,7 @@ dplyr::left_join(ageb, ids, by = "ID_AGEB")
 
 `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `ID_AGEB` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.
 
-Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generado el 2026-09-30). La cobertura se mide sobre AGEB **habitadas**, como % de AGEB con valor y como % de su población; la mediana y el rango también se miden sobre AGEB habitadas.
+Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generado el 2026-10-01). La cobertura se mide sobre AGEB **habitadas**, como % de AGEB con valor y como % de su población; la mediana y el rango también se miden sobre AGEB habitadas.
 
 ### Identificación
 
@@ -83,20 +84,20 @@ Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
 | 2 | [`POB_TOTAL`](#pob_total) | Población total residente habitual. | personas | Ambos | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,027 | n/a |
-| 6 | [`POB_HOMBRES`](#pob_hombres) | Población masculina. | personas | Ambos | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 565 | n/a |
-| 7 | [`POB_MUJERES`](#pob_mujeres) | Población femenina. | personas | Ambos | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 592 | n/a |
-| 8 | [`PCT_HOMBRES`](#pct_hombres) | Porcentaje de hombres. | % | Ambos | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 48.94 | n/a |
-| 9 | [`PCT_MUJERES`](#pct_mujeres) | Porcentaje de mujeres. | % | Ambos | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 51.06 | n/a |
-| 10 | [`DENS_POB_KM2`](#dens_pob_km2) | Densidad de población. | personas/km² | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 2,560 | ± |
-| 11 | [`POB_POR_VIV`](#pob_por_viv) | Personas por vivienda particular habitada. | personas/vivienda | Ambos |  | 95.5 / 86.6 | 100.0 / 99.9 | 3.55 | + |
+| 3 | [`POB_HOMBRES`](#pob_hombres) | Población masculina. | personas | Ambos | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 565 | n/a |
+| 4 | [`POB_MUJERES`](#pob_mujeres) | Población femenina. | personas | Ambos | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 592 | n/a |
+| 5 | [`PCT_HOMBRES`](#pct_hombres) | Porcentaje de hombres. | % | Ambos | `POBMAS` | 95.6 / 86.8 | 100.0 / 99.9 | 48.94 | n/a |
+| 6 | [`PCT_MUJERES`](#pct_mujeres) | Porcentaje de mujeres. | % | Ambos | `POBFEM` | 95.6 / 86.8 | 100.0 / 99.9 | 51.06 | n/a |
+| 7 | [`DENS_POB_KM2`](#dens_pob_km2) | Densidad de población. | personas/km² | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 2,560 | ± |
+| 8 | [`POB_POR_VIV`](#pob_por_viv) | Personas por vivienda particular habitada. | personas/vivienda | Ambos |  | 95.5 / 86.6 | 100.0 / 99.9 | 3.55 | + |
 
 ### Confiabilidad
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 3 | [`POB_REPORTADA`](#pob_reportada) | Población cuyas características sí publica el censo. | personas | Ambos | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,021 | n/a |
-| 4 | [`PCT_POB_REPORTADA`](#pct_pob_reportada) | Porcentaje de la población de la AGEB cuyas características publica el censo. | % | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 100 | n/a |
-| 5 | [`N_CELDAS_IMPUTADAS`](#n_celdas_imputadas) | Número de celdas censales de la AGEB imputadas como 1.5 porque venían suprimidas ('*'). | celdas | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
+| 9 | [`POB_REPORTADA`](#pob_reportada) | Población cuyas características sí publica el censo. | personas | Ambos | `POBTOT` | 100.0 / 100.0 | 100.0 / 100.0 | 1,021 | n/a |
+| 10 | [`PCT_POB_REPORTADA`](#pct_pob_reportada) | Porcentaje de la población de la AGEB cuyas características publica el censo. | % | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 100 | n/a |
+| 11 | [`N_CELDAS_IMPUTADAS`](#n_celdas_imputadas) | Número de celdas censales de la AGEB imputadas como 1.5 porque venían suprimidas ('*'). | celdas | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 | 2 | n/a |
 
 ### Vivienda
 
@@ -108,72 +109,72 @@ Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,
 | 15 | [`VIV_ELECTRICIDAD`](#viv_electricidad) | Viviendas que disponen de energía eléctrica. | viviendas | Ambos | `VPH_C_ELEC` | 95.6 / 86.6 | 100.0 / 99.9 | 325 | n/a |
 | 16 | [`PCT_DRENAJE`](#pct_drenaje) | Porcentaje de viviendas con drenaje. | % | Ambos | `VPH_DRENAJ` | 95.5 / 86.6 | 100.0 / 99.9 | 99.59 | − |
 | 17 | [`PCT_ELECTRIC`](#pct_electric) | Porcentaje de viviendas con electricidad. | % | Ambos | `VPH_C_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 99.89 | − |
-| 32 | [`PCT_VIV_SIN_DRENAJE`](#pct_viv_sin_drenaje) | Porcentaje de viviendas que no disponen de drenaje. | % | Ambos | `VPH_NODREN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.34 | + |
-| 33 | [`PCT_VIV_SIN_ELECTRIC`](#pct_viv_sin_electric) | Porcentaje de viviendas que no disponen de energía eléctrica. | % | Ambos | `VPH_S_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.1 | + |
-| 34 | [`PCT_VIV_SIN_AGUA`](#pct_viv_sin_agua) | Porcentaje de viviendas sin agua entubada en el ámbito de la vivienda. | % | Ambos | `VPH_AGUAFV` | 95.5 / 86.6 | 100.0 / 99.9 | 0.31 | + |
-| 35 | [`PCT_VIV_PISO_TIERRA`](#pct_viv_piso_tierra) | Porcentaje de viviendas con piso de tierra. | % | Ambos | `VPH_PISOTI` | 95.5 / 86.6 | 100.0 / 99.9 | 1.23 | + |
-| 36 | [`PCT_VIV_1CUARTO`](#pct_viv_1cuarto) | Porcentaje de viviendas con un solo cuarto. | % | Ambos | `VPH_1CUART` | 95.5 / 86.6 | 100.0 / 99.9 | 4.06 | + |
-| 37 | [`PCT_VIV_SIN_SANITARIO`](#pct_viv_sin_sanitario) | Porcentaje de viviendas sin excusado, sanitario ni letrina. | % | Ambos | `VPH_EXCSA + VPH_LETR` | 95.5 / 86.6 | 100.0 / 99.9 | 0.2 | + |
+| 18 | [`PCT_VIV_SIN_DRENAJE`](#pct_viv_sin_drenaje) | Porcentaje de viviendas que no disponen de drenaje. | % | Ambos | `VPH_NODREN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.34 | + |
+| 19 | [`PCT_VIV_SIN_ELECTRIC`](#pct_viv_sin_electric) | Porcentaje de viviendas que no disponen de energía eléctrica. | % | Ambos | `VPH_S_ELEC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.1 | + |
+| 20 | [`PCT_VIV_SIN_AGUA`](#pct_viv_sin_agua) | Porcentaje de viviendas sin agua entubada en el ámbito de la vivienda. | % | Ambos | `VPH_AGUAFV` | 95.5 / 86.6 | 100.0 / 99.9 | 0.31 | + |
+| 21 | [`PCT_VIV_PISO_TIERRA`](#pct_viv_piso_tierra) | Porcentaje de viviendas con piso de tierra. | % | Ambos | `VPH_PISOTI` | 95.5 / 86.6 | 100.0 / 99.9 | 1.23 | + |
+| 22 | [`PCT_VIV_1CUARTO`](#pct_viv_1cuarto) | Porcentaje de viviendas con un solo cuarto. | % | Ambos | `VPH_1CUART` | 95.5 / 86.6 | 100.0 / 99.9 | 4.06 | + |
+| 23 | [`PCT_VIV_SIN_SANITARIO`](#pct_viv_sin_sanitario) | Porcentaje de viviendas sin excusado, sanitario ni letrina. | % | Ambos | `VPH_EXCSA + VPH_LETR` | 95.5 / 86.6 | 100.0 / 99.9 | 0.2 | + |
 
 ### Sensibilidad
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 18 | [`PCT_POB_0A5`](#pct_pob_0a5) | Porcentaje de población de 0 a 5 años. | % | Ambos | `P_0A2 + P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 10.01 | + |
-| 19 | [`PCT_POB_65YMAS`](#pct_pob_65ymas) | Porcentaje de población de 65 años y más. | % | Ambos | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 7.21 | + |
-| 20 | [`PCT_POB_DISC`](#pct_pob_disc) | Porcentaje de población con discapacidad. | % | Ambos | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 4.6 | + |
-| 21 | [`PCT_POB_HLI`](#pct_pob_hli) | Porcentaje de población de 3 años y más que habla lengua indígena. | % | Ambos | `P3YM_HLI` | 95.5 / 86.6 | 100.0 / 99.9 | 0.47 | + |
-| 22 | [`PCT_POB_HLI_NHE`](#pct_pob_hli_nhe) | Porcentaje de población de 3 años y más que habla lengua indígena y no habla español. | % | Ambos | `P3HLINHE` | 95.5 / 86.6 | 100.0 / 99.9 | 0 | + |
-| 23 | [`PCT_HOG_JEFA`](#pct_hog_jefa) | Porcentaje de hogares censales con persona de referencia mujer. | % | Ambos | `HOGJEF_F` | 95.5 / 86.6 | 100.0 / 99.9 | 31.04 | + |
+| 24 | [`PCT_POB_0A5`](#pct_pob_0a5) | Porcentaje de población de 0 a 5 años. | % | Ambos | `P_0A2 + P_3A5` | 95.6 / 86.6 | 100.0 / 99.9 | 10.01 | + |
+| 25 | [`PCT_POB_65YMAS`](#pct_pob_65ymas) | Porcentaje de población de 65 años y más. | % | Ambos | `POB65_MAS` | 95.6 / 86.6 | 100.0 / 99.9 | 7.21 | + |
+| 26 | [`PCT_POB_DISC`](#pct_pob_disc) | Porcentaje de población con discapacidad. | % | Ambos | `PCON_DISC` | 95.6 / 86.6 | 100.0 / 99.9 | 4.6 | + |
+| 27 | [`PCT_POB_HLI`](#pct_pob_hli) | Porcentaje de población de 3 años y más que habla lengua indígena. | % | Ambos | `P3YM_HLI` | 95.5 / 86.6 | 100.0 / 99.9 | 0.47 | + |
+| 28 | [`PCT_POB_HLI_NHE`](#pct_pob_hli_nhe) | Porcentaje de población de 3 años y más que habla lengua indígena y no habla español. | % | Ambos | `P3HLINHE` | 95.5 / 86.6 | 100.0 / 99.9 | 0 | + |
+| 29 | [`PCT_HOG_JEFA`](#pct_hog_jefa) | Porcentaje de hogares censales con persona de referencia mujer. | % | Ambos | `HOGJEF_F` | 95.5 / 86.6 | 100.0 / 99.9 | 31.04 | + |
 
 ### Rezago social
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 24 | [`PCT_POB_SIN_SALUD`](#pct_pob_sin_salud) | Porcentaje de población sin afiliación a servicios de salud. | % | Ambos | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 23.44 | + |
-| 25 | [`PCT_ANALF`](#pct_analf) | Porcentaje de población de 15 años y más analfabeta. | % | Ambos | `P15YM_AN` | 95.5 / 86.6 | 100.0 / 99.9 | 3.23 | + |
-| 26 | [`PCT_EDU_BAS_INC`](#pct_edu_bas_inc) | Porcentaje de población de 15 años y más con educación básica incompleta. | % | Ambos | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` | 95.5 / 86.6 | 100.0 / 99.9 | 31.82 | + |
-| 27 | [`PCT_NOASIS_6A14`](#pct_noasis_6a14) | Porcentaje de población de 6 a 14 años que no asiste a la escuela. | % | Ambos | `P6A11_NOA + P12A14NOA` | 94.8 / 84.0 | 100.0 / 99.9 | 4.7 | + |
-| 28 | [`PCT_NOASIS_15A24`](#pct_noasis_15a24) | Porcentaje de población de 15 a 24 años que no asiste a la escuela. | % | Ambos | `P_15A17 + P_18A24 − P15A17A − P18A24A` | 94.7 / 84.7 | 100.0 / 99.9 | 55.7 | ± |
-| 52 | [`GRAPROES`](#graproes) | Grado promedio de escolaridad de la población de 15 años y más. | años aprobados | Ambos | `GRAPROES` | 95.5 / 86.6 | 100.0 / 99.9 | 9.08 | − |
-| 53 | [`PRO_OCUP_C`](#pro_ocup_c) | Promedio de ocupantes por cuarto en viviendas particulares habitadas. | ocupantes/cuarto | Ambos | `PRO_OCUP_C` | 95.5 / 86.6 | 100.0 / 99.9 | 1.02 | + |
+| 30 | [`PCT_POB_SIN_SALUD`](#pct_pob_sin_salud) | Porcentaje de población sin afiliación a servicios de salud. | % | Ambos | `PSINDER` | 95.6 / 86.6 | 100.0 / 99.9 | 23.44 | + |
+| 31 | [`PCT_ANALF`](#pct_analf) | Porcentaje de población de 15 años y más analfabeta. | % | Ambos | `P15YM_AN` | 95.5 / 86.6 | 100.0 / 99.9 | 3.23 | + |
+| 32 | [`PCT_EDU_BAS_INC`](#pct_edu_bas_inc) | Porcentaje de población de 15 años y más con educación básica incompleta. | % | Ambos | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` | 95.5 / 86.6 | 100.0 / 99.9 | 31.82 | + |
+| 33 | [`PCT_NOASIS_6A14`](#pct_noasis_6a14) | Porcentaje de población de 6 a 14 años que no asiste a la escuela. | % | Ambos | `P6A11_NOA + P12A14NOA` | 94.8 / 84.0 | 100.0 / 99.9 | 4.7 | + |
+| 34 | [`PCT_NOASIS_15A24`](#pct_noasis_15a24) | Porcentaje de población de 15 a 24 años que no asiste a la escuela. | % | Ambos | `P_15A17 + P_18A24 − P15A17A − P18A24A` | 94.7 / 84.7 | 100.0 / 99.9 | 55.7 | ± |
+| 35 | [`GRAPROES`](#graproes) | Grado promedio de escolaridad de la población de 15 años y más. | años aprobados | Ambos | `GRAPROES` | 95.5 / 86.6 | 100.0 / 99.9 | 9.08 | − |
+| 36 | [`PRO_OCUP_C`](#pro_ocup_c) | Promedio de ocupantes por cuarto en viviendas particulares habitadas. | ocupantes/cuarto | Ambos | `PRO_OCUP_C` | 95.5 / 86.6 | 100.0 / 99.9 | 1.02 | + |
 
 ### Empleo
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 29 | [`PCT_PEA`](#pct_pea) | Tasa de participación económica: porcentaje de la población de 12 años y más con condición de actividad especificada que es económicamente activa. | % | Ambos | `PEA / (PEA + PE_INAC)` | 95.5 / 86.6 | 100.0 / 99.9 | 61.9 | − |
-| 30 | [`PCT_PEA_F`](#pct_pea_f) | Tasa de participación económica femenina: porcentaje de mujeres de 12 años y más con condición de actividad especificada que son económicamente activas. | % | Ambos | `PEA_F / (PEA_F + PE_INAC_F)` | 95.5 / 86.4 | 100.0 / 99.9 | 48.72 | − |
-| 31 | [`PCT_DESOCUP`](#pct_desocup) | Tasa de desocupación: porcentaje de la población económicamente activa que no tiene trabajo y lo buscó. | % | Ambos | `PDESOCUP / PEA` | 95.5 / 86.5 | 100.0 / 99.9 | 1.38 | + |
+| 37 | [`PCT_PEA`](#pct_pea) | Tasa de participación económica: porcentaje de la población de 12 años y más con condición de actividad especificada que es económicamente activa. | % | Ambos | `PEA / (PEA + PE_INAC)` | 95.5 / 86.6 | 100.0 / 99.9 | 61.9 | − |
+| 38 | [`PCT_PEA_F`](#pct_pea_f) | Tasa de participación económica femenina: porcentaje de mujeres de 12 años y más con condición de actividad especificada que son económicamente activas. | % | Ambos | `PEA_F / (PEA_F + PE_INAC_F)` | 95.5 / 86.4 | 100.0 / 99.9 | 48.72 | − |
+| 39 | [`PCT_DESOCUP`](#pct_desocup) | Tasa de desocupación: porcentaje de la población económicamente activa que no tiene trabajo y lo buscó. | % | Ambos | `PDESOCUP / PEA` | 95.5 / 86.5 | 100.0 / 99.9 | 1.38 | + |
 
 ### Agua y almacenamiento
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 38 | [`PCT_VIV_TINACO`](#pct_viv_tinaco) | Porcentaje de viviendas con tinaco. | % | Ambos | `VPH_TINACO` | 95.5 / 86.6 | 100.0 / 99.9 | 71.75 | − |
-| 39 | [`PCT_VIV_CISTERNA`](#pct_viv_cisterna) | Porcentaje de viviendas con cisterna o aljibe. | % | Ambos | `VPH_CISTER` | 95.5 / 86.6 | 100.0 / 99.9 | 13.04 | − |
+| 40 | [`PCT_VIV_TINACO`](#pct_viv_tinaco) | Porcentaje de viviendas con tinaco. | % | Ambos | `VPH_TINACO` | 95.5 / 86.6 | 100.0 / 99.9 | 71.75 | − |
+| 41 | [`PCT_VIV_CISTERNA`](#pct_viv_cisterna) | Porcentaje de viviendas con cisterna o aljibe. | % | Ambos | `VPH_CISTER` | 95.5 / 86.6 | 100.0 / 99.9 | 13.04 | − |
 
 ### Bienes y movilidad
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 40 | [`PCT_VIV_REFRI`](#pct_viv_refri) | Porcentaje de viviendas con refrigerador. | % | Ambos | `VPH_REFRI` | 95.5 / 86.6 | 100.0 / 99.9 | 92.38 | − |
-| 41 | [`PCT_VIV_LAVADORA`](#pct_viv_lavadora) | Porcentaje de viviendas con lavadora. | % | Ambos | `VPH_LAVAD` | 95.5 / 86.6 | 100.0 / 99.9 | 76.35 | − |
-| 42 | [`PCT_VIV_AUTO`](#pct_viv_auto) | Porcentaje de viviendas con automóvil o camioneta. | % | Ambos | `VPH_AUTOM` | 95.5 / 86.6 | 100.0 / 99.9 | 47.03 | − |
-| 51 | [`PCT_VIV_SIN_BIENES`](#pct_viv_sin_bienes) | Porcentaje de viviendas sin ningún bien. | % | Ambos | `VPH_SNBIEN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.28 | + |
+| 42 | [`PCT_VIV_REFRI`](#pct_viv_refri) | Porcentaje de viviendas con refrigerador. | % | Ambos | `VPH_REFRI` | 95.5 / 86.6 | 100.0 / 99.9 | 92.38 | − |
+| 43 | [`PCT_VIV_LAVADORA`](#pct_viv_lavadora) | Porcentaje de viviendas con lavadora. | % | Ambos | `VPH_LAVAD` | 95.5 / 86.6 | 100.0 / 99.9 | 76.35 | − |
+| 44 | [`PCT_VIV_AUTO`](#pct_viv_auto) | Porcentaje de viviendas con automóvil o camioneta. | % | Ambos | `VPH_AUTOM` | 95.5 / 86.6 | 100.0 / 99.9 | 47.03 | − |
+| 45 | [`PCT_VIV_SIN_BIENES`](#pct_viv_sin_bienes) | Porcentaje de viviendas sin ningún bien. | % | Ambos | `VPH_SNBIEN` | 95.5 / 86.6 | 100.0 / 99.9 | 0.28 | + |
 
 ### Comunicación y alertas
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 43 | [`PCT_VIV_RADIO`](#pct_viv_radio) | Porcentaje de viviendas con radio. | % | Ambos | `VPH_RADIO` | 95.5 / 86.6 | 100.0 / 99.9 | 68.03 | − |
-| 44 | [`PCT_VIV_TELEFONO`](#pct_viv_telefono) | Porcentaje de viviendas con línea telefónica fija. | % | Ambos | `VPH_TELEF` | 95.5 / 86.6 | 100.0 / 99.9 | 25 | − |
-| 45 | [`PCT_VIV_CELULAR`](#pct_viv_celular) | Porcentaje de viviendas con teléfono celular. | % | Ambos | `VPH_CEL` | 95.5 / 86.6 | 100.0 / 99.9 | 90.97 | − |
-| 46 | [`PCT_VIV_INTERNET`](#pct_viv_internet) | Porcentaje de viviendas con internet. | % | Ambos | `VPH_INTER` | 95.5 / 86.6 | 100.0 / 99.9 | 44.7 | − |
-| 47 | [`PCT_VIV_COMPU`](#pct_viv_compu) | Porcentaje de viviendas con computadora, laptop o tablet. | % | Ambos | `VPH_PC` | 95.5 / 86.6 | 100.0 / 99.9 | 28.57 | − |
-| 48 | [`PCT_VIV_SIN_RADIO_TV`](#pct_viv_sin_radio_tv) | Porcentaje de viviendas sin radio ni televisor. | % | Ambos | `VPH_SINRTV` | 95.5 / 86.6 | 100.0 / 99.9 | 3.18 | + |
-| 49 | [`PCT_VIV_SIN_TEL_CEL`](#pct_viv_sin_tel_cel) | Porcentaje de viviendas sin teléfono fijo ni celular. | % | Ambos | `VPH_SINLTC` | 95.5 / 86.6 | 100.0 / 99.9 | 5.66 | + |
-| 50 | [`PCT_VIV_SIN_TIC`](#pct_viv_sin_tic) | Porcentaje de viviendas sin ninguna tecnología de información y comunicación. | % | Ambos | `VPH_SINTIC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.73 | + |
+| 46 | [`PCT_VIV_RADIO`](#pct_viv_radio) | Porcentaje de viviendas con radio. | % | Ambos | `VPH_RADIO` | 95.5 / 86.6 | 100.0 / 99.9 | 68.03 | − |
+| 47 | [`PCT_VIV_TELEFONO`](#pct_viv_telefono) | Porcentaje de viviendas con línea telefónica fija. | % | Ambos | `VPH_TELEF` | 95.5 / 86.6 | 100.0 / 99.9 | 25 | − |
+| 48 | [`PCT_VIV_CELULAR`](#pct_viv_celular) | Porcentaje de viviendas con teléfono celular. | % | Ambos | `VPH_CEL` | 95.5 / 86.6 | 100.0 / 99.9 | 90.97 | − |
+| 49 | [`PCT_VIV_INTERNET`](#pct_viv_internet) | Porcentaje de viviendas con internet. | % | Ambos | `VPH_INTER` | 95.5 / 86.6 | 100.0 / 99.9 | 44.7 | − |
+| 50 | [`PCT_VIV_COMPU`](#pct_viv_compu) | Porcentaje de viviendas con computadora, laptop o tablet. | % | Ambos | `VPH_PC` | 95.5 / 86.6 | 100.0 / 99.9 | 28.57 | − |
+| 51 | [`PCT_VIV_SIN_RADIO_TV`](#pct_viv_sin_radio_tv) | Porcentaje de viviendas sin radio ni televisor. | % | Ambos | `VPH_SINRTV` | 95.5 / 86.6 | 100.0 / 99.9 | 3.18 | + |
+| 52 | [`PCT_VIV_SIN_TEL_CEL`](#pct_viv_sin_tel_cel) | Porcentaje de viviendas sin teléfono fijo ni celular. | % | Ambos | `VPH_SINLTC` | 95.5 / 86.6 | 100.0 / 99.9 | 5.66 | + |
+| 53 | [`PCT_VIV_SIN_TIC`](#pct_viv_sin_tic) | Porcentaje de viviendas sin ninguna tecnología de información y comunicación. | % | Ambos | `VPH_SINTIC` | 95.5 / 86.6 | 100.0 / 99.9 | 0.73 | + |
 
 ### Validación CONEVAL
 
@@ -365,28 +366,11 @@ Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,
 | 197 | [`VIV_SIN_TIC`](#viv_sin_tic) | Viviendas sin tecnologías de la información y la comunicación. | viviendas | Ambos | `VPH_SINTIC` | 95.6 / 86.6 | 100.0 / 99.9 | 3 | n/a |
 | 198 | [`VIV_SIN_BIENES`](#viv_sin_bienes) | Viviendas sin ningún bien. | viviendas | Ambos | `VPH_SNBIEN` | 95.6 / 86.6 | 100.0 / 99.9 | 1.5 | n/a |
 
-### Metadatos
-
-| # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
-|---|---|---|---|---|---|---|---|---|---|
-| 199 | [`YEAR_GEOMETRY`](#year_geometry) | Año de referencia de la geometría. | año | Ambos | `YEARS$geometry` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 200 | [`YEAR_CENSUS`](#year_census) | Año de referencia del censo. | año | Ambos | `YEARS$census` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 201 | [`YEAR_CONEVAL`](#year_coneval) | Año de referencia del GRS de CONEVAL. | año | Ambos | `YEARS$coneval` | 100.0 / 100.0 | 100.0 / 100.0 | 2,020 | n/a |
-| 202 | [`YEAR_DENUE`](#year_denue) | Versión del DENUE. | año-mes | Ambos | `YEARS$denue` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 203 | [`YEAR_HIDRO`](#year_hidro) | Año de referencia de la capa de cuerpos de agua. | año | Ambos | `YEARS$hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 204 | [`YEAR_USV`](#year_usv) | Año de referencia de la capa de uso de suelo y vegetación. | año | Ambos | `YEARS$usv` | 100.0 / 100.0 | 100.0 / 100.0 | 2,021 | n/a |
-| 205 | [`YEAR_CLUES`](#year_clues) | Corte del catálogo CLUES de establecimientos de salud. | año-mes | Ambos | `YEARS$clues` | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
-| 206 | [`YEAR_CEM`](#year_cem) | Año de publicación del Continuo de Elevaciones Mexicano 4.0. | año | Ambos | `YEARS$cem` | 100.0 / 100.0 | 100.0 / 100.0 | 2,024 | n/a |
-| 207 | [`YEAR_RED_HIDRO`](#year_red_hidro) | Año de la edición 2.0 de la Red Hidrográfica 1:50 000. | año | Ambos | `YEARS$red_hidro` | 100.0 / 100.0 | 100.0 / 100.0 | 2,010 | n/a |
-| 208 | [`YEAR_COSTA`](#year_costa) | Año de la capa de línea de costa de CONABIO. | año | Ambos | `YEARS$costa` | 100.0 / 100.0 | 100.0 / 100.0 | 2,018 | n/a |
-| 209 | [`YEAR_CENAPRED`](#year_cenapred) | Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos. | año | Ambos | `YEARS$cenapred` | 100.0 / 100.0 | 100.0 / 100.0 | 2,023 | n/a |
-| 210 | [`YEAR_ICMM`](#year_icmm) | Edición del Ingreso Corriente para los Municipios de México. | año | Ambos | `YEARS$icmm` | 100.0 / 100.0 | 100.0 / 100.0 | 2,022 | n/a |
-
 ### Geometría
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 211 | [`geom`](#geom) | Polígono o multipolígono de la AGEB. | EPSG:4326 | Ambos | `geometría` |  /  |  /  |  | n/a |
+| 199 | [`geom`](#geom) | Polígono o multipolígono de la AGEB. | EPSG:4326 | Ambos | `geometría` |  /  |  /  |  | n/a |
 
 ## Fichas de ageb_integrada
 
@@ -436,80 +420,8 @@ Población total residente habitual.
 | Rango | 0 – 44,157 |
 | Notas | Nunca suprimido por el INEGI. La suma nacional cuadra exacta con el Censo: 126,014,024 (D-12). |
 
-<a id="pob_reportada"></a>
-#### 3. `POB_REPORTADA`
-
-Población cuyas características sí publica el censo.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Confiabilidad |
-| Tipo | decimal (conteo) |
-| Unidad | personas |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `POBTOT` |
-| Derivación | Urbana: POB_TOTAL, o 0 si la fila de la AGEB está suprimida entera. Rural: suma de POBTOT de las localidades que publican todas las características. |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Confiabilidad |
-| Sentido sugerido | n/a |
-| Script | 04_census_urban.R; 05_census_rural.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 1,021 |
-| Rango | 0 – 44,154 |
-| Notas | Ver D-14. |
-
-<a id="pct_pob_reportada"></a>
-#### 4. `PCT_POB_REPORTADA`
-
-Porcentaje de la población de la AGEB cuyas características publica el censo.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Confiabilidad |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Derivación | 100 × POB_REPORTADA / POB_TOTAL. |
-| Universo | POB_TOTAL |
-| Valores vacíos | D0: POB_TOTAL = 0 |
-| Dimensión sugerida | Confiabilidad |
-| Sentido sugerido | n/a |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 100 |
-| Rango | 0 – 100 |
-| Notas | Úsalo como peso o filtro de confiabilidad de los porcentajes, sobre todo en lo rural. |
-
-<a id="n_celdas_imputadas"></a>
-#### 5. `N_CELDAS_IMPUTADAS`
-
-Número de celdas censales de la AGEB imputadas como 1.5 porque venían suprimidas ('*').
-
-| Campo | Valor |
-|---|---|
-| Bloque | Confiabilidad |
-| Tipo | entero |
-| Unidad | celdas |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Derivación | Cuenta de celdas '*' entre los 52 conteos de CENSUS_VARS, solo en filas urbanas no suprimidas enteras. |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Confiabilidad |
-| Sentido sugerido | n/a |
-| Script | 04_census_urban.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2 |
-| Rango | 0 – 32 |
-| Notas | Siempre 0 en AGEB rurales (el ITER sí publica 1 y 2). Nacional: 253,460 celdas en 55,573 AGEB urbanas (D-15). |
-
 <a id="pob_hombres"></a>
-#### 6. `POB_HOMBRES`
+#### 3. `POB_HOMBRES`
 
 Población masculina.
 
@@ -533,7 +445,7 @@ Población masculina.
 | Notas | Puede valer 1.5 en AGEB urbanas (imputación). |
 
 <a id="pob_mujeres"></a>
-#### 7. `POB_MUJERES`
+#### 4. `POB_MUJERES`
 
 Población femenina.
 
@@ -556,7 +468,7 @@ Población femenina.
 | Rango | 0 – 23,939 |
 
 <a id="pct_hombres"></a>
-#### 8. `PCT_HOMBRES`
+#### 5. `PCT_HOMBRES`
 
 Porcentaje de hombres.
 
@@ -581,7 +493,7 @@ Porcentaje de hombres.
 | Rango | 0 – 100 |
 
 <a id="pct_mujeres"></a>
-#### 9. `PCT_MUJERES`
+#### 6. `PCT_MUJERES`
 
 Porcentaje de mujeres.
 
@@ -606,7 +518,7 @@ Porcentaje de mujeres.
 | Rango | 0 – 100 |
 
 <a id="dens_pob_km2"></a>
-#### 10. `DENS_POB_KM2`
+#### 7. `DENS_POB_KM2`
 
 Densidad de población.
 
@@ -631,7 +543,7 @@ Densidad de población.
 | Notas | En AGEB rurales divide entre todo el territorio, no entre el área habitada. |
 
 <a id="pob_por_viv"></a>
-#### 11. `POB_POR_VIV`
+#### 8. `POB_POR_VIV`
 
 Personas por vivienda particular habitada.
 
@@ -654,6 +566,78 @@ Personas por vivienda particular habitada.
 | Mediana (AGEB habitadas) | 3.55 |
 | Rango | 0 – 679 |
 | Notas | Usa población total, no ocupantes. En AGEB diminutas con viviendas imputadas da valores extremos (52 AGEB > 10; máx. 679): filtrar por tamaño. |
+
+<a id="pob_reportada"></a>
+#### 9. `POB_REPORTADA`
+
+Población cuyas características sí publica el censo.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Confiabilidad |
+| Tipo | decimal (conteo) |
+| Unidad | personas |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `POBTOT` |
+| Derivación | Urbana: POB_TOTAL, o 0 si la fila de la AGEB está suprimida entera. Rural: suma de POBTOT de las localidades que publican todas las características. |
+| Valores vacíos | Nunca |
+| Dimensión sugerida | Confiabilidad |
+| Sentido sugerido | n/a |
+| Script | 04_census_urban.R; 05_census_rural.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 1,021 |
+| Rango | 0 – 44,154 |
+| Notas | Ver D-14. |
+
+<a id="pct_pob_reportada"></a>
+#### 10. `PCT_POB_REPORTADA`
+
+Porcentaje de la población de la AGEB cuyas características publica el censo.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Confiabilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Derivación | 100 × POB_REPORTADA / POB_TOTAL. |
+| Universo | POB_TOTAL |
+| Valores vacíos | D0: POB_TOTAL = 0 |
+| Dimensión sugerida | Confiabilidad |
+| Sentido sugerido | n/a |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 100 |
+| Rango | 0 – 100 |
+| Notas | Úsalo como peso o filtro de confiabilidad de los porcentajes, sobre todo en lo rural. |
+
+<a id="n_celdas_imputadas"></a>
+#### 11. `N_CELDAS_IMPUTADAS`
+
+Número de celdas censales de la AGEB imputadas como 1.5 porque venían suprimidas ('*').
+
+| Campo | Valor |
+|---|---|
+| Bloque | Confiabilidad |
+| Tipo | entero |
+| Unidad | celdas |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Derivación | Cuenta de celdas '*' entre los 52 conteos de CENSUS_VARS, solo en filas urbanas no suprimidas enteras. |
+| Valores vacíos | Nunca |
+| Dimensión sugerida | Confiabilidad |
+| Sentido sugerido | n/a |
+| Script | 04_census_urban.R |
+| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
+| Mediana (AGEB habitadas) | 2 |
+| Rango | 0 – 32 |
+| Notas | Siempre 0 en AGEB rurales (el ITER sí publica 1 y 2). Nacional: 253,460 celdas en 55,573 AGEB urbanas (D-15). |
 
 <a id="viv_part_hab"></a>
 #### 12. `VIV_PART_HAB`
@@ -801,372 +785,8 @@ Porcentaje de viviendas con electricidad.
 | Rango | 0 – 100 |
 | Notas | Igual que PCT_DRENAJE; para la carencia usa PCT_VIV_SIN_ELECTRIC. |
 
-<a id="pct_pob_0a5"></a>
-#### 18. `PCT_POB_0A5`
-
-Porcentaje de población de 0 a 5 años.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Sensibilidad |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `P_0A2 + P_3A5` |
-| Derivación | 100 × (POB_0A2 + POB_3A5) / POB_DEN_PERS. |
-| Universo | Población de las localidades que publican el grupo PERS |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Sensibilidad |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 10.01 |
-| Rango | 0 – 50 |
-| Notas | Calor, enfermedades hídricas y dependencia en evacuación. |
-
-<a id="pct_pob_65ymas"></a>
-#### 19. `PCT_POB_65YMAS`
-
-Porcentaje de población de 65 años y más.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Sensibilidad |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `POB65_MAS` |
-| Derivación | 100 × POB_65YMAS / POB_DEN_PERS. |
-| Universo | Igual que PCT_POB_0A5 |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Sensibilidad |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 7.21 |
-| Rango | 0 – 100 |
-| Notas | Mortalidad por calor, movilidad reducida. |
-
-<a id="pct_pob_disc"></a>
-#### 20. `PCT_POB_DISC`
-
-Porcentaje de población con discapacidad.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Sensibilidad |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `PCON_DISC` |
-| Derivación | 100 × POB_DISC / POB_DEN_PERS. |
-| Universo | Igual que PCT_POB_0A5 |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Sensibilidad |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 4.6 |
-| Rango | 0 – 88.07 |
-| Notas | Discapacidad = mucha dificultad o imposibilidad para ver, oír, caminar, recordar, autocuidado o comunicarse. |
-
-<a id="pct_pob_hli"></a>
-#### 21. `PCT_POB_HLI`
-
-Porcentaje de población de 3 años y más que habla lengua indígena.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Sensibilidad |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `P3YM_HLI` |
-| Derivación | 100 × POB_HLI / POB_3YMAS. |
-| Universo | Población de 3 años y más |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Sensibilidad |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 0.47 |
-| Rango | 0 – 100 |
-| Notas | Proxy de marginación estructural. Para barrera de idioma ante alertas es mejor PCT_POB_HLI_NHE. |
-
-<a id="pct_pob_hli_nhe"></a>
-#### 22. `PCT_POB_HLI_NHE`
-
-Porcentaje de población de 3 años y más que habla lengua indígena y no habla español.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Sensibilidad |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `P3HLINHE` |
-| Derivación | 100 × POB_HLI_NHE / POB_3YMAS. |
-| Universo | Población de 3 años y más |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Sensibilidad |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 0 |
-| Rango | 0 – 82.24 |
-| Notas | Barrera directa para recibir alertas y avisos oficiales. Mediana nacional 0 %: muy concentrado. |
-
-<a id="pct_hog_jefa"></a>
-#### 23. `PCT_HOG_JEFA`
-
-Porcentaje de hogares censales con persona de referencia mujer.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Sensibilidad |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `HOGJEF_F` |
-| Derivación | 100 × HOGARES_JEFA / HOGARES. |
-| Universo | Hogares censales |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Sensibilidad |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 31.04 |
-| Rango | 0 – 100 |
-| Notas | Uso común en la literatura de vulnerabilidad social, pero su sentido es debatible; decidir al construir el índice. |
-
-<a id="pct_pob_sin_salud"></a>
-#### 24. `PCT_POB_SIN_SALUD`
-
-Porcentaje de población sin afiliación a servicios de salud.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Rezago social |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `PSINDER` |
-| Derivación | 100 × POB_SIN_SALUD / POB_DEN_PERS. |
-| Universo | Igual que PCT_POB_0A5 |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 23.44 |
-| Rango | 0 – 100 |
-| Notas | Equivalente de RZ_SSALUD. |
-
-<a id="pct_analf"></a>
-#### 25. `PCT_ANALF`
-
-Porcentaje de población de 15 años y más analfabeta.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Rezago social |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `P15YM_AN` |
-| Derivación | 100 × POB_15YMAS_ANALF / POB_15YMAS. |
-| Universo | Población de 15 años y más |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 3.23 |
-| Rango | 0 – 100 |
-| Notas | Equivalente de RZ_ANALF. |
-
-<a id="pct_edu_bas_inc"></a>
-#### 26. `PCT_EDU_BAS_INC`
-
-Porcentaje de población de 15 años y más con educación básica incompleta.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Rezago social |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` |
-| Derivación | min(100, 100 × (sin escolaridad + primaria incompleta + primaria completa + secundaria incompleta) / POB_15YMAS). |
-| Universo | Población de 15 años y más |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 31.82 |
-| Rango | 0 – 100 |
-| Notas | Equivalente de RZ_EBINC. Acotado a 100 porque suma cuatro celdas posiblemente imputadas (D-20). |
-
-<a id="pct_noasis_6a14"></a>
-#### 27. `PCT_NOASIS_6A14`
-
-Porcentaje de población de 6 a 14 años que no asiste a la escuela.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Rezago social |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `P6A11_NOA + P12A14NOA` |
-| Derivación | 100 × (POB_6A11_NOASIS + POB_12A14_NOASIS) / (POB_6A11 + POB_12A14). |
-| Universo | Población de 6 a 14 años |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 94.8 % / 84.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 4.7 |
-| Rango | 0 – 100 |
-| Notas | Equivalente de RZ_INA614. |
-
-<a id="pct_noasis_15a24"></a>
-#### 28. `PCT_NOASIS_15A24`
-
-Porcentaje de población de 15 a 24 años que no asiste a la escuela.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Rezago social |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `P_15A17 + P_18A24 − P15A17A − P18A24A` |
-| Derivación | max(0, 100 × (POB_15A17 + POB_18A24 − POB_15A17_ASIS − POB_18A24_ASIS) / (POB_15A17 + POB_18A24)). |
-| Universo | Población de 15 a 24 años |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | ± |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 94.7 % / 84.7 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 55.7 |
-| Rango | 0 – 100 |
-| Notas | Equivalente de RZ_INA1524. Es una resta: incluye a quienes no especificaron asistencia. Mediana nacional 56 %: poco discriminante para vulnerabilidad. |
-
-<a id="pct_pea"></a>
-#### 29. `PCT_PEA`
-
-Tasa de participación económica: porcentaje de la población de 12 años y más con condición de actividad especificada que es económicamente activa.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Empleo |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `PEA / (PEA + PE_INAC)` |
-| Derivación | 100 × POB_PEA / (POB_PEA + POB_INAC). |
-| Universo | Población de 12 años y más con condición de actividad especificada (PEA + PE_INAC) |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 61.9 |
-| Rango | 0 – 100 |
-| Notas | No divide entre P_12YMAS: el no especificado es 0.2–0.5 % por entidad pero llega a 27 % en algunas AGEB. Sumado desde las AGEB de Oaxaca da 57.03 %, igual que el total estatal del ITER. El censo no capta ingreso; esta es la señal económica más cercana. |
-
-<a id="pct_pea_f"></a>
-#### 30. `PCT_PEA_F`
-
-Tasa de participación económica femenina: porcentaje de mujeres de 12 años y más con condición de actividad especificada que son económicamente activas.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Empleo |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `PEA_F / (PEA_F + PE_INAC_F)` |
-| Derivación | 100 × POB_PEA_F / (POB_PEA_F + POB_INAC_F). |
-| Universo | Mujeres de 12 años y más con condición de actividad especificada |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.4 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 48.72 |
-| Rango | 0 – 100 |
-| Notas | Discrimina más que PCT_PEA entre AGEB (Oaxaca: 34 % rural contra 48 % urbana). Correlaciona con PCT_HOG_JEFA y con rezago educativo; revisar colinealidad al construir el índice. |
-
-<a id="pct_desocup"></a>
-#### 31. `PCT_DESOCUP`
-
-Tasa de desocupación: porcentaje de la población económicamente activa que no tiene trabajo y lo buscó.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Empleo |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `PDESOCUP / PEA` |
-| Derivación | 100 × POB_DESOCUP / POB_PEA. |
-| Universo | Población económicamente activa (PEA = POCUPADA + PDESOCUP) |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | + |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.5 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 1.38 |
-| Rango | 0 – 100 |
-| Notas | Poco discriminante: el trabajo informal cuenta como ocupación y la tasa censal es baja (1.7–2.3 % por entidad). En AGEB urbanas el conteo es con frecuencia 1–2 y se imputa como 1.5 (D-15), así que en AGEB chicas es ruido. |
-
 <a id="pct_viv_sin_drenaje"></a>
-#### 32. `PCT_VIV_SIN_DRENAJE`
+#### 18. `PCT_VIV_SIN_DRENAJE`
 
 Porcentaje de viviendas que no disponen de drenaje.
 
@@ -1192,7 +812,7 @@ Porcentaje de viviendas que no disponen de drenaje.
 | Notas | Equivalente de RZ_SDREN. Conteo directo, no 100 − PCT_DRENAJE (D-19). |
 
 <a id="pct_viv_sin_electric"></a>
-#### 33. `PCT_VIV_SIN_ELECTRIC`
+#### 19. `PCT_VIV_SIN_ELECTRIC`
 
 Porcentaje de viviendas que no disponen de energía eléctrica.
 
@@ -1218,7 +838,7 @@ Porcentaje de viviendas que no disponen de energía eléctrica.
 | Notas | Equivalente de RZ_SELEC. |
 
 <a id="pct_viv_sin_agua"></a>
-#### 34. `PCT_VIV_SIN_AGUA`
+#### 20. `PCT_VIV_SIN_AGUA`
 
 Porcentaje de viviendas sin agua entubada en el ámbito de la vivienda.
 
@@ -1244,7 +864,7 @@ Porcentaje de viviendas sin agua entubada en el ámbito de la vivienda.
 | Notas | Equivalente de RZ_SAGUA. Estrés hídrico y sequía. |
 
 <a id="pct_viv_piso_tierra"></a>
-#### 35. `PCT_VIV_PISO_TIERRA`
+#### 21. `PCT_VIV_PISO_TIERRA`
 
 Porcentaje de viviendas con piso de tierra.
 
@@ -1270,7 +890,7 @@ Porcentaje de viviendas con piso de tierra.
 | Notas | Equivalente de RZ_PISOT. Proxy de precariedad de la vivienda ante inundación. |
 
 <a id="pct_viv_1cuarto"></a>
-#### 36. `PCT_VIV_1CUARTO`
+#### 22. `PCT_VIV_1CUARTO`
 
 Porcentaje de viviendas con un solo cuarto.
 
@@ -1296,7 +916,7 @@ Porcentaje de viviendas con un solo cuarto.
 | Notas | Hacinamiento y calor interior. |
 
 <a id="pct_viv_sin_sanitario"></a>
-#### 37. `PCT_VIV_SIN_SANITARIO`
+#### 23. `PCT_VIV_SIN_SANITARIO`
 
 Porcentaje de viviendas sin excusado, sanitario ni letrina.
 
@@ -1321,369 +941,294 @@ Porcentaje de viviendas sin excusado, sanitario ni letrina.
 | Rango | 0 – 100 |
 | Notas | Equivalente de RZ_SEXCUS. Único complemento: no existe conteo directo. Como CONEVAL, la letrina cuenta como sanitario (D-19). |
 
-<a id="pct_viv_tinaco"></a>
-#### 38. `PCT_VIV_TINACO`
+<a id="pct_pob_0a5"></a>
+#### 24. `PCT_POB_0A5`
 
-Porcentaje de viviendas con tinaco.
+Porcentaje de población de 0 a 5 años.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Agua y almacenamiento |
+| Bloque | Sensibilidad |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_TINACO` |
-| Derivación | 100 × VIV_TINACO / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `P_0A2 + P_3A5` |
+| Derivación | 100 × (POB_0A2 + POB_3A5) / POB_DEN_PERS. |
+| Universo | Población de las localidades que publican el grupo PERS |
 | Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
+| Dimensión sugerida | Sensibilidad |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 10.01 |
+| Rango | 0 – 50 |
+| Notas | Calor, enfermedades hídricas y dependencia en evacuación. |
+
+<a id="pct_pob_65ymas"></a>
+#### 25. `PCT_POB_65YMAS`
+
+Porcentaje de población de 65 años y más.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Sensibilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `POB65_MAS` |
+| Derivación | 100 × POB_65YMAS / POB_DEN_PERS. |
+| Universo | Igual que PCT_POB_0A5 |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Sensibilidad |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 7.21 |
+| Rango | 0 – 100 |
+| Notas | Mortalidad por calor, movilidad reducida. |
+
+<a id="pct_pob_disc"></a>
+#### 26. `PCT_POB_DISC`
+
+Porcentaje de población con discapacidad.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Sensibilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `PCON_DISC` |
+| Derivación | 100 × POB_DISC / POB_DEN_PERS. |
+| Universo | Igual que PCT_POB_0A5 |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Sensibilidad |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 4.6 |
+| Rango | 0 – 88.07 |
+| Notas | Discapacidad = mucha dificultad o imposibilidad para ver, oír, caminar, recordar, autocuidado o comunicarse. |
+
+<a id="pct_pob_hli"></a>
+#### 27. `PCT_POB_HLI`
+
+Porcentaje de población de 3 años y más que habla lengua indígena.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Sensibilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `P3YM_HLI` |
+| Derivación | 100 × POB_HLI / POB_3YMAS. |
+| Universo | Población de 3 años y más |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Sensibilidad |
+| Sentido sugerido | + |
 | Script | 10_build.R |
 | AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 71.75 |
+| Mediana (AGEB habitadas) | 0.47 |
 | Rango | 0 – 100 |
-| Notas | Almacenamiento de agua ante cortes y sequía. |
+| Notas | Proxy de marginación estructural. Para barrera de idioma ante alertas es mejor PCT_POB_HLI_NHE. |
 
-<a id="pct_viv_cisterna"></a>
-#### 39. `PCT_VIV_CISTERNA`
+<a id="pct_pob_hli_nhe"></a>
+#### 28. `PCT_POB_HLI_NHE`
 
-Porcentaje de viviendas con cisterna o aljibe.
+Porcentaje de población de 3 años y más que habla lengua indígena y no habla español.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Agua y almacenamiento |
+| Bloque | Sensibilidad |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_CISTER` |
-| Derivación | 100 × VIV_CISTERNA / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `P3HLINHE` |
+| Derivación | 100 × POB_HLI_NHE / POB_3YMAS. |
+| Universo | Población de 3 años y más |
 | Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
+| Dimensión sugerida | Sensibilidad |
+| Sentido sugerido | + |
 | Script | 10_build.R |
 | AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 13.04 |
-| Rango | 0 – 100 |
+| Mediana (AGEB habitadas) | 0 |
+| Rango | 0 – 82.24 |
+| Notas | Barrera directa para recibir alertas y avisos oficiales. Mediana nacional 0 %: muy concentrado. |
 
-<a id="pct_viv_refri"></a>
-#### 40. `PCT_VIV_REFRI`
+<a id="pct_hog_jefa"></a>
+#### 29. `PCT_HOG_JEFA`
 
-Porcentaje de viviendas con refrigerador.
+Porcentaje de hogares censales con persona de referencia mujer.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Bienes y movilidad |
+| Bloque | Sensibilidad |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_REFRI` |
-| Derivación | 100 × VIV_REFRI / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `HOGJEF_F` |
+| Derivación | 100 × HOGARES_JEFA / HOGARES. |
+| Universo | Hogares censales |
 | Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
+| Dimensión sugerida | Sensibilidad |
+| Sentido sugerido | + |
 | Script | 10_build.R |
 | AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 92.38 |
+| Mediana (AGEB habitadas) | 31.04 |
 | Rango | 0 – 100 |
-| Notas | RZ_SREFRI = 100 − este valor (CONEVAL publica la carencia). |
+| Notas | Uso común en la literatura de vulnerabilidad social, pero su sentido es debatible; decidir al construir el índice. |
 
-<a id="pct_viv_lavadora"></a>
-#### 41. `PCT_VIV_LAVADORA`
+<a id="pct_pob_sin_salud"></a>
+#### 30. `PCT_POB_SIN_SALUD`
 
-Porcentaje de viviendas con lavadora.
+Porcentaje de población sin afiliación a servicios de salud.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Bienes y movilidad |
+| Bloque | Rezago social |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_LAVAD` |
-| Derivación | 100 × VIV_LAVADORA / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `PSINDER` |
+| Derivación | 100 × POB_SIN_SALUD / POB_DEN_PERS. |
+| Universo | Igual que PCT_POB_0A5 |
 | Valores vacíos | S; D0 |
 | Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
+| Sentido sugerido | + |
 | Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| AGEB habitadas con dato (urbana / rural) | 95.6 % / 86.6 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 76.35 |
+| Mediana (AGEB habitadas) | 23.44 |
 | Rango | 0 – 100 |
-| Notas | RZ_SLAVAD = 100 − este valor. |
+| Notas | Equivalente de RZ_SSALUD. |
 
-<a id="pct_viv_auto"></a>
-#### 42. `PCT_VIV_AUTO`
+<a id="pct_analf"></a>
+#### 31. `PCT_ANALF`
 
-Porcentaje de viviendas con automóvil o camioneta.
+Porcentaje de población de 15 años y más analfabeta.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Bienes y movilidad |
+| Bloque | Rezago social |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_AUTOM` |
-| Derivación | 100 × VIV_AUTO / VIV_CARACT. |
-| Universo | VIV_CARACT |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 47.03 |
-| Rango | 0 – 100 |
-| Notas | Capacidad de evacuación. |
-
-<a id="pct_viv_radio"></a>
-#### 43. `PCT_VIV_RADIO`
-
-Porcentaje de viviendas con radio.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Comunicación y alertas |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `VPH_RADIO` |
-| Derivación | 100 × VIV_RADIO / VIV_CARACT. |
-| Universo | VIV_CARACT |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 68.03 |
-| Rango | 0 – 100 |
-| Notas | Canal de alerta temprana que no depende de la red eléctrica o de datos. |
-
-<a id="pct_viv_telefono"></a>
-#### 44. `PCT_VIV_TELEFONO`
-
-Porcentaje de viviendas con línea telefónica fija.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Comunicación y alertas |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `VPH_TELEF` |
-| Derivación | 100 × VIV_TELEFONO / VIV_CARACT. |
-| Universo | VIV_CARACT |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 25 |
-| Rango | 0 – 100 |
-| Notas | RZ_STELF = 100 − este valor. |
-
-<a id="pct_viv_celular"></a>
-#### 45. `PCT_VIV_CELULAR`
-
-Porcentaje de viviendas con teléfono celular.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Comunicación y alertas |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `VPH_CEL` |
-| Derivación | 100 × VIV_CELULAR / VIV_CARACT. |
-| Universo | VIV_CARACT |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 90.97 |
-| Rango | 0 – 100 |
-| Notas | RZ_SCEL = 100 − este valor. |
-
-<a id="pct_viv_internet"></a>
-#### 46. `PCT_VIV_INTERNET`
-
-Porcentaje de viviendas con internet.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Comunicación y alertas |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `VPH_INTER` |
-| Derivación | 100 × VIV_INTERNET / VIV_CARACT. |
-| Universo | VIV_CARACT |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 44.7 |
-| Rango | 0 – 100 |
-| Notas | RZ_SINTER = 100 − este valor. |
-
-<a id="pct_viv_compu"></a>
-#### 47. `PCT_VIV_COMPU`
-
-Porcentaje de viviendas con computadora, laptop o tablet.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Comunicación y alertas |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `VPH_PC` |
-| Derivación | 100 × VIV_COMPU / VIV_CARACT. |
-| Universo | VIV_CARACT |
-| Valores vacíos | S; D0 |
-| Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | − |
-| Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
-| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 28.57 |
-| Rango | 0 – 100 |
-| Notas | RZ_SCOMPU = 100 − este valor. |
-
-<a id="pct_viv_sin_radio_tv"></a>
-#### 48. `PCT_VIV_SIN_RADIO_TV`
-
-Porcentaje de viviendas sin radio ni televisor.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Comunicación y alertas |
-| Tipo | decimal |
-| Unidad | % |
-| Decimales | 2 |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `VPH_SINRTV` |
-| Derivación | 100 × VIV_SIN_RADIO_TV / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `P15YM_AN` |
+| Derivación | 100 × POB_15YMAS_ANALF / POB_15YMAS. |
+| Universo | Población de 15 años y más |
 | Valores vacíos | S; D0 |
 | Dimensión sugerida | Capacidad adaptativa |
 | Sentido sugerido | + |
 | Script | 10_build.R |
 | AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 3.18 |
+| Mediana (AGEB habitadas) | 3.23 |
 | Rango | 0 – 100 |
+| Notas | Equivalente de RZ_ANALF. |
 
-<a id="pct_viv_sin_tel_cel"></a>
-#### 49. `PCT_VIV_SIN_TEL_CEL`
+<a id="pct_edu_bas_inc"></a>
+#### 32. `PCT_EDU_BAS_INC`
 
-Porcentaje de viviendas sin teléfono fijo ni celular.
+Porcentaje de población de 15 años y más con educación básica incompleta.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Comunicación y alertas |
+| Bloque | Rezago social |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_SINLTC` |
-| Derivación | 100 × VIV_SIN_TEL_CEL / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `P15YM_SE + P15PRI_IN + P15PRI_CO + P15SEC_IN` |
+| Derivación | min(100, 100 × (sin escolaridad + primaria incompleta + primaria completa + secundaria incompleta) / POB_15YMAS). |
+| Universo | Población de 15 años y más |
 | Valores vacíos | S; D0 |
 | Dimensión sugerida | Capacidad adaptativa |
 | Sentido sugerido | + |
 | Script | 10_build.R |
 | AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 5.66 |
+| Mediana (AGEB habitadas) | 31.82 |
 | Rango | 0 – 100 |
+| Notas | Equivalente de RZ_EBINC. Acotado a 100 porque suma cuatro celdas posiblemente imputadas (D-20). |
 
-<a id="pct_viv_sin_tic"></a>
-#### 50. `PCT_VIV_SIN_TIC`
+<a id="pct_noasis_6a14"></a>
+#### 33. `PCT_NOASIS_6A14`
 
-Porcentaje de viviendas sin ninguna tecnología de información y comunicación.
+Porcentaje de población de 6 a 14 años que no asiste a la escuela.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Comunicación y alertas |
+| Bloque | Rezago social |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_SINTIC` |
-| Derivación | 100 × VIV_SIN_TIC / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `P6A11_NOA + P12A14NOA` |
+| Derivación | 100 × (POB_6A11_NOASIS + POB_12A14_NOASIS) / (POB_6A11 + POB_12A14). |
+| Universo | Población de 6 a 14 años |
 | Valores vacíos | S; D0 |
 | Dimensión sugerida | Capacidad adaptativa |
 | Sentido sugerido | + |
 | Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| AGEB habitadas con dato (urbana / rural) | 94.8 % / 84.0 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 0.73 |
+| Mediana (AGEB habitadas) | 4.7 |
 | Rango | 0 – 100 |
-| Notas | Sin radio, TV, computadora, teléfono fijo, celular, internet, TV de paga, streaming ni consola. Muy correlacionado con PCT_VIV_SIN_BIENES. |
+| Notas | Equivalente de RZ_INA614. |
 
-<a id="pct_viv_sin_bienes"></a>
-#### 51. `PCT_VIV_SIN_BIENES`
+<a id="pct_noasis_15a24"></a>
+#### 34. `PCT_NOASIS_15A24`
 
-Porcentaje de viviendas sin ningún bien.
+Porcentaje de población de 15 a 24 años que no asiste a la escuela.
 
 | Campo | Valor |
 |---|---|
-| Bloque | Bienes y movilidad |
+| Bloque | Rezago social |
 | Tipo | decimal |
 | Unidad | % |
 | Decimales | 2 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Variable en la fuente | `VPH_SNBIEN` |
-| Derivación | 100 × VIV_SIN_BIENES / VIV_CARACT. |
-| Universo | VIV_CARACT |
+| Variable en la fuente | `P_15A17 + P_18A24 − P15A17A − P18A24A` |
+| Derivación | max(0, 100 × (POB_15A17 + POB_18A24 − POB_15A17_ASIS − POB_18A24_ASIS) / (POB_15A17 + POB_18A24)). |
+| Universo | Población de 15 a 24 años |
 | Valores vacíos | S; D0 |
 | Dimensión sugerida | Capacidad adaptativa |
-| Sentido sugerido | + |
+| Sentido sugerido | ± |
 | Script | 10_build.R |
-| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| AGEB habitadas con dato (urbana / rural) | 94.7 % / 84.7 % |
 | Población con dato (urbana / rural) | 100.0 % / 99.9 % |
-| Mediana (AGEB habitadas) | 0.28 |
+| Mediana (AGEB habitadas) | 55.7 |
 | Rango | 0 – 100 |
-| Notas | Sin refrigerador, lavadora, microondas, vehículo, bicicleta ni ninguna TIC. |
+| Notas | Equivalente de RZ_INA1524. Es una resta: incluye a quienes no especificaron asistencia. Mediana nacional 56 %: poco discriminante para vulnerabilidad. |
 
 <a id="graproes"></a>
-#### 52. `GRAPROES`
+#### 35. `GRAPROES`
 
 Grado promedio de escolaridad de la población de 15 años y más.
 
@@ -1709,7 +1254,7 @@ Grado promedio de escolaridad de la población de 15 años y más.
 | Notas | Los promedios no se suman: se convierten a totales y se vuelven a dividir (D-17). El INEGI excluye a quien no especificó grados; aquí el denominador los incluye, diferencia menor. |
 
 <a id="pro_ocup_c"></a>
-#### 53. `PRO_OCUP_C`
+#### 36. `PRO_OCUP_C`
 
 Promedio de ocupantes por cuarto en viviendas particulares habitadas.
 
@@ -1733,6 +1278,445 @@ Promedio de ocupantes por cuarto en viviendas particulares habitadas.
 | Mediana (AGEB habitadas) | 1.02 |
 | Rango | 0.16 – 6.83 |
 | Notas | Sustituto de RZ_HACIN (el censo no publica el conteo de viviendas hacinadas). No se valida contra CONEVAL porque uno es promedio y otro porcentaje. |
+
+<a id="pct_pea"></a>
+#### 37. `PCT_PEA`
+
+Tasa de participación económica: porcentaje de la población de 12 años y más con condición de actividad especificada que es económicamente activa.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Empleo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `PEA / (PEA + PE_INAC)` |
+| Derivación | 100 × POB_PEA / (POB_PEA + POB_INAC). |
+| Universo | Población de 12 años y más con condición de actividad especificada (PEA + PE_INAC) |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 61.9 |
+| Rango | 0 – 100 |
+| Notas | No divide entre P_12YMAS: el no especificado es 0.2–0.5 % por entidad pero llega a 27 % en algunas AGEB. Sumado desde las AGEB de Oaxaca da 57.03 %, igual que el total estatal del ITER. El censo no capta ingreso; esta es la señal económica más cercana. |
+
+<a id="pct_pea_f"></a>
+#### 38. `PCT_PEA_F`
+
+Tasa de participación económica femenina: porcentaje de mujeres de 12 años y más con condición de actividad especificada que son económicamente activas.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Empleo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `PEA_F / (PEA_F + PE_INAC_F)` |
+| Derivación | 100 × POB_PEA_F / (POB_PEA_F + POB_INAC_F). |
+| Universo | Mujeres de 12 años y más con condición de actividad especificada |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.4 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 48.72 |
+| Rango | 0 – 100 |
+| Notas | Discrimina más que PCT_PEA entre AGEB (Oaxaca: 34 % rural contra 48 % urbana). Correlaciona con PCT_HOG_JEFA y con rezago educativo; revisar colinealidad al construir el índice. |
+
+<a id="pct_desocup"></a>
+#### 39. `PCT_DESOCUP`
+
+Tasa de desocupación: porcentaje de la población económicamente activa que no tiene trabajo y lo buscó.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Empleo |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `PDESOCUP / PEA` |
+| Derivación | 100 × POB_DESOCUP / POB_PEA. |
+| Universo | Población económicamente activa (PEA = POCUPADA + PDESOCUP) |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.5 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 1.38 |
+| Rango | 0 – 100 |
+| Notas | Poco discriminante: el trabajo informal cuenta como ocupación y la tasa censal es baja (1.7–2.3 % por entidad). En AGEB urbanas el conteo es con frecuencia 1–2 y se imputa como 1.5 (D-15), así que en AGEB chicas es ruido. |
+
+<a id="pct_viv_tinaco"></a>
+#### 40. `PCT_VIV_TINACO`
+
+Porcentaje de viviendas con tinaco.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Agua y almacenamiento |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_TINACO` |
+| Derivación | 100 × VIV_TINACO / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 71.75 |
+| Rango | 0 – 100 |
+| Notas | Almacenamiento de agua ante cortes y sequía. |
+
+<a id="pct_viv_cisterna"></a>
+#### 41. `PCT_VIV_CISTERNA`
+
+Porcentaje de viviendas con cisterna o aljibe.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Agua y almacenamiento |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_CISTER` |
+| Derivación | 100 × VIV_CISTERNA / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 13.04 |
+| Rango | 0 – 100 |
+
+<a id="pct_viv_refri"></a>
+#### 42. `PCT_VIV_REFRI`
+
+Porcentaje de viviendas con refrigerador.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Bienes y movilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_REFRI` |
+| Derivación | 100 × VIV_REFRI / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 92.38 |
+| Rango | 0 – 100 |
+| Notas | RZ_SREFRI = 100 − este valor (CONEVAL publica la carencia). |
+
+<a id="pct_viv_lavadora"></a>
+#### 43. `PCT_VIV_LAVADORA`
+
+Porcentaje de viviendas con lavadora.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Bienes y movilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_LAVAD` |
+| Derivación | 100 × VIV_LAVADORA / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 76.35 |
+| Rango | 0 – 100 |
+| Notas | RZ_SLAVAD = 100 − este valor. |
+
+<a id="pct_viv_auto"></a>
+#### 44. `PCT_VIV_AUTO`
+
+Porcentaje de viviendas con automóvil o camioneta.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Bienes y movilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_AUTOM` |
+| Derivación | 100 × VIV_AUTO / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 47.03 |
+| Rango | 0 – 100 |
+| Notas | Capacidad de evacuación. |
+
+<a id="pct_viv_sin_bienes"></a>
+#### 45. `PCT_VIV_SIN_BIENES`
+
+Porcentaje de viviendas sin ningún bien.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Bienes y movilidad |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_SNBIEN` |
+| Derivación | 100 × VIV_SIN_BIENES / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 0.28 |
+| Rango | 0 – 100 |
+| Notas | Sin refrigerador, lavadora, microondas, vehículo, bicicleta ni ninguna TIC. |
+
+<a id="pct_viv_radio"></a>
+#### 46. `PCT_VIV_RADIO`
+
+Porcentaje de viviendas con radio.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_RADIO` |
+| Derivación | 100 × VIV_RADIO / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 68.03 |
+| Rango | 0 – 100 |
+| Notas | Canal de alerta temprana que no depende de la red eléctrica o de datos. |
+
+<a id="pct_viv_telefono"></a>
+#### 47. `PCT_VIV_TELEFONO`
+
+Porcentaje de viviendas con línea telefónica fija.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_TELEF` |
+| Derivación | 100 × VIV_TELEFONO / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 25 |
+| Rango | 0 – 100 |
+| Notas | RZ_STELF = 100 − este valor. |
+
+<a id="pct_viv_celular"></a>
+#### 48. `PCT_VIV_CELULAR`
+
+Porcentaje de viviendas con teléfono celular.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_CEL` |
+| Derivación | 100 × VIV_CELULAR / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 90.97 |
+| Rango | 0 – 100 |
+| Notas | RZ_SCEL = 100 − este valor. |
+
+<a id="pct_viv_internet"></a>
+#### 49. `PCT_VIV_INTERNET`
+
+Porcentaje de viviendas con internet.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_INTER` |
+| Derivación | 100 × VIV_INTERNET / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 44.7 |
+| Rango | 0 – 100 |
+| Notas | RZ_SINTER = 100 − este valor. |
+
+<a id="pct_viv_compu"></a>
+#### 50. `PCT_VIV_COMPU`
+
+Porcentaje de viviendas con computadora, laptop o tablet.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_PC` |
+| Derivación | 100 × VIV_COMPU / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | − |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 28.57 |
+| Rango | 0 – 100 |
+| Notas | RZ_SCOMPU = 100 − este valor. |
+
+<a id="pct_viv_sin_radio_tv"></a>
+#### 51. `PCT_VIV_SIN_RADIO_TV`
+
+Porcentaje de viviendas sin radio ni televisor.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_SINRTV` |
+| Derivación | 100 × VIV_SIN_RADIO_TV / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 3.18 |
+| Rango | 0 – 100 |
+
+<a id="pct_viv_sin_tel_cel"></a>
+#### 52. `PCT_VIV_SIN_TEL_CEL`
+
+Porcentaje de viviendas sin teléfono fijo ni celular.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_SINLTC` |
+| Derivación | 100 × VIV_SIN_TEL_CEL / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 5.66 |
+| Rango | 0 – 100 |
+
+<a id="pct_viv_sin_tic"></a>
+#### 53. `PCT_VIV_SIN_TIC`
+
+Porcentaje de viviendas sin ninguna tecnología de información y comunicación.
+
+| Campo | Valor |
+|---|---|
+| Bloque | Comunicación y alertas |
+| Tipo | decimal |
+| Unidad | % |
+| Decimales | 2 |
+| Ámbito | Ambos |
+| Fuente | PIPELINE |
+| Variable en la fuente | `VPH_SINTIC` |
+| Derivación | 100 × VIV_SIN_TIC / VIV_CARACT. |
+| Universo | VIV_CARACT |
+| Valores vacíos | S; D0 |
+| Dimensión sugerida | Capacidad adaptativa |
+| Sentido sugerido | + |
+| Script | 10_build.R |
+| AGEB habitadas con dato (urbana / rural) | 95.5 % / 86.6 % |
+| Población con dato (urbana / rural) | 100.0 % / 99.9 % |
+| Mediana (AGEB habitadas) | 0.73 |
+| Rango | 0 – 100 |
+| Notas | Sin radio, TV, computadora, teléfono fijo, celular, internet, TV de paga, streaming ni consola. Muy correlacionado con PCT_VIV_SIN_BIENES. |
 
 <a id="grs_grado"></a>
 #### 54. `GRS_GRADO`
@@ -2480,7 +2464,7 @@ Unidades económicas del sector SCIAN 31-33: Industrias manufactureras.
 | Ámbito | Ambos |
 | Fuente | DENUE |
 | Variable en la fuente | `codigo_act` |
-| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 31 o 33. |
+| Derivación | Conteo de establecimientos de la AGEB cuyo código SCIAN empieza con 31, 32 o 33. |
 | Valores vacíos | Nunca (0 = sin establecimientos) |
 | Dimensión sugerida | Contexto |
 | Sentido sugerido | ± |
@@ -2913,7 +2897,7 @@ Indicador de presencia de cuerpos de agua en la AGEB.
 | Unidad | 0/1 |
 | Ámbito | Ambos |
 | Fuente | PIPELINE |
-| Derivación | 1 si WATER_AREA > 0; 0 en otro caso. |
+| Derivación | 1 si el área intersectada es mayor que cero, 0 en otro caso. Se evalúa antes de redondear. |
 | Valores vacíos | Nunca |
 | Dimensión sugerida | Exposición (contexto) |
 | Sentido sugerido | ± |
@@ -2922,6 +2906,7 @@ Indicador de presencia de cuerpos de agua en la AGEB.
 | Población con dato (urbana / rural) | 100.0 % / 100.0 % |
 | Mediana (AGEB habitadas) | 0 |
 | Rango | 0 – 1 |
+| Notas | No se puede reproducir desde la WATER_AREA publicada: 188 AGEB del país tienen HAS_WATER = 1 con WATER_AREA en 0, porque el área intersectada es menor a 5e-7 km² y el redondeo a 6 decimales la vuelve cero. El caso inverso no ocurre: ninguna AGEB con área publicada mayor que cero tiene HAS_WATER = 0. |
 
 <a id="uso_dom"></a>
 #### 103. `USO_DOM`
@@ -5224,289 +5209,8 @@ Viviendas sin ningún bien.
 | Mediana (AGEB habitadas) | 1.5 |
 | Rango | 0 – 4,215 |
 
-<a id="year_geometry"></a>
-#### 199. `YEAR_GEOMETRY`
-
-Año de referencia de la geometría.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$geometry` |
-| Derivación | Constante (2020). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,020 |
-| Rango | 2,020 – 2,020 |
-
-<a id="year_census"></a>
-#### 200. `YEAR_CENSUS`
-
-Año de referencia del censo.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$census` |
-| Derivación | Constante (2020). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,020 |
-| Rango | 2,020 – 2,020 |
-
-<a id="year_coneval"></a>
-#### 201. `YEAR_CONEVAL`
-
-Año de referencia del GRS de CONEVAL.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$coneval` |
-| Derivación | Constante (2020). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,020 |
-| Rango | 2,020 – 2,020 |
-
-<a id="year_denue"></a>
-#### 202. `YEAR_DENUE`
-
-Versión del DENUE.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | texto |
-| Unidad | año-mes |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$denue` |
-| Derivación | Constante ('2026-05'). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Notas | Se escribe a mano en 00_config.R: actualizarlo si se vuelve a descargar el DENUE. |
-
-<a id="year_hidro"></a>
-#### 203. `YEAR_HIDRO`
-
-Año de referencia de la capa de cuerpos de agua.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$hidro` |
-| Derivación | Constante (2018). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,018 |
-| Rango | 2,018 – 2,018 |
-| Notas | Continuo topográfico 1:50,000 serie III, levantamiento 2013–2018. |
-
-<a id="year_usv"></a>
-#### 204. `YEAR_USV`
-
-Año de referencia de la capa de uso de suelo y vegetación.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$usv` |
-| Derivación | Constante (2021). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,021 |
-| Rango | 2,021 – 2,021 |
-| Notas | Serie VII, publicada en 2021 con imágenes de año base 2018. |
-
-<a id="year_clues"></a>
-#### 205. `YEAR_CLUES`
-
-Corte del catálogo CLUES de establecimientos de salud.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | texto |
-| Unidad | año-mes |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$clues` |
-| Derivación | Constante ('2026-07'). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Notas | Se escribe a mano en 00_config.R junto con URL_CLUES y CLUES_FILE: actualizar los tres si se descarga otro corte. |
-
-<a id="year_cem"></a>
-#### 206. `YEAR_CEM`
-
-Año de publicación del Continuo de Elevaciones Mexicano 4.0.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$cem` |
-| Derivación | Constante (2024). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,024 |
-| Rango | 2,024 – 2,024 |
-| Notas | Imágenes de radar ALOS PALSAR de 2006–2011. |
-
-<a id="year_red_hidro"></a>
-#### 207. `YEAR_RED_HIDRO`
-
-Año de la edición 2.0 de la Red Hidrográfica 1:50 000.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$red_hidro` |
-| Derivación | Constante (2010). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,010 |
-| Rango | 2,010 – 2,010 |
-| Notas | Construida sobre cartas topográficas 1:50 000 de 1995–2002 según la subcuenca. |
-
-<a id="year_costa"></a>
-#### 208. `YEAR_COSTA`
-
-Año de la capa de línea de costa de CONABIO.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | PIPELINE |
-| Variable en la fuente | `YEARS$costa` |
-| Derivación | Constante (2018). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 00_config.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,018 |
-| Rango | 2,018 – 2,018 |
-| Notas | Imágenes RapidEye de 2011–2014. |
-
-<a id="year_cenapred"></a>
-#### 209. `YEAR_CENAPRED`
-
-Actualización del Sistema de Indicadores Municipales del Atlas Nacional de Riesgos.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | CENAPRED_SITU2023 |
-| Variable en la fuente | `YEARS$cenapred` |
-| Derivación | Constante (2023). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 13_hazard.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,023 |
-| Rango | 2,023 – 2,023 |
-| Notas | Los indicadores sociodemográficos con los que CENAPRED construyó estos grados vienen del censo 2020; 2023 es el corte de publicación. |
-
-<a id="year_icmm"></a>
-#### 210. `YEAR_ICMM`
-
-Edición del Ingreso Corriente para los Municipios de México.
-
-| Campo | Valor |
-|---|---|
-| Bloque | Metadatos |
-| Tipo | entero |
-| Unidad | año |
-| Ámbito | Ambos |
-| Fuente | ICMM2022 |
-| Variable en la fuente | `YEARS$icmm` |
-| Derivación | Constante (2022). |
-| Valores vacíos | Nunca |
-| Dimensión sugerida | Metadato |
-| Sentido sugerido | n/a |
-| Script | 13b_income.R |
-| AGEB habitadas con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Población con dato (urbana / rural) | 100.0 % / 100.0 % |
-| Mediana (AGEB habitadas) | 2,022 |
-| Rango | 2,022 – 2,022 |
-| Notas | Levantamiento de la ENIGH 2022: 21 de agosto a 28 de noviembre de 2022. Publicado por el INEGI el 2024-11-14. |
-
 <a id="geom"></a>
-#### 211. `geom`
+#### 199. `geom`
 
 Polígono o multipolígono de la AGEB.
 
@@ -5544,6 +5248,17 @@ Polígono o multipolígono de la AGEB.
 | 10 | `AREA_KM2` | Superficie de la AGEB. | decimal | km² | MG2020 | Área del polígono en EPSG:6372 (LCC ITRF2008) tras st_make_valid(). | Mínimo nacional 0.0003 km²; las AGEB rurales pueden superar 6,000 km². |
 | 11 | `CENTROIDE_LON` | Longitud de un punto representativo dentro de la AGEB. | decimal | grados decimales (EPSG:4326) | MG2020 | st_point_on_surface() en EPSG:6372, transformado a EPSG:4326. | No es el centroide geométrico: se garantiza que cae dentro del polígono (D-07). |
 | 12 | `CENTROIDE_LAT` | Latitud de un punto representativo dentro de la AGEB. | decimal | grados decimales (EPSG:4326) | MG2020 | Igual que CENTROIDE_LON. |  |
+
+<a id="tabla-fuentes"></a>
+## Tabla fuentes
+
+`data/processed/fuentes.csv`, un solo archivo para todo el país: una fila por fuente y la edición de ella que leyó el pipeline. Aparte de la base porque no varía por AGEB; antes eran las columnas `YEAR_*` de `ageb_integrada`, con el mismo valor en las 81,451 filas.
+
+| # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
+|---|---|---|---|---|---|---|---|
+| 1 | `FUENTE` | Clave de la fuente. | texto | clave | PIPELINE | Nombre de la fuente en YEARS (00_config.R), en mayúsculas. | Clave primaria de la tabla. Valores: GEOMETRY, CENSUS, CONEVAL, DENUE, HIDRO, USV, CLUES, CEM, RED_HIDRO, COSTA, CENAPRED, ICMM. La columna FUENTE de este diccionario nombra la fuente con más detalle (p. ej. CPV2020_AGEB) y no se une a esta clave. |
+| 2 | `VERSION` | Edición de la fuente que leyó el pipeline. | texto | año o año-mes | PIPELINE | Valor de YEARS para esa fuente. | Texto y no entero porque DENUE y CLUES están fijados a un mes ('2026-05') y el resto a un año. Eran las columnas YEAR_* de ageb_integrada: al ser una propiedad de la fuente y no de la AGEB, el mismo valor se repetía en las 81,451 filas. |
+| 3 | `DESCRIPCION` | Qué es la fuente. | texto |  | PIPELINE |  | Una línea por fuente; el detalle de cada variable está en su propia fila de este diccionario. |
 
 <a id="tabla-denue-establishments"></a>
 ## Tabla denue_establishments

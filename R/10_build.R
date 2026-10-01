@@ -8,24 +8,42 @@
 # Urban and rural population arrive through different products and are stacked,
 # never added, so no AGEB can be counted twice.
 
-# Census shares derived below, in publication order. 11_qc.R range-checks them
-# and 12_export.R publishes them.
-CENSUS_SHARE_COLS <- c(
-  # Sensitivity
-  "PCT_POB_0A5", "PCT_POB_65YMAS", "PCT_POB_DISC", "PCT_POB_HLI",
-  "PCT_POB_HLI_NHE", "PCT_HOG_JEFA",
-  # CONEVAL rezago equivalents
-  "PCT_POB_SIN_SALUD", "PCT_ANALF", "PCT_EDU_BAS_INC", "PCT_NOASIS_6A14",
-  "PCT_NOASIS_15A24",
-  # Employment
-  "PCT_PEA", "PCT_PEA_F", "PCT_DESOCUP",
-  # Housing
+# Census shares derived below, one vector per published block. They are split
+# this way because the published schema is laid out block by block (CSV_COLUMNS
+# in 12_export.R) and some blocks are not contiguous here: the housing shares
+# are published next to the housing counts, the rezago shares next to GRAPROES
+# and PRO_OCUP_C. Listing them as one flat vector forced the schema to publish
+# them in this file's order, which split four blocks in two.
+#
+# 11_qc.R range-checks CENSUS_SHARE_COLS, which is all of them, and does not
+# care about order.
+SHARE_VIVIENDA <- c(
   "PCT_VIV_SIN_DRENAJE", "PCT_VIV_SIN_ELECTRIC", "PCT_VIV_SIN_AGUA",
-  "PCT_VIV_PISO_TIERRA", "PCT_VIV_1CUARTO", "PCT_VIV_SIN_SANITARIO",
-  "PCT_VIV_TINACO", "PCT_VIV_CISTERNA", "PCT_VIV_REFRI", "PCT_VIV_LAVADORA",
-  "PCT_VIV_AUTO", "PCT_VIV_RADIO", "PCT_VIV_TELEFONO", "PCT_VIV_CELULAR",
-  "PCT_VIV_INTERNET", "PCT_VIV_COMPU", "PCT_VIV_SIN_RADIO_TV",
-  "PCT_VIV_SIN_TEL_CEL", "PCT_VIV_SIN_TIC", "PCT_VIV_SIN_BIENES"
+  "PCT_VIV_PISO_TIERRA", "PCT_VIV_1CUARTO", "PCT_VIV_SIN_SANITARIO"
+)
+SHARE_SENSIBILIDAD <- c(
+  "PCT_POB_0A5", "PCT_POB_65YMAS", "PCT_POB_DISC", "PCT_POB_HLI",
+  "PCT_POB_HLI_NHE", "PCT_HOG_JEFA"
+)
+# CONEVAL rezago equivalents
+SHARE_REZAGO <- c(
+  "PCT_POB_SIN_SALUD", "PCT_ANALF", "PCT_EDU_BAS_INC", "PCT_NOASIS_6A14",
+  "PCT_NOASIS_15A24"
+)
+SHARE_EMPLEO <- c("PCT_PEA", "PCT_PEA_F", "PCT_DESOCUP")
+SHARE_AGUA <- c("PCT_VIV_TINACO", "PCT_VIV_CISTERNA")
+SHARE_BIENES <- c(
+  "PCT_VIV_REFRI", "PCT_VIV_LAVADORA", "PCT_VIV_AUTO", "PCT_VIV_SIN_BIENES"
+)
+SHARE_COMUNICACION <- c(
+  "PCT_VIV_RADIO", "PCT_VIV_TELEFONO", "PCT_VIV_CELULAR", "PCT_VIV_INTERNET",
+  "PCT_VIV_COMPU", "PCT_VIV_SIN_RADIO_TV", "PCT_VIV_SIN_TEL_CEL",
+  "PCT_VIV_SIN_TIC"
+)
+
+CENSUS_SHARE_COLS <- c(
+  SHARE_VIVIENDA, SHARE_SENSIBILIDAD, SHARE_REZAGO, SHARE_EMPLEO,
+  SHARE_AGUA, SHARE_BIENES, SHARE_COMUNICACION
 )
 CENSUS_AVG_COLS <- c("GRAPROES", "PRO_OCUP_C")
 
@@ -226,21 +244,12 @@ build_complete <- function(ent) {
       PCT_VIV_SIN_RADIO_TV = safe_pct(VIV_SIN_RADIO_TV, VIV_CARACT),
       PCT_VIV_SIN_TEL_CEL  = safe_pct(VIV_SIN_TEL_CEL, VIV_CARACT),
       PCT_VIV_SIN_TIC      = safe_pct(VIV_SIN_TIC, VIV_CARACT),
-      PCT_VIV_SIN_BIENES   = safe_pct(VIV_SIN_BIENES, VIV_CARACT),
-
-      YEAR_GEOMETRY = YEARS$geometry,
-      YEAR_CENSUS   = YEARS$census,
-      YEAR_CONEVAL  = YEARS$coneval,
-      YEAR_DENUE    = YEARS$denue,
-      YEAR_HIDRO    = YEARS$hidro,
-      YEAR_USV      = YEARS$usv,
-      YEAR_CLUES    = YEARS$clues,
-      YEAR_CEM      = YEARS$cem,
-      YEAR_RED_HIDRO = YEARS$red_hidro,
-      YEAR_COSTA    = YEARS$costa,
-      YEAR_CENAPRED = YEARS$cenapred,
-      YEAR_ICMM     = YEARS$icmm
+      PCT_VIV_SIN_BIENES   = safe_pct(VIV_SIN_BIENES, VIV_CARACT)
     )
+  # The vintage of each source used to be written here, as twelve YEAR_*
+  # columns holding the same value on every row of the country. It is a
+  # property of the source, so it is published once, in the fuentes table
+  # (SOURCE_DESC in 12_export.R, written by 14_integrate.R).
   # UNINHABITED stays in the interim table for 11_qc.R; the export drops it.
 
   log_msg("  rows: ", nrow(df), " | with census: ", sum(!is.na(df$POB_TOTAL)),

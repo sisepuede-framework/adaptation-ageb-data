@@ -41,6 +41,10 @@
 #                             entity, or copying it into each database, would
 #                             put the same rows in 32 places; at twelve narrow
 #                             columns the whole country is a few megabytes
+#   data/processed/fuentes.csv   one row per source and the edition of it that
+#                             was read. Twelve rows, true of the country, so
+#                             they are stated once here instead of as twelve
+#                             constant columns on every AGEB
 #
 # There is no national version on purpose. The 32 entities in one GeoPackage
 # come to ~1.4 GB, slow to open and awkward to move around, and the work that
@@ -229,11 +233,11 @@ INTEGRATED_LAYERS <- c("ageb_integrada", "denue_establishments",
                        "denue_ageb_sector", "ageb_landuse_detail")
 
 # What the dictionary embedded in each database describes: its own layers, plus
-# ageb_ids. That table is not in the file -- it is national, written once -- but
+# the two national tables. Neither is in the file -- each is written once -- but
 # a reader holding only base_ageb_20.gpkg has to be able to find out that the
-# municipality names exist and where, so it is documented here rather than left
-# to be guessed from a column that is missing.
-DOCUMENTED_LAYERS <- c("ageb_ids", INTEGRATED_LAYERS)
+# municipality names and the vintages exist and where, so they are documented
+# here rather than left to be guessed from columns that are missing.
+DOCUMENTED_LAYERS <- c("ageb_ids", "fuentes", INTEGRATED_LAYERS)
 
 # Everything the integrated database of one entity reads; if any of these is
 # newer than the database, it is stale.
@@ -391,5 +395,22 @@ build_ids_national <- function(ents) {
   write_csv(ids, out, na = "")
   log_step("national ID table: ", format(nrow(ids), big.mark = ","), " AGEB from ",
            length(have), " entities -> ", basename(out))
+  invisible(out)
+}
+
+# The fuentes table: what the pipeline read and which edition of it. National
+# like ageb_ids and for the same reason -- the answer does not vary by entity --
+# but more plainly so: the whole table is twelve rows that are true of the
+# country, not of any AGEB.
+#
+# It comes straight out of the configuration rather than off the data, so it is
+# written whether or not any entity is built; if the two disagree, the one to
+# fix is the configuration.
+build_fuentes <- function() {
+  fuentes <- fuentes_table()
+  check_layer_dictionary(read_dictionaries(), "fuentes", names(fuentes))
+  out <- file.path(DIR_PROCESSED, "fuentes.csv")
+  write_csv(fuentes, out, na = "")
+  log_step("source table: ", nrow(fuentes), " sources -> ", basename(out))
   invisible(out)
 }

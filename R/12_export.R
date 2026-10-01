@@ -28,26 +28,50 @@ ID_COLUMNS <- c(
   "CVE_LOC", "NOM_LOC", "CVE_AGEB", "AREA_KM2", "CENTROIDE_LON", "CENTROIDE_LAT"
 )
 
+# One block at a time, in the order the data dictionary lists them: a reader
+# scrolling the table meets a whole subject before the next one starts, and the
+# dictionary's BLOQUE column never alternates. The blocks named in the comments
+# are exactly the values of that column.
 CSV_COLUMNS <- c(
   ID_COLUMNS,
-  "POB_TOTAL", "POB_REPORTADA", "PCT_POB_REPORTADA", "N_CELDAS_IMPUTADAS",
-  "POB_HOMBRES", "POB_MUJERES", "PCT_HOMBRES", "PCT_MUJERES",
+  # Poblacion base
+  "POB_TOTAL", "POB_HOMBRES", "POB_MUJERES", "PCT_HOMBRES", "PCT_MUJERES",
   "DENS_POB_KM2", "POB_POR_VIV",
+  # Confiabilidad: how much of the AGEB was reported rather than imputed
+  "POB_REPORTADA", "PCT_POB_REPORTADA", "N_CELDAS_IMPUTADAS",
+  # Vivienda: the counts and the shares derived from them, together
   "VIV_PART_HAB", "VIV_CARACT", "VIV_DRENAJE", "VIV_ELECTRICIDAD",
-  "PCT_DRENAJE", "PCT_ELECTRIC",
-  CENSUS_SHARE_COLS, CENSUS_AVG_COLS,
+  "PCT_DRENAJE", "PCT_ELECTRIC", SHARE_VIVIENDA,
+  # Sensibilidad
+  SHARE_SENSIBILIDAD,
+  # Rezago social: the CONEVAL equivalents and the two census averages
+  SHARE_REZAGO, CENSUS_AVG_COLS,
+  # Empleo
+  SHARE_EMPLEO,
+  # Agua y almacenamiento
+  SHARE_AGUA,
+  # Bienes y movilidad
+  SHARE_BIENES,
+  # Comunicacion y alertas
+  SHARE_COMUNICACION,
+  # Validacion CONEVAL
   "GRS_GRADO", "GRS_NUM", RZ_NAMES,
+  # Actividad economica (14_integrate.R splices DEN_SCIAN_* in after SCHOOL_TOT)
   "DENUE_TOT", "DEN_MANUF", "DEN_COM", "DEN_SERV", "DEN_EDU", "DEN_GOB", "SCHOOL_TOT",
+  # Hidrografia
   "WATER_AREA", "WATER_PCT", "HAS_WATER",
+  # Uso de suelo (14_integrate.R splices USV_PCT_* in after PCT_URB)
   "USO_DOM", "USO_PCT", "PCT_URB",
+  # Acceso a salud
   names(HEALTH_DIST_COLS), "DIST_ORIGEN",
+  # Relieve y exposicion
   TERRAIN_COLS,
+  # Amenaza (CENAPRED)
   HAZARD_COLS,
+  # Ingreso (municipal)
   INCOME_COLS,
-  CENSUS_COUNT_COLS,
-  "YEAR_GEOMETRY", "YEAR_CENSUS", "YEAR_CONEVAL", "YEAR_DENUE", "YEAR_HIDRO", "YEAR_USV",
-  "YEAR_CLUES", "YEAR_CEM", "YEAR_RED_HIDRO", "YEAR_COSTA", "YEAR_CENAPRED",
-  "YEAR_ICMM"
+  # Conteos censales
+  CENSUS_COUNT_COLS
 )
 
 # Rounded on export only; the interim tables keep full precision.
@@ -64,6 +88,55 @@ ROUND_DIGITS <- c(
   setNames(rep(2, length(CENSUS_SHARE_COLS) + length(CENSUS_AVG_COLS)),
            c(CENSUS_SHARE_COLS, CENSUS_AVG_COLS))
 )
+
+# What each source is, in the order the pipeline reads it. The key is the name
+# it has in YEARS (00_config.R), which holds the vintage; this list holds the
+# sentence that says what the vintage is the vintage of.
+#
+# These twelve were columns of the indicator table -- YEAR_GEOMETRY, YEAR_CENSUS
+# and the rest -- until they were taken out of it. A source's vintage is a
+# property of the source, not of the AGEB, so writing it on all 81,451 rows said
+# one fact 81,451 times. It is now said once, in the fuentes table.
+SOURCE_DESC <- c(
+  geometry  = "Marco Geoestadístico del INEGI: las AGEB y sus polígonos.",
+  census    = "Censo de Población y Vivienda: AGEB urbana e ITER para la rural.",
+  coneval   = "Grado de Rezago Social (GRS) del CONEVAL a nivel AGEB.",
+  denue     = "Directorio Estadístico Nacional de Unidades Económicas (DENUE).",
+  hidro     = "Cuerpos de agua del Continuo Topográfico del INEGI.",
+  usv       = "Uso de suelo y vegetación del INEGI, serie VII.",
+  clues     = "Catálogo CLUES de establecimientos de salud de la Secretaría de Salud.",
+  cem       = "Continuo de Elevaciones Mexicano 4.0 del INEGI.",
+  red_hidro = "Red Hidrográfica 1:50 000, edición 2.0, del INEGI.",
+  costa     = "Línea de costa de la CONABIO.",
+  cenapred  = "Sistema de Indicadores Municipales del Atlas Nacional de Riesgos (CENAPRED).",
+  icmm      = "Ingreso Corriente para los Municipios de México (INEGI, a partir de la ENIGH)."
+)
+
+# The fuentes table: one row per source, the same for the whole country, so it
+# is published once (14_integrate.R) rather than per entity. VERSION is text
+# because DENUE and CLUES are pinned to a month rather than a year, and a column
+# that is sometimes 2020 and sometimes '2026-05' cannot be an integer.
+#
+# YEARS and SOURCE_DESC have to name exactly the same sources: a source added to
+# one and not the other would otherwise be published without a vintage, or drop
+# out of the table without a word.
+fuentes_table <- function() {
+  only_desc <- setdiff(names(SOURCE_DESC), names(YEARS))
+  only_year <- setdiff(names(YEARS), names(SOURCE_DESC))
+  if (length(only_desc) > 0 || length(only_year) > 0) {
+    stop("SOURCE_DESC and YEARS disagree on which sources exist",
+         if (length(only_desc) > 0) paste0("; no vintage for: ",
+           paste(only_desc, collapse = ", ")),
+         if (length(only_year) > 0) paste0("; no description for: ",
+           paste(only_year, collapse = ", ")), call. = FALSE)
+  }
+  data.frame(
+    FUENTE      = toupper(names(SOURCE_DESC)),
+    VERSION     = as.character(unlist(YEARS[names(SOURCE_DESC)], use.names = FALSE)),
+    DESCRIPCION = unname(SOURCE_DESC),
+    stringsAsFactors = FALSE
+  )
+}
 
 # Who the AGEB is, for one entity: the slice of the published table that becomes
 # the national ageb_ids. Taken from the same rounded values as everything else,

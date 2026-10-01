@@ -81,6 +81,12 @@ tryCatch(build_ids_national(ok), error = function(e) {
   log_msg("!! national ID table failed: ", conditionMessage(e))
 })
 
+# The source table: the same twelve rows whatever was built, and the record of
+# which edition of each source the run above read.
+tryCatch(build_fuentes(), error = function(e) {
+  log_msg("!! source table failed: ", conditionMessage(e))
+})
+
 write_csv(results, file.path(DIR_LOGS, sprintf(
   "run_%s.csv", format(started, "%Y%m%d_%H%M%S"))), na = "")
 

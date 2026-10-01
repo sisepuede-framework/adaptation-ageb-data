@@ -138,7 +138,7 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 | `R/12_export.R` | Esquema publicado de indicadores y contrato del diccionario | — |
 | `R/13_hazard.R` | Grados municipales de peligro de CENAPRED, vía SEDATU | `hazard`, `hazard_national` |
 | `R/13b_income.R` | Ingreso corriente trimestral por hogar del municipio (ICMM 2022 del INEGI) | `income`, `income_national` |
-| `R/14_integrate.R` | Integra todas las tablas de una entidad en una sola base y publica la tabla de IDs | `data/processed/base_ageb_{ENT}.gpkg`, `ageb_ids.csv` |
+| `R/14_integrate.R` | Integra todas las tablas de una entidad en una sola base y publica las tablas nacionales | `data/processed/base_ageb_{ENT}.gpkg`, `ageb_ids.csv`, `fuentes.csv` |
 | `maps/map_municipio.R` | Mapa de control visual de la malla de un municipio | `maps/*.png` |
 
 ## Salidas (`data/processed/`)
@@ -147,12 +147,13 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 |---|---|
 | `base_ageb_{ENT}.gpkg` | **Base integrada** de la entidad: todas las tablas en un solo GeoPackage (ver abajo) |
 | `ageb_ids.csv` | **Tabla de relación**, única y nacional: una fila por AGEB del país con todos sus identificadores |
-| `ageb_integrada_{ENT}.csv` | La capa `ageb_integrada` sin geometría: `ID_AGEB` más 209 indicadores |
+| `fuentes.csv` | **Tabla de fuentes**, única y nacional: una fila por fuente con la edición que leyó el pipeline |
+| `ageb_integrada_{ENT}.csv` | La capa `ageb_integrada` sin geometría: `ID_AGEB` más 197 indicadores |
 | `detail/{tabla}_{ENT}.csv` | Las tres tablas de detalle, planas, para consulta sin GIS |
 | `qc/quality_control_report_{ENT}.csv`, `qc/_MX.csv` | 33 controles por entidad |
 | `qc/qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
 
-Salvo `ageb_ids.csv`, cada entidad se publica por separado. La geometría y las
+Salvo `ageb_ids.csv` y `fuentes.csv`, cada entidad se publica por separado. La geometría y las
 tablas de detalle (establecimientos del DENUE, AGEB × sector, AGEB × clase de
 uso de suelo) viven como capas de `base_ageb_{ENT}.gpkg`, no como archivos
 aparte.
@@ -173,6 +174,12 @@ A cambio, `base_ageb_{ENT}.gpkg` por sí solo mapea cualquier indicador pero no
 puede etiquetarlo con el municipio; el diccionario que trae dentro dice dónde
 están los nombres.
 
+Por la misma razón salió `fuentes.csv`. El año de cada fuente vivía en doce
+columnas `YEAR_*` de `ageb_integrada` con el mismo valor en las 81,451 filas:
+es una propiedad de la fuente, no de la AGEB, así que ahora se dice doce veces
+en total y no doce veces por AGEB. No lleva `ID_AGEB` y no se une a nada; se
+consulta.
+
 ```mermaid
 erDiagram
     ageb_ids ||--|| ageb_integrada       : ID_AGEB
@@ -192,8 +199,13 @@ erDiagram
     }
     ageb_integrada {
         text     ID_AGEB FK
-        decimal  indicadores_209
+        decimal  indicadores_197
         geometry geom
+    }
+    fuentes {
+        text     FUENTE PK
+        text     VERSION
+        text     DESCRIPCION
     }
     denue_establishments {
         text     ID_AGEB FK
@@ -213,7 +225,8 @@ erDiagram
 ```
 
 `||--||` es uno a uno y `||--o{` uno a varios, como la `1` y la `P` del diagrama
-de la ENIGH.
+de la ENIGH. `fuentes` va suelta a propósito: no tiene llave con la que unirse a
+una AGEB porque describe de dónde salieron los datos, no a quién describen.
 
 Lee **siempre** las claves como texto, o se pierden los ceros a la izquierda:
 
@@ -241,7 +254,7 @@ cliente SQL.
 | `denue_establishments` | Punto | Un registro por establecimiento del DENUE |
 | `denue_ageb_sector` | — | AGEB × sector SCIAN, formato largo |
 | `ageb_landuse_detail` | — | AGEB × clase de uso de suelo, formato largo |
-| `diccionario_datos`, `data_dictionary` | — | Los diccionarios de estas capas y de `ageb_ids`, para que el archivo se explique solo |
+| `diccionario_datos`, `data_dictionary` | — | Los diccionarios de estas capas y de las dos tablas nacionales (`ageb_ids`, `fuentes`), para que el archivo se explique solo |
 
 El control de calidad no va dentro, ni en el diccionario embebido: es cómo
 verificamos la construcción, no parte de lo que se entrega. Vive aparte, en
@@ -269,25 +282,32 @@ dplyr::left_join(ageb, ids, by = "ID_AGEB")
 
 ## Contenido del CSV
 
-| Bloque | Columnas | Ámbito |
-|---|---|---|
-| Identificación y geometría | En `ageb_ids.csv`: `ID_AGEB`, claves y nombres, `AREA_KM2`, punto representativo | Ambos |
-| Población base | `POB_TOTAL`, sexo, `DENS_POB_KM2`, `POB_POR_VIV`, viviendas | Ambos |
-| Confiabilidad | `POB_REPORTADA`, `PCT_POB_REPORTADA`, `N_CELDAS_IMPUTADAS` | Ambos |
-| Sensibilidad | `PCT_POB_0A5`, `PCT_POB_65YMAS`, `PCT_POB_DISC`, `PCT_POB_HLI`, `PCT_POB_HLI_NHE`, `PCT_HOG_JEFA` | Ambos |
-| Rezago social (equivalentes de CONEVAL) | `PCT_ANALF`, `PCT_NOASIS_6A14`, `PCT_NOASIS_15A24`, `PCT_EDU_BAS_INC`, `PCT_POB_SIN_SALUD`, `GRAPROES`, `PRO_OCUP_C` | Ambos |
-| Empleo | `PCT_PEA`, `PCT_PEA_F`, `PCT_DESOCUP` | Ambos |
-| Vivienda y servicios | `PCT_VIV_SIN_DRENAJE`, `PCT_VIV_SIN_ELECTRIC`, `PCT_VIV_SIN_AGUA`, `PCT_VIV_SIN_SANITARIO`, `PCT_VIV_PISO_TIERRA`, `PCT_VIV_1CUARTO`, `PCT_DRENAJE`, `PCT_ELECTRIC` | Ambos |
-| Agua, bienes y comunicación | `PCT_VIV_TINACO`, `PCT_VIV_CISTERNA`, `PCT_VIV_REFRI`, `PCT_VIV_LAVADORA`, `PCT_VIV_AUTO`, `PCT_VIV_SIN_BIENES`, `PCT_VIV_RADIO`, `PCT_VIV_TELEFONO`, `PCT_VIV_CELULAR`, `PCT_VIV_INTERNET`, `PCT_VIV_COMPU`, `PCT_VIV_SIN_RADIO_TV`, `PCT_VIV_SIN_TEL_CEL`, `PCT_VIV_SIN_TIC` | Ambos |
-| Validación CONEVAL | `GRS_GRADO`, `GRS_NUM`, 17 `RZ_*` | Solo urbana |
-| Actividad económica | `DENUE_TOT`, `DEN_MANUF`, `DEN_COM`, `DEN_SERV`, `DEN_EDU`, `DEN_GOB`, `SCHOOL_TOT` | Ambos |
-| Agua y uso de suelo | `WATER_AREA`, `WATER_PCT`, `HAS_WATER`, `USO_DOM`, `USO_PCT`, `PCT_URB` | Ambos |
-| Acceso a salud | `DIST_HOSP_KM`, `DIST_HOSP_PUB_KM`, `DIST_1NIVEL_PUB_KM`, `DIST_ORIGEN` | Ambos |
-| Relieve y exposición | `ELEV_M`, `PEND_MEDIA_GRAD`, `PCT_PEND_15`, `PCT_PEND_30`, `DIST_CAUCE_KM`, `DIST_COSTA_KM`, `DESNIVEL_CAUCE_M` | Ambos |
-| Amenaza (municipal) | 13 `AMZ_*` de peligro CENAPRED, más `CEN_RESIL` y `CEN_VULN_CC` | Ambos |
-| Ingreso (municipal) | `ING_MUN_HOG_TRIM` (ingreso corriente trimestral por hogar, ICMM 2022), su intervalo al 90 % `ING_MUN_LIM_INF`/`ING_MUN_LIM_SUP` y `ING_MUN_CV` | Ambos |
-| Conteos censales | 51 conteos, para reagregar a otras geografías | Ambos |
-| Metadatos | `YEAR_*` | Ambos |
+Los bloques van en el orden en que aparecen en la tabla, el mismo del
+diccionario de datos: cada bloque es un tramo contiguo de columnas.
+
+| # | Bloque | Cols | Columnas | Ámbito |
+|---|---|---|---|---|
+| — | Identificación y geometría | 12 | En `ageb_ids.csv`: `ID_AGEB`, claves y nombres, `AREA_KM2`, punto representativo | Ambos |
+| 1 | Identificación | 1 | `ID_AGEB`, la llave que une con `ageb_ids` | Ambos |
+| 2 | Población base | 7 | `POB_TOTAL`, `POB_HOMBRES`, `POB_MUJERES`, `PCT_HOMBRES`, `PCT_MUJERES`, `DENS_POB_KM2`, `POB_POR_VIV` | Ambos |
+| 3 | Confiabilidad | 3 | `POB_REPORTADA`, `PCT_POB_REPORTADA`, `N_CELDAS_IMPUTADAS` | Ambos |
+| 4 | Vivienda | 12 | `VIV_PART_HAB`, `VIV_CARACT`, `VIV_DRENAJE`, `VIV_ELECTRICIDAD`, `PCT_DRENAJE`, `PCT_ELECTRIC`, `PCT_VIV_SIN_DRENAJE`, `PCT_VIV_SIN_ELECTRIC`, `PCT_VIV_SIN_AGUA`, `PCT_VIV_PISO_TIERRA`, `PCT_VIV_1CUARTO`, `PCT_VIV_SIN_SANITARIO` | Ambos |
+| 5 | Sensibilidad | 6 | `PCT_POB_0A5`, `PCT_POB_65YMAS`, `PCT_POB_DISC`, `PCT_POB_HLI`, `PCT_POB_HLI_NHE`, `PCT_HOG_JEFA` | Ambos |
+| 6 | Rezago social (equivalentes de CONEVAL) | 7 | `PCT_POB_SIN_SALUD`, `PCT_ANALF`, `PCT_EDU_BAS_INC`, `PCT_NOASIS_6A14`, `PCT_NOASIS_15A24`, `GRAPROES`, `PRO_OCUP_C` | Ambos |
+| 7 | Empleo | 3 | `PCT_PEA`, `PCT_PEA_F`, `PCT_DESOCUP` | Ambos |
+| 8 | Agua y almacenamiento | 2 | `PCT_VIV_TINACO`, `PCT_VIV_CISTERNA` | Ambos |
+| 9 | Bienes y movilidad | 4 | `PCT_VIV_REFRI`, `PCT_VIV_LAVADORA`, `PCT_VIV_AUTO`, `PCT_VIV_SIN_BIENES` | Ambos |
+| 10 | Comunicación y alertas | 8 | `PCT_VIV_RADIO`, `PCT_VIV_TELEFONO`, `PCT_VIV_CELULAR`, `PCT_VIV_INTERNET`, `PCT_VIV_COMPU`, `PCT_VIV_SIN_RADIO_TV`, `PCT_VIV_SIN_TEL_CEL`, `PCT_VIV_SIN_TIC` | Ambos |
+| 11 | Validación CONEVAL | 19 | `GRS_GRADO`, `GRS_NUM`, 17 `RZ_*` | Solo urbana |
+| 12 | Actividad económica | 27 | `DENUE_TOT`, `DEN_MANUF`, `DEN_COM`, `DEN_SERV`, `DEN_EDU`, `DEN_GOB`, `SCHOOL_TOT`, 20 `DEN_SCIAN_*` | Ambos |
+| 13 | Hidrografía | 3 | `WATER_AREA`, `WATER_PCT`, `HAS_WATER` | Ambos |
+| 14 | Uso de suelo | 15 | `USO_DOM`, `USO_PCT`, `PCT_URB`, 12 `USV_PCT_*` | Ambos |
+| 15 | Acceso a salud | 4 | `DIST_HOSP_KM`, `DIST_HOSP_PUB_KM`, `DIST_1NIVEL_PUB_KM`, `DIST_ORIGEN` | Ambos |
+| 16 | Relieve y exposición | 7 | `ELEV_M`, `PEND_MEDIA_GRAD`, `PCT_PEND_15`, `PCT_PEND_30`, `DIST_CAUCE_KM`, `DIST_COSTA_KM`, `DESNIVEL_CAUCE_M` | Ambos |
+| 17 | Amenaza (municipal) | 15 | 13 `AMZ_*` de peligro CENAPRED, más `CEN_RESIL` y `CEN_VULN_CC` | Ambos |
+| 18 | Ingreso (municipal) | 4 | `ING_MUN_HOG_TRIM` (ingreso corriente trimestral por hogar, ICMM 2022), su intervalo al 90 % `ING_MUN_LIM_INF`/`ING_MUN_LIM_SUP` y `ING_MUN_CV` | Ambos |
+| 19 | Conteos censales | 51 | 51 conteos, para reagregar a otras geografías | Ambos |
+| 20 | Geometría | 1 | `geom`, solo en el GeoPackage | Ambos |
 
 ## Validación
 
@@ -385,5 +405,5 @@ Ver [problemas conocidos](docs/DECISIONES.md#problemas-conocidos) y
   ENIGH 2022) y todas las AGEB de un municipio comparten valor. Es una media por
   hogar, en pesos corrientes de 2022 y por trimestre. Para contrastes dentro del
   municipio usa los indicadores censales (bienes, GRS).
-- **Años mixtos** entre fuentes; se registran en las columnas `YEAR_*`.
+- **Años mixtos** entre fuentes; se registran en `fuentes.csv`.
 - **Licencia:** las capas de CONABIO son CC BY-NC 2.5 MX (sin fines de lucro).

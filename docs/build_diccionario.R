@@ -36,7 +36,7 @@ EN_FIELDS <- c(
 stats <- NULL
 if (length(data_paths) > 0 && file.exists(ids_path)) {
   df <- map_dfr(data_paths, read_csv, progress = FALSE, col_types = cols(
-    .default = col_guess(), ID_AGEB = "c", YEAR_DENUE = "c", YEAR_CLUES = "c")) |>
+    .default = col_guess(), ID_AGEB = "c")) |>
     left_join(read_csv(ids_path, progress = FALSE, col_types = cols(
         .default = col_guess(), ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
         CVE_LOC = "c", CVE_AGEB = "c")),
@@ -128,6 +128,7 @@ TEXT <- list(
     cols_word = "Columnas",
     table_desc = c(
       ageb_ids               = "`data/processed/ageb_ids.csv`, un solo archivo para todo el país: una fila por AGEB, y la única copia que existe. Es la tabla de relación de toda la base. `ID_AGEB` es la clave primaria y las demás tablas traen solo esa columna: entidad, municipio, localidad, ámbito, superficie y punto interior se obtienen uniendo aquí.",
+      fuentes                = "`data/processed/fuentes.csv`, un solo archivo para todo el país: una fila por fuente y la edición de ella que leyó el pipeline. Aparte de la base porque no varía por AGEB; antes eran las columnas `YEAR_*` de `ageb_integrada`, con el mismo valor en las 81,451 filas.",
       ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `ID_AGEB` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.",
       denue_establishments   = "`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_establishments`, y `data/processed/detail/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE.",
       denue_ageb_sector      = "`data/processed/base_ageb_{ENT}.gpkg`, capa `denue_ageb_sector`, y `data/processed/detail/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN.",
@@ -212,6 +213,7 @@ TEXT <- list(
     cols_word = "Columns",
     table_desc = c(
       ageb_ids               = "`data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `ID_AGEB` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here.",
+      fuentes                = "`data/processed/fuentes.csv`, a single file for the whole country: one row per source and the edition of it the pipeline read. Kept out of the database because it does not vary by AGEB; these were the `YEAR_*` columns of `ageb_integrada`, holding the same value on all 81,451 rows.",
       ageb_integrada         = "`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.",
       denue_establishments   = "`data/processed/base_ageb_{ENT}.gpkg`, layer `denue_establishments`, and `data/processed/detail/denue_establishments_{ENT}.csv`. One row per DENUE establishment.",
       denue_ageb_sector      = "`data/processed/base_ageb_{ENT}.gpkg`, layer `denue_ageb_sector`, and `data/processed/detail/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector.",
