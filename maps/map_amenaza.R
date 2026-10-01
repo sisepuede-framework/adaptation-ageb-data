@@ -141,15 +141,16 @@ log_msg("  wrote ", out_nat)
 # --- figure 2: what municipal resolution looks like from the ground -------
 log_step("metro zoom ", zoom_ent, " ", paste(zoom_mun, collapse = " "))
 
-tab <- read_csv(file.path(DIR_PROCESSED, sprintf("ageb_indicadores_%s.csv", zoom_ent)),
-                show_col_types = FALSE,
-                col_types = cols(ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
-                                 CVE_LOC = "c", CVE_AGEB = "c")) |>
-  filter(CVE_MUN %in% zoom_mun)
+# CVE_MUN and NOM_MUN are in ageb_ids.csv, which covers the whole country, so
+# the cut is by entity and municipality together: the three-digit CVE_MUN
+# repeats across entities.
+tab <- read_csv(file.path(DIR_PROCESSED, "ageb_ids.csv"), show_col_types = FALSE,
+                 col_types = cols(ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
+                                  CVE_LOC = "c", CVE_AGEB = "c")) |>
+  filter(CVE_ENT == zoom_ent, CVE_MUN %in% zoom_mun)
 
-sel <- st_read(file.path(DIR_PROCESSED, sprintf("ageb_geom_%s.gpkg", zoom_ent)),
-               quiet = TRUE) |>
-  select(ID_AGEB) |>
+sel <- st_read(file.path(DIR_PROCESSED, sprintf("base_ageb_%s.gpkg", zoom_ent)),
+               layer = "ageb_integrada", quiet = TRUE) |>
   inner_join(tab, by = "ID_AGEB") |>
   st_transform(CRS_ANALYSIS)
 

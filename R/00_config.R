@@ -10,9 +10,15 @@ if (!dir.exists(file.path(PROJECT_ROOT, "R"))) PROJECT_ROOT <- normalizePath(get
 DIR_RAW       <- file.path(PROJECT_ROOT, "data", "raw")
 DIR_INTERIM   <- file.path(PROJECT_ROOT, "data", "interim")
 DIR_PROCESSED <- file.path(PROJECT_ROOT, "data", "processed")
+# Quality control is how the build is checked, not part of what is handed over,
+# so it sits in its own folder instead of among the published databases.
+DIR_QC        <- file.path(DIR_PROCESSED, "qc")
+# The long detail tables, also written as flat CSV for readers without GIS.
+# Their own folder: 96 files would bury the 64 that are the actual databases.
+DIR_DETAIL    <- file.path(DIR_PROCESSED, "detail")
 DIR_LOGS      <- file.path(PROJECT_ROOT, "logs")
 
-for (d in c(DIR_RAW, DIR_INTERIM, DIR_PROCESSED, DIR_LOGS)) {
+for (d in c(DIR_RAW, DIR_INTERIM, DIR_PROCESSED, DIR_QC, DIR_DETAIL, DIR_LOGS)) {
   dir.create(d, recursive = TRUE, showWarnings = FALSE)
 }
 

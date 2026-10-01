@@ -37,6 +37,14 @@ CENSUS_VARS <- c(
   POB_3YMAS           = "P_3YMAS",
   POB_HLI             = "P3YM_HLI",
   POB_HLI_NHE         = "P3HLINHE",   # indigenous language and no Spanish
+  # Afro-Mexican self-identification. The basic questionnaire asks it of every
+  # person, so its universe is the whole population, not P_3YMAS as the
+  # language items above. The two by sex are published next to the total and
+  # sum to it exactly wherever all three are reported -- 110,931 ITER
+  # localities, not one exception.
+  POB_AFRO            = "POB_AFRO",
+  POB_AFRO_F          = "POB_AFRO_F",
+  POB_AFRO_M          = "POB_AFRO_M",
   # Education and health (CONEVAL rezago equivalents)
   POB_SIN_SALUD       = "PSINDER",
   POB_15YMAS          = "P_15YMAS",
@@ -112,7 +120,8 @@ CENSUS_CHAR_VARS <- c(setdiff(names(CENSUS_VARS), "POB_TOTAL"), CENSUS_TOTAL_VAR
 CENSUS_GROUPS <- list(
   SEXO = c("POB_HOMBRES", "POB_MUJERES"),
   PERS = c("POB_0A2", "POB_3A5", "POB_65YMAS", "POB_DISC", "POB_3YMAS",
-           "POB_HLI", "POB_HLI_NHE", "POB_SIN_SALUD", "POB_15YMAS",
+           "POB_HLI", "POB_HLI_NHE", "POB_AFRO", "POB_AFRO_F", "POB_AFRO_M",
+           "POB_SIN_SALUD", "POB_15YMAS",
            "POB_15YMAS_ANALF", "POB_15YMAS_SIN_ESC", "POB_15YMAS_PRIM_INC",
            "POB_15YMAS_PRIM_COM", "POB_15YMAS_SEC_INC", "POB_6A11", "POB_12A14",
            "POB_6A11_NOASIS", "POB_12A14_NOASIS", "POB_15A17", "POB_18A24",
@@ -133,12 +142,20 @@ stopifnot(setequal(unlist(CENSUS_GROUPS), CENSUS_CHAR_VARS),
 census_den_col <- function(group) paste0("POB_DEN_", group)
 CENSUS_DEN_COLS <- census_den_col(names(CENSUS_GROUPS))
 
-# The urban product never publishes a count of 1 or 2: across all 64,313 urban
-# AGEB rows not one cell holds either value, while 0 and 3 are common. Every
-# "*" in a published row therefore stands for 1 or 2 and is imputed as the
-# midpoint (error at most +-0.5). Left as NA, it would blank rare deprivation
-# counts (no electricity, dirt floor) in 25-30% of urban AGEB -- precisely the
-# least deprived ones, so the gap would bias any index built on top.
+# The urban product all but never publishes a count of 1 or 2: across the
+# 61,575 published urban AGEB rows exactly one cell holds either value -- a
+# POB_AFRO_F of 1 in AGEB 1403900014565 -- while 0 and 3 are common (20,002 and
+# 2,731 for that same column). Every "*" in a published row therefore stands
+# for 1 or 2 and is imputed as the midpoint (error at most +-0.5). Left as NA,
+# it would blank rare deprivation counts (no electricity, dirt floor) in 25-30%
+# of urban AGEB -- precisely the least deprived ones, so the gap would bias any
+# index built on top.
+#
+# Imputing each cell on its own does not preserve sums: POB_AFRO_F + POB_AFRO_M
+# lands within 1.5 of POB_AFRO in the 6,605 urban AGEB (10.7%) where at least
+# one of the three is suppressed. The alternative -- solving for the suppressed
+# term -- would propagate one cell's error into the others and cannot be done
+# when two of the three are blank (1,219 rows have all three).
 URBAN_SUPPRESSED_VALUE <- 1.5
 
 # Averages -> additive totals. Occupants per room becomes rooms = occupants /
