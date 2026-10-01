@@ -292,7 +292,7 @@ diccionario de datos: cada bloque es un tramo contiguo de columnas.
 | 2 | Población base | 7 | `POB_TOTAL`, `POB_HOMBRES`, `POB_MUJERES`, `PCT_HOMBRES`, `PCT_MUJERES`, `DENS_POB_KM2`, `POB_POR_VIV` | Ambos |
 | 3 | Confiabilidad | 3 | `POB_REPORTADA`, `PCT_POB_REPORTADA`, `N_CELDAS_IMPUTADAS` | Ambos |
 | 4 | Vivienda | 12 | `VIV_PART_HAB`, `VIV_CARACT`, `VIV_DRENAJE`, `VIV_ELECTRICIDAD`, `PCT_DRENAJE`, `PCT_ELECTRIC`, `PCT_VIV_SIN_DRENAJE`, `PCT_VIV_SIN_ELECTRIC`, `PCT_VIV_SIN_AGUA`, `PCT_VIV_PISO_TIERRA`, `PCT_VIV_1CUARTO`, `PCT_VIV_SIN_SANITARIO` | Ambos |
-| 5 | Sensibilidad | 6 | `PCT_POB_0A5`, `PCT_POB_65YMAS`, `PCT_POB_DISC`, `PCT_POB_HLI`, `PCT_POB_HLI_NHE`, `PCT_HOG_JEFA` | Ambos |
+| 5 | Sensibilidad | 8 | `PCT_POB_0A5`, `PCT_POB_65YMAS`, `PCT_POB_DISC`, `PCT_POB_HLI`, `PCT_POB_HLI_NHE`, `PCT_POB_AFRO`, `PCT_AFRO_F`, `PCT_HOG_JEFA` | Ambos |
 | 6 | Rezago social (equivalentes de CONEVAL) | 7 | `PCT_POB_SIN_SALUD`, `PCT_ANALF`, `PCT_EDU_BAS_INC`, `PCT_NOASIS_6A14`, `PCT_NOASIS_15A24`, `GRAPROES`, `PRO_OCUP_C` | Ambos |
 | 7 | Empleo | 3 | `PCT_PEA`, `PCT_PEA_F`, `PCT_DESOCUP` | Ambos |
 | 8 | Agua y almacenamiento | 2 | `PCT_VIV_TINACO`, `PCT_VIV_CISTERNA` | Ambos |
@@ -306,7 +306,7 @@ diccionario de datos: cada bloque es un tramo contiguo de columnas.
 | 16 | Relieve y exposición | 7 | `ELEV_M`, `PEND_MEDIA_GRAD`, `PCT_PEND_15`, `PCT_PEND_30`, `DIST_CAUCE_KM`, `DIST_COSTA_KM`, `DESNIVEL_CAUCE_M` | Ambos |
 | 17 | Amenaza (municipal) | 15 | 13 `AMZ_*` de peligro CENAPRED, más `CEN_RESIL` y `CEN_VULN_CC` | Ambos |
 | 18 | Ingreso (municipal) | 4 | `ING_MUN_HOG_TRIM` (ingreso corriente trimestral por hogar, ICMM 2022), su intervalo al 90 % `ING_MUN_LIM_INF`/`ING_MUN_LIM_SUP` y `ING_MUN_CV` | Ambos |
-| 19 | Conteos censales | 51 | 51 conteos, para reagregar a otras geografías | Ambos |
+| 19 | Conteos censales | 54 | 54 conteos, para reagregar a otras geografías | Ambos |
 | 20 | Geometría | 1 | `geom`, solo en el GeoPackage | Ambos |
 
 ## Validación
@@ -318,8 +318,9 @@ Corrida nacional completa (32 entidades, 2026-09-17):
 | AGEB | **81,451** = 63,982 urbanas + 17,469 rurales |
 | Municipios | 2,469 |
 | `sum(POB_TOTAL)` | **126,014,024**, idéntico al Censo 2020 (diferencia 0) |
+| Población afrodescendiente | 2,569,695 (2.04 %), contra los 2,576,213 que publica el INEGI: −0.25 %, la misma brecha de cobertura AGEB |
 | Superficie | 1,956,075 km² |
-| Controles de calidad | **992 / 992 PASS** (31 por entidad) |
+| Controles de calidad | **1,056 / 1,056 PASS** (33 por entidad) |
 | DENUE | 6,117,578 unidades, 150,067 escuelas |
 | Con GRS | 61,430 de 63,982 urbanas (96 %) |
 | Población con indicadores censales | 99.97 % urbana, 99.93 % rural |
@@ -352,7 +353,9 @@ El detalle y la evidencia de cada una están en [docs/DECISIONES.md](docs/DECISI
 - **Una AGEB rural sin localidades es deshabitada**, con población 0 y no `NA`
   (D-12). El ITER nunca suprime `POBTOT`.
 - **Las celdas urbanas suprimidas se imputan como 1.5** (D-15): el censo urbano
-  nunca publica un 1 ni un 2. `N_CELDAS_IMPUTADAS` lo registra.
+  casi nunca publica un 1 ni un 2 — una sola celda en 61,575 AGEB lo hace, un
+  `POB_AFRO_F` de 1 — así que un `*` vale 1 o 2 y el punto medio yerra por 0.5
+  a lo más. `N_CELDAS_IMPUTADAS` lo registra.
 - **Los porcentajes de vivienda dividen entre `VIV_CARACT`** y no entre
   `TVIVPARHAB` (D-18). Las carencias usan los conteos directos «sin» (D-19).
 - **Los indicadores de CONEVAL se recalculan desde el censo para ambos ámbitos**

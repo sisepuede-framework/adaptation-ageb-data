@@ -23,7 +23,7 @@ SHARE_VIVIENDA <- c(
 )
 SHARE_SENSIBILIDAD <- c(
   "PCT_POB_0A5", "PCT_POB_65YMAS", "PCT_POB_DISC", "PCT_POB_HLI",
-  "PCT_POB_HLI_NHE", "PCT_HOG_JEFA"
+  "PCT_POB_HLI_NHE", "PCT_POB_AFRO", "PCT_AFRO_F", "PCT_HOG_JEFA"
 )
 # CONEVAL rezago equivalents
 SHARE_REZAGO <- c(
@@ -181,6 +181,16 @@ build_complete <- function(ent) {
       PCT_POB_DISC      = safe_pct(POB_DISC, POB_DEN_PERS),
       PCT_POB_HLI       = safe_pct(POB_HLI, POB_3YMAS),
       PCT_POB_HLI_NHE   = safe_pct(POB_HLI_NHE, POB_3YMAS),
+      # Afro-Mexican self-identification is asked of everyone, so it divides by
+      # the whole reported population, not by POB_3YMAS as the two above.
+      PCT_POB_AFRO      = safe_pct(POB_AFRO, POB_DEN_PERS),
+      # The sex split of that population, not the share of women who are
+      # Afro-Mexican: POB_MUJERES sits in the SEXO group and POB_AFRO_F in
+      # PERS, and a share whose terms straddle two groups would be summed over
+      # different sets of localities in a rural AGEB. Needs no cap -- across the
+      # 61,575 published urban AGEB, POB_AFRO_F never exceeds POB_AFRO even
+      # after both are imputed.
+      PCT_AFRO_F        = safe_pct(POB_AFRO_F, POB_AFRO),
       PCT_HOG_JEFA      = safe_pct(HOGARES_JEFA, HOGARES),
 
       # --- Census equivalents of CONEVAL's rezago indicators, for both ambits.
