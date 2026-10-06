@@ -154,7 +154,7 @@ build_hazard <- function(ent) {
   attrs <- readRDS(interim_path("ageb_attrs", ent))
 
   out <- attrs |>
-    select(ID_AGEB, CVE_MUN_FULL) |>
+    select(CVEGEO, CVE_MUN_FULL) |>
     left_join(haz, by = "CVE_MUN_FULL")
 
   # A municipality with no CENAPRED row leaves the whole block NA for its AGEB.
@@ -169,7 +169,7 @@ build_hazard <- function(ent) {
   }
 
   out <- out |> select(-CVE_MUN_FULL)
-  if (anyDuplicated(out$ID_AGEB) || !setequal(out$ID_AGEB, attrs$ID_AGEB)) {
+  if (anyDuplicated(out$CVEGEO) || !setequal(out$CVEGEO, attrs$CVEGEO)) {
     stop("hazard grades do not map one-to-one onto the AGEB spine in entity ",
          ent, call. = FALSE)
   }

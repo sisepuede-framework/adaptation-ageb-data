@@ -54,7 +54,7 @@ build_census_rural <- function(ent) {
   # localities, so no share mixes two different sets of hamlets.
   base <- joined |>
     mutate(REPORTS_ALL = if_all(all_of(CENSUS_CHAR_VARS), ~ !is.na(.x))) |>
-    group_by(ID_AGEB) |>
+    group_by(CVEGEO) |>
     summarise(
       # Ordered so POB_TOTAL is still per locality when POB_REPORTADA reads it.
       POB_REPORTADA = sum(POB_TOTAL[REPORTS_ALL]),
@@ -72,7 +72,7 @@ build_census_rural <- function(ent) {
     }
     joined |>
       mutate(REP = reports) |>
-      group_by(ID_AGEB) |>
+      group_by(CVEGEO) |>
       summarise(
         !!census_den_col(g) := sum(POB_TOTAL[REP]),
         across(all_of(vars), ~ if (any(REP)) sum(.x[REP]) else NA_real_),
@@ -81,7 +81,7 @@ build_census_rural <- function(ent) {
   })
 
   # The ITER does publish counts of 1 and 2, so nothing here is imputed.
-  out <- reduce(by_group, left_join, by = "ID_AGEB", .init = base) |>
+  out <- reduce(by_group, left_join, by = "CVEGEO", .init = base) |>
     mutate(N_CELDAS_IMPUTADAS = 0)
 
   log_msg("  rural AGEB rows: ", nrow(out),

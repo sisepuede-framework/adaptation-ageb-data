@@ -91,7 +91,7 @@ load_coast <- function() {
 # blanking the AGEB.
 weighted_by_ageb <- function(df, cols) {
   df |>
-    group_by(ID_AGEB) |>
+    group_by(CVEGEO) |>
     summarise(across(all_of(cols), ~ {
       ok <- !is.na(.x)
       if (any(ok)) sum(.x[ok] * W[ok]) / sum(W[ok]) else NA_real_
@@ -106,10 +106,10 @@ build_terrain <- function(ent) {
     st_transform(CRS_ANALYSIS)
   st_geometry(ageb) <- "geometry"
   attrs <- readRDS(interim_path("ageb_attrs", ent))
-  rural_ids <- attrs$ID_AGEB[attrs$AMBITO == "Rural"]
+  rural_ids <- attrs$CVEGEO[attrs$AMBITO == "Rural"]
 
   loc_pts <- inhabited_locality_points(ent, rural_ids)
-  polys <- ageb |> filter(!ID_AGEB %in% loc_pts$ID_AGEB) |> mutate(W = 1)
+  polys <- ageb |> filter(!CVEGEO %in% loc_pts$CVEGEO) |> mutate(W = 1)
 
   # --- Relief. The DEM window is the entity plus a margin, so border slopes
   # are computed with real neighbours rather than an edge.
@@ -124,7 +124,7 @@ build_terrain <- function(ent) {
   zonal <- function(zones) {
     v <- vect(st_transform(zones, crs(relief)))
     vals <- terra::extract(relief, v, fun = mean, na.rm = TRUE, ID = FALSE)
-    bind_cols(st_drop_geometry(zones)[c("ID_AGEB", "W")], as_tibble(vals))
+    bind_cols(st_drop_geometry(zones)[c("CVEGEO", "W")], as_tibble(vals))
   }
   discs <- st_buffer(loc_pts, TERRAIN_BUFFER_M)
   relief_raw <- bind_rows(zonal(discs), zonal(polys))
@@ -133,7 +133,7 @@ build_terrain <- function(ent) {
     weighted_by_ageb(relief_cols)
 
   # --- Streams and coast, from points.
-  interior <- suppressWarnings(st_point_on_surface(polys)) |> select(ID_AGEB, W)
+  interior <- suppressWarnings(st_point_on_surface(polys)) |> select(CVEGEO, W)
   origins <- rbind(loc_pts, interior)
 
   # A window padded by 100 km keeps the national layer out of the search; that
@@ -173,17 +173,17 @@ build_terrain <- function(ent) {
   point_tbl <- origins |> st_drop_geometry() |> weighted_by_ageb(point_cols)
 
   out <- attrs |>
-    select(ID_AGEB) |>
-    left_join(relief_tbl, by = "ID_AGEB") |>
-    left_join(point_tbl, by = "ID_AGEB") |>
-    select(ID_AGEB, all_of(TERRAIN_COLS))
+    select(CVEGEO) |>
+    left_join(relief_tbl, by = "CVEGEO") |>
+    left_join(point_tbl, by = "CVEGEO") |>
+    select(CVEGEO, all_of(TERRAIN_COLS))
 
-  if (nrow(out) != nrow(attrs) || anyDuplicated(out$ID_AGEB)) {
+  if (nrow(out) != nrow(attrs) || anyDuplicated(out$CVEGEO)) {
     stop("terrain table does not map one-to-one onto the AGEB spine in entity ",
          ent, call. = FALSE)
   }
 
-  inh <- out$ID_AGEB %in% c(loc_pts$ID_AGEB, attrs$ID_AGEB[attrs$AMBITO == "Urbana"])
+  inh <- out$CVEGEO %in% c(loc_pts$CVEGEO, attrs$CVEGEO[attrs$AMBITO == "Urbana"])
   log_msg("  origins: ", nrow(discs), " locality discs + ", nrow(polys),
           " polygons | AGEB without elevation: ", sum(is.na(out$ELEV_M)),
           " | median slope (inhabited) ",

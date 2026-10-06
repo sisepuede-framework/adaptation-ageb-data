@@ -76,7 +76,7 @@ for (ent in ok) {
 }
 
 # The national ID table, assembled from whatever databases exist: it resolves
-# ID_AGEB for all of them, so it is rebuilt after the last one is written.
+# CVEGEO for all of them, so it is rebuilt after the last one is written.
 tryCatch(build_ids_national(ok), error = function(e) {
   log_msg("!! national ID table failed: ", conditionMessage(e))
 })

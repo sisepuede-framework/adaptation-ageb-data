@@ -44,18 +44,18 @@ build_hydrology <- function(ent) {
   water_by_ageb <- inter |>
     mutate(A = area_km2(inter)) |>
     st_drop_geometry() |>
-    group_by(ID_AGEB) |>
+    group_by(CVEGEO) |>
     summarise(WATER_AREA = sum(A), .groups = "drop")
 
   out <- attrs |>
-    select(ID_AGEB, AREA_KM2) |>
-    left_join(water_by_ageb, by = "ID_AGEB") |>
+    select(CVEGEO, AREA_KM2) |>
+    left_join(water_by_ageb, by = "CVEGEO") |>
     mutate(
       WATER_AREA = coalesce(WATER_AREA, 0),          # real zero, not missing
       WATER_PCT  = pmin(100, safe_pct(WATER_AREA, AREA_KM2)),
       HAS_WATER  = as.integer(WATER_AREA > 0)
     ) |>
-    select(ID_AGEB, WATER_AREA, WATER_PCT, HAS_WATER)
+    select(CVEGEO, WATER_AREA, WATER_PCT, HAS_WATER)
 
   log_msg("  AGEB with water: ", sum(out$HAS_WATER), " | total water km2: ",
           round(sum(out$WATER_AREA), 1))

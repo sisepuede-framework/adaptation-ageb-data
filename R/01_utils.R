@@ -159,7 +159,7 @@ pad <- function(x, width) {
   str_pad(str_trim(x), width = width, side = "left", pad = "0")
 }
 
-# ID_AGEB = ENT(2) + MUN(3) + LOC(4) + AGEB(4) = 13 characters.
+# CVEGEO = ENT(2) + MUN(3) + LOC(4) + AGEB(4) = 13 characters.
 # CVE_AGEB is alphanumeric, so everything stays character throughout.
 build_ageb_id <- function(ent, mun, loc, ageb) {
   paste0(pad(ent, 2), pad(mun, 3), pad(loc, 4), pad(ageb, 4))

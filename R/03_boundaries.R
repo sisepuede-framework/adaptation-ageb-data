@@ -12,9 +12,12 @@
 # Two facts drive the code below:
 #  * The MG ships in EPSG:6372 already, so areas need no reprojection; only the
 #    published centroids are converted to EPSG:4326.
-#  * Rural AGEB have no CVE_LOC. To keep ID_AGEB a single 13-character key
+#  * Rural AGEB have no CVE_LOC. To keep CVEGEO a single 13-character key
 #    across both ambits, rural rows get CVE_LOC = "0000", which is also the
 #    census convention for "no specific locality".
+#  * The key is named CVEGEO but is NOT the shapefile's CVEGEO field, which is
+#    9 characters on rural AGEB. It is rebuilt here from the CVE_* parts, so
+#    the published CVEGEO is always the 13-character one.
 
 suppressPackageStartupMessages(library(sf))
 
@@ -42,7 +45,7 @@ build_boundaries <- function(ent) {
     transmute(
       CVE_ENT, CVE_MUN, CVE_LOC, CVE_AGEB,
       AMBITO = "Urbana",
-      ID_AGEB = build_ageb_id(CVE_ENT, CVE_MUN, CVE_LOC, CVE_AGEB)
+      CVEGEO = build_ageb_id(CVE_ENT, CVE_MUN, CVE_LOC, CVE_AGEB)
     )
 
   rural <- read_mg_layer(ent, "ar") |>
@@ -51,15 +54,15 @@ build_boundaries <- function(ent) {
       CVE_LOC = "0000",
       CVE_AGEB,
       AMBITO = "Rural",
-      ID_AGEB = build_ageb_id(CVE_ENT, CVE_MUN, CVE_LOC, CVE_AGEB)
+      CVEGEO = build_ageb_id(CVE_ENT, CVE_MUN, CVE_LOC, CVE_AGEB)
     )
 
   ageb <- bind_rows(urban, rural) |> st_make_valid()
   ageb$CVE_MUN_FULL <- build_mun_id(ageb$CVE_ENT, ageb$CVE_MUN)
   ageb$AREA_KM2 <- area_km2(ageb)
 
-  if (anyDuplicated(ageb$ID_AGEB)) {
-    stop("duplicated ID_AGEB in entity ", ent, call. = FALSE)
+  if (anyDuplicated(ageb$CVEGEO)) {
+    stop("duplicated CVEGEO in entity ", ent, call. = FALSE)
   }
 
   # point_on_surface, not centroid: guarantees the published coordinate falls
@@ -77,7 +80,7 @@ build_boundaries <- function(ent) {
           sum(ageb$AMBITO == "Rural"), " rural = ", nrow(ageb))
 
   saveRDS(st_drop_geometry(ageb), interim_path("ageb_attrs", ent))
-  st_write(ageb["ID_AGEB"], interim_path("ageb_geom", ent, "gpkg"),
+  st_write(ageb["CVEGEO"], interim_path("ageb_geom", ent, "gpkg"),
            layer = "ageb", delete_dsn = TRUE, quiet = TRUE)
   invisible(ageb)
 }
@@ -103,7 +106,7 @@ build_locality_bridge <- function(ent) {
     st_drop_geometry() |>
     transmute(
       ID_LOC = build_loc_id(CVE_ENT, CVE_MUN, CVE_LOC),
-      ID_AGEB = build_ageb_id(CVE_ENT, CVE_MUN, "0000", CVE_AGEB),
+      CVEGEO = build_ageb_id(CVE_ENT, CVE_MUN, "0000", CVE_AGEB),
       NOM_LOC = NOMGEO
     ) |>
     distinct(ID_LOC, .keep_all = TRUE)
@@ -133,11 +136,11 @@ inhabited_locality_points <- function(ent, rural_ids) {
 
   pts <- read_mg_layer(ent, "lpr") |>
     transmute(ID_LOC = build_loc_id(CVE_ENT, CVE_MUN, CVE_LOC),
-              ID_AGEB = build_ageb_id(CVE_ENT, CVE_MUN, "0000", CVE_AGEB)) |>
+              CVEGEO = build_ageb_id(CVE_ENT, CVE_MUN, "0000", CVE_AGEB)) |>
     distinct(ID_LOC, .keep_all = TRUE) |>
     inner_join(iter_pop, by = "ID_LOC") |>
-    filter(ID_AGEB %in% rural_ids, W > 0) |>
-    select(ID_AGEB, W)
+    filter(CVEGEO %in% rural_ids, W > 0) |>
+    select(CVEGEO, W)
   st_geometry(pts) <- "geometry"
   pts
 }

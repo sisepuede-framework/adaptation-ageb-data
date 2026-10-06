@@ -7,7 +7,7 @@
 # published_table() for the values below so the database carries exactly them.
 # The dictionary contract that used to live here moved there too, because these
 # columns are no longer one table: ID_COLUMNS becomes ageb_ids and the rest,
-# keyed by ID_AGEB alone, becomes ageb_integrada.
+# keyed by CVEGEO alone, becomes ageb_integrada.
 
 # Census counts published after the headline indicators, for re-aggregation to
 # other geographies. The six excluded here already appear earlier in the schema.
@@ -21,10 +21,10 @@ CENSUS_COUNT_COLS <- setdiff(
 # The census catalogs it draws on live in 04_census_urban.R and 10_build.R.
 # Who the AGEB is and where it sits: the keys, the names they stand for, and
 # the two descriptors read straight off the polygon. Published once, as the
-# ageb_ids table, so every other table carries only ID_AGEB and joins back to
-# this one (14_integrate.R). ID_AGEB leads the list because it is the key.
+# ageb_ids table, so every other table carries only CVEGEO and joins back to
+# this one (14_integrate.R). CVEGEO leads the list because it is the key.
 ID_COLUMNS <- c(
-  "ID_AGEB", "AMBITO", "CVE_ENT", "NOM_ENT", "CVE_MUN", "NOM_MUN",
+  "CVEGEO", "AMBITO", "CVE_ENT", "NOM_ENT", "CVE_MUN", "NOM_MUN",
   "CVE_LOC", "NOM_LOC", "CVE_AGEB", "AREA_KM2", "CENTROIDE_LON", "CENTROIDE_LAT"
 )
 

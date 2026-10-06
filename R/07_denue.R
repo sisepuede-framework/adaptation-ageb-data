@@ -36,8 +36,8 @@ build_denue <- function(ent) {
   raw <- map_dfr(file.path(root, rel), read_latin1_csv)
 
   spine_all <- readRDS(interim_path("ageb_attrs", ent))
-  urban_spine <- spine_all$ID_AGEB[spine_all$AMBITO == "Urbana"]
-  rural_spine <- spine_all$ID_AGEB[spine_all$AMBITO == "Rural"]
+  urban_spine <- spine_all$CVEGEO[spine_all$AMBITO == "Urbana"]
+  rural_spine <- spine_all$CVEGEO[spine_all$AMBITO == "Rural"]
 
   # DENUE always reports the real locality, but rural AGEB have no CVE_LOC and
   # this database stores them with CVE_LOC = "0000". So the key is resolved in
@@ -50,7 +50,7 @@ build_denue <- function(ent) {
 
   est <- raw |>
     transmute(
-      ID_AGEB = resolved,
+      CVEGEO = resolved,
       NOM_ESTAB = nom_estab,
       SCIAN = codigo_act,
       SECTOR = substr(codigo_act, 1, 2),
@@ -72,13 +72,13 @@ build_denue <- function(ent) {
     est$LAT[bad] <- NA_real_
   }
 
-  off_spine <- sum(!est$ID_AGEB %in% spine_all$ID_AGEB)
+  off_spine <- sum(!est$CVEGEO %in% spine_all$CVEGEO)
   if (off_spine > 0) {
     log_msg("  establishments whose AGEB key is absent from the MG: ", off_spine)
   }
 
   summary_tbl <- est |>
-    group_by(ID_AGEB) |>
+    group_by(CVEGEO) |>
     summarise(
       DENUE_TOT = n(),
       !!!lapply(SCIAN_SECTORS, function(codes) {
@@ -89,7 +89,7 @@ build_denue <- function(ent) {
     )
 
   # Long AGEB x sector detail, exported separately by 12_export.R.
-  sector_tbl <- est |> count(ID_AGEB, SECTOR, name = "N_UNITS")
+  sector_tbl <- est |> count(CVEGEO, SECTOR, name = "N_UNITS")
 
   log_msg("  establishments: ", format(nrow(est), big.mark = ","),
           " in ", nrow(summary_tbl), " AGEB | schools: ",

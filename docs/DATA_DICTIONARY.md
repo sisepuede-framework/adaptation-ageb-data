@@ -44,7 +44,7 @@ Básica*) is INEGI's census tract.
 
 **General warnings**
 
-- Read `ID_AGEB`, `CVE_ENT`, `CVE_MUN`, `CVE_LOC` and `CVE_AGEB` **as text**.
+- Read `CVEGEO`, `CVE_ENT`, `CVE_MUN`, `CVE_LOC` and `CVE_AGEB` **as text**.
 - An uninhabited rural AGEB has `POB_TOTAL = 0` and its counts at 0; its shares are empty (`D0`).
 - In AGEB with tiny universes the shares are noise (K-01 in DECISIONES.md). Filter or weight by `POB_TOTAL`, `VIV_CARACT` or `PCT_POB_REPORTADA`.
 - To re-aggregate to another geography, sum **counts**; never average shares (D-25).
@@ -52,22 +52,22 @@ Básica*) is INEGI's census tract.
 
 ```r
 ids  <- readr::read_csv("data/processed/ageb_ids.csv",
-                        col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
+                        col_types = readr::cols(CVEGEO = "c", CVE_ENT = "c",
                                                 CVE_MUN = "c", CVE_LOC = "c",
                                                 CVE_AGEB = "c"))
 ageb <- readr::read_csv("data/processed/ageb_integrada_20.csv",
-                        col_types = readr::cols(ID_AGEB = "c"))
+                        col_types = readr::cols(CVEGEO = "c"))
 
-dplyr::left_join(ageb, ids, by = "ID_AGEB")
+dplyr::left_join(ageb, ids, by = "CVEGEO")
 ```
 
 ## Tables
 
 | Table | File | Columns |
 |---|---|---|
-| [ageb_ids](#tabla-ageb-ids) | `data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `ID_AGEB` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here. | 12 |
+| [ageb_ids](#tabla-ageb-ids) | `data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `CVEGEO` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here. | 12 |
 | [fuentes](#tabla-fuentes) | `data/processed/fuentes.csv`, a single file for the whole country: one row per source and the edition of it the pipeline read. Kept out of the database because it does not vary by AGEB; these were the `YEAR_*` columns of `ageb_integrada`, holding the same value on all 81,451 rows. | 3 |
-| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary. | 204 |
+| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `CVEGEO` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary. | 204 |
 | [denue_establishments](#tabla-denue-establishments) | `data/processed/base_ageb_{ENT}.gpkg`, layer `denue_establishments`, and `data/processed/detail/denue_establishments_{ENT}.csv`. One row per DENUE establishment. | 8 |
 | [denue_ageb_sector](#tabla-denue-ageb-sector) | `data/processed/base_ageb_{ENT}.gpkg`, layer `denue_ageb_sector`, and `data/processed/detail/denue_ageb_sector_{ENT}.csv`. One row per AGEB × SCIAN sector. | 3 |
 | [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_landuse_detail`, and `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. One row per AGEB × land use class. | 4 |
@@ -75,7 +75,7 @@ dplyr::left_join(ageb, ids, by = "ID_AGEB")
 <a id="tabla-ageb-integrada"></a>
 ## Table ageb_integrada
 
-`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `ID_AGEB` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.
+`data/processed/base_ageb_{ENT}.gpkg`, layer `ageb_integrada` (EPSG:4326), and `ageb_integrada_{ENT}.csv`, one of each per entity. One row per AGEB, with `CVEGEO` as its only identifier; `ORDER` is the column's position in the layer. The GeoPackage also carries, as layers, the three detail tables and this dictionary.
 
 Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generated on 2026-10-01). Coverage is measured on **inhabited** AGEB, as the % of AGEB with a value and as the % of their population; the median and range are also measured on inhabited AGEB.
 
@@ -83,7 +83,7 @@ Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,45
 
 | # | Variable | Description | Unit | Scope | Source variable | % AGEB with value (urb / rur) | % population with value (urb / rur) | Median | Direction |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | [`ID_AGEB`](#id_ageb) | AGEB key. | code | Both |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 1 | [`CVEGEO`](#id_ageb) | AGEB key. | code | Both |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
 
 ### Base population
 
@@ -388,7 +388,7 @@ Coverage and median measured on `data/processed/ageb_integrada_{ENT}.csv` (81,45
 One card per column, in CSV order.
 
 <a id="id_ageb"></a>
-#### 1. `ID_AGEB`
+#### 1. `CVEGEO`
 
 AGEB key.
 
@@ -5367,11 +5367,11 @@ Polygon or multipolygon of the AGEB.
 <a id="tabla-ageb-ids"></a>
 ## Table ageb_ids
 
-`data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `ID_AGEB` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here.
+`data/processed/ageb_ids.csv`, a single file for the whole country: one row per AGEB, and the only copy there is. This is the database's relational table. `CVEGEO` is the primary key and every other table carries that column alone: entity, municipality, locality, setting, area and interior point come from joining here.
 
 | # | Variable | Description | Type | Unit | Source | Derivation | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | Unique AGEB key: state (2) + municipality (3) + locality (4) + AGEB (4). | text | code | MG2020 | Urban: 13-character CVEGEO. Rural: CVE_ENT + CVE_MUN + '0000' + CVE_AGEB. | The database's primary key: every table joins to ageb_ids on this column. Always read as text: it has leading zeros and CVE_AGEB is alphanumeric. See D-03. |
+| 1 | `CVEGEO` | Unique AGEB key: state (2) + municipality (3) + locality (4) + AGEB (4). | text | code | MG2020 | Urban: 13-character CVEGEO. Rural: CVE_ENT + CVE_MUN + '0000' + CVE_AGEB. | The database's primary key: every table joins to ageb_ids on this column. Always read as text: it has leading zeros and CVE_AGEB is alphanumeric. See D-03. |
 | 2 | `AMBITO` | Setting of the AGEB, according to the Marco Geoestadístico layer it comes from. | categorical |  | MG2020 | 'Urbana' if it comes from {ENT}a.shp; 'Rural' if it comes from {ENT}ar.shp. | Values: Urbana (urban), Rural. Population sources differ by setting (D-11). |
 | 3 | `CVE_ENT` | State (entidad federativa) code. | text | code | MG2020 |  | 01 to 32. |
 | 4 | `NOM_ENT` | State name. | text |  | PIPELINE | Fixed catalog in 00_config.R. | Without accents (e.g. 'Ciudad de Mexico', 'Nuevo Leon'). |
@@ -5402,7 +5402,7 @@ Polygon or multipolygon of the AGEB.
 
 | # | Variable | Description | Type | Unit | Source | Derivation | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | AGEB to which the establishment was assigned. | text | code | DENUE | The urban key is tried first; if it does not exist in the MG, the rural one (CVE_LOC = '0000'). | May not exist in the MG (logged). |
+| 1 | `CVEGEO` | AGEB to which the establishment was assigned. | text | code | DENUE | The urban key is tried first; if it does not exist in the MG, the rural one (CVE_LOC = '0000'). | May not exist in the MG (logged). |
 | 2 | `NOM_ESTAB` | Name of the establishment. | text |  | DENUE |  |  |
 | 3 | `SCIAN` | 6-digit SCIAN activity code. | text | code | DENUE |  |  |
 | 4 | `SECTOR` | SCIAN sector (first 2 digits). | text | code | PIPELINE | substr(codigo_act, 1, 2). |  |
@@ -5418,7 +5418,7 @@ Polygon or multipolygon of the AGEB.
 
 | # | Variable | Description | Type | Unit | Source | Derivation | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | AGEB key. | text | code | DENUE |  | Long format: one row per AGEB × sector with at least one establishment. |
+| 1 | `CVEGEO` | AGEB key. | text | code | DENUE |  | Long format: one row per AGEB × sector with at least one establishment. |
 | 2 | `SECTOR` | SCIAN sector (2 digits). | text | code | DENUE |  |  |
 | 3 | `N_UNITS` | Economic units of the sector in the AGEB. | integer | establishments | PIPELINE | Count. |  |
 
@@ -5429,7 +5429,7 @@ Polygon or multipolygon of the AGEB.
 
 | # | Variable | Description | Type | Unit | Source | Derivation | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | AGEB key. | text | code | MG2020 |  | Long format: one row per AGEB × land use class present. |
+| 1 | `CVEGEO` | AGEB key. | text | code | MG2020 |  | Long format: one row per AGEB × land use class present. |
 | 2 | `USO_CLASE` | Land use and vegetation class. | categorical |  | INEGI_USV7 |  |  |
 | 3 | `CLASS_AREA_KM2` | Area of the class inside the AGEB. | decimal | km² | PIPELINE | Area (EPSG:6372) of the intersection AGEB ∩ USV, dissolved by AGEB and class. | Dissolving before measuring avoids double counting overlapping polygons (D-28). |
 | 4 | `CLASS_PCT` | Share of the AGEB covered by the class. | decimal | % | PIPELINE | min(100, 100 × CLASS_AREA_KM2 / AREA_KM2). | The classes of an AGEB can add up to less than 100 if the USV layer does not cover it completely. |

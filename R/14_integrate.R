@@ -7,7 +7,7 @@
 # directly -- plus a flat CSV of its main layer for readers without GIS:
 #
 #   data/processed/base_ageb_{ENT}.gpkg
-#     ageb_integrada          polygons, one row per AGEB: ID_AGEB plus the
+#     ageb_integrada          polygons, one row per AGEB: CVEGEO plus the
 #                             published indicators, including the wide DENUE
 #                             and land-use blocks
 #     denue_establishments    points, one row per DENUE establishment
@@ -16,10 +16,10 @@
 #     diccionario_datos, data_dictionary   the dictionaries, so the file is
 #                             self-describing
 #
-# ID_AGEB is the key of every table and the only identifier any of them carries.
+# CVEGEO is the key of every table and the only identifier any of them carries.
 # Which entity, municipality or locality an AGEB belongs to, and how large it
 # is, is stated in exactly one place -- data/processed/ageb_ids.csv, one file
-# for the whole country -- and read from there by joining on ID_AGEB. Nothing
+# for the whole country -- and read from there by joining on CVEGEO. Nothing
 # else repeats it, including the state databases: a copy of the ID table in
 # each of the 32 would be the same 32 answers to a question with one answer,
 # and the first thing to go stale after a name is corrected.
@@ -37,7 +37,7 @@
 #                             readers without GIS
 #   data/processed/ageb_ids.csv  the ID table, for the whole country and written
 #                             once: the single file every table keyed by
-#                             ID_AGEB alone is joined against. Splitting it by
+#                             CVEGEO alone is joined against. Splitting it by
 #                             entity, or copying it into each database, would
 #                             put the same rows in 32 places; at twelve narrow
 #                             columns the whole country is a few megabytes
@@ -115,7 +115,7 @@ INTEGRATED_EXTRA_COLS <- setdiff(INTEGRATED_COLUMNS, CSV_COLUMNS)
 # What ageb_integrada actually carries: the key and the measurements. The other
 # eleven ID_COLUMNS live in ageb_ids, one row per AGEB, instead of being
 # repeated on every table that mentions an AGEB.
-INDICATOR_COLUMNS <- c("ID_AGEB", setdiff(INTEGRATED_COLUMNS, ID_COLUMNS))
+INDICATOR_COLUMNS <- c("CVEGEO", setdiff(INTEGRATED_COLUMNS, ID_COLUMNS))
 
 # Classes of one AGEB can overlap by slivers in the USYV layer, so the shares
 # may sum to a hair over 100; more than this means a class was counted twice.
@@ -193,10 +193,10 @@ integrate_denue_sectors <- function(sector_long, ids) {
                           unlist(SCIAN_SECTOR_COLS))
   wide <- sector_long |>
     mutate(COL = factor(code_to_col[SECTOR], levels = names(SCIAN_SECTOR_COLS))) |>
-    count(ID_AGEB, COL, wt = N_UNITS, name = "N", .drop = FALSE) |>
+    count(CVEGEO, COL, wt = N_UNITS, name = "N", .drop = FALSE) |>
     tidyr::pivot_wider(names_from = COL, values_from = N, values_fill = 0L)
-  tibble(ID_AGEB = ids) |>
-    left_join(wide, by = "ID_AGEB") |>
+  tibble(CVEGEO = ids) |>
+    left_join(wide, by = "CVEGEO") |>
     mutate(across(all_of(names(SCIAN_SECTOR_COLS)), ~ as.integer(coalesce(.x, 0L))))
 }
 
@@ -220,11 +220,11 @@ usv_group_of <- function(classes) {
 integrate_landuse_groups <- function(detail, ids) {
   wide <- detail |>
     mutate(GROUP = factor(usv_group_of(USO_CLASE), levels = names(USV_GROUPS))) |>
-    group_by(ID_AGEB, GROUP, .drop = FALSE) |>
+    group_by(CVEGEO, GROUP, .drop = FALSE) |>
     summarise(PCT = pmin(100, sum(CLASS_PCT)), .groups = "drop") |>
     tidyr::pivot_wider(names_from = GROUP, values_from = PCT, values_fill = 0)
-  tibble(ID_AGEB = ids) |>
-    left_join(wide, by = "ID_AGEB") |>
+  tibble(CVEGEO = ids) |>
+    left_join(wide, by = "CVEGEO") |>
     mutate(across(all_of(names(USV_GROUPS)), ~ round(.x, 2)))
 }
 
@@ -252,14 +252,14 @@ integrated_inputs <- function(ent) {
 
 integrate_entity <- function(ent) {
   tbl <- published_table(ent)
-  ids <- tbl$ID_AGEB
+  ids <- tbl$CVEGEO
 
   sectors <- integrate_denue_sectors(readRDS(interim_path("denue_sector", ent)), ids)
   landuse <- integrate_landuse_groups(readRDS(interim_path("landuse_detail", ent)), ids)
 
   out <- tbl |>
-    left_join(sectors, by = "ID_AGEB") |>
-    left_join(landuse, by = "ID_AGEB") |>
+    left_join(sectors, by = "CVEGEO") |>
+    left_join(landuse, by = "CVEGEO") |>
     select(all_of(INTEGRATED_COLUMNS))
 
   # The sectors must add back to the published total, AGEB by AGEB; a gap means
@@ -301,13 +301,13 @@ build_integrated <- function(ent) {
 
   geom <- sf::st_read(interim_path("ageb_geom", ent, "gpkg"), quiet = TRUE) |>
     sf::st_transform(CRS_OUTPUT) |>
-    select(ID_AGEB)
-  if (nrow(geom) != nrow(ageb) || !setequal(geom$ID_AGEB, ageb$ID_AGEB)) {
+    select(CVEGEO)
+  if (nrow(geom) != nrow(ageb) || !setequal(geom$CVEGEO, ageb$CVEGEO)) {
     stop("integrated database ", ent, ": geometry and attributes cover ",
          "different AGEB (", nrow(geom), " polygons, ", nrow(ageb), " rows)",
          call. = FALSE)
   }
-  ageb_sf <- geom |> left_join(ageb, by = "ID_AGEB") |>
+  ageb_sf <- geom |> left_join(ageb, by = "CVEGEO") |>
     select(all_of(INDICATOR_COLUMNS), everything())
 
   # Written under a temporary name and moved into place at the end, so an
@@ -373,7 +373,7 @@ build_integrated <- function(ent) {
 }
 
 # The ID table: national, and the only copy. Every other table is keyed by
-# ID_AGEB alone, and what you join to resolve that key should be one file rather
+# CVEGEO alone, and what you join to resolve that key should be one file rather
 # than something you first assemble out of 32.
 #
 # Built from the same published tables the databases are built from, so it says
@@ -385,10 +385,10 @@ build_ids_national <- function(ents) {
     log_msg("national ID table skipped: no entity is built")
     return(invisible(NULL))
   }
-  ids <- map_dfr(have, ids_table) |> arrange(ID_AGEB)
-  if (anyDuplicated(ids$ID_AGEB) > 0) {
-    stop("national ID table: ID_AGEB is not unique across entities (",
-         sum(duplicated(ids$ID_AGEB)), " repeated)", call. = FALSE)
+  ids <- map_dfr(have, ids_table) |> arrange(CVEGEO)
+  if (anyDuplicated(ids$CVEGEO) > 0) {
+    stop("national ID table: CVEGEO is not unique across entities (",
+         sum(duplicated(ids$CVEGEO)), " repeated)", call. = FALSE)
   }
   check_layer_dictionary(read_dictionaries(), "ageb_ids", names(ids))
   out <- file.path(DIR_PROCESSED, "ageb_ids.csv")

@@ -22,13 +22,13 @@ mun <- if (length(args) >= 2) args[[2]] else "057"
 # Being national, it has to be cut by CVE_ENT as well: CVE_MUN is three digits
 # and unique only inside an entity, so 057 alone matches 32 municipalities.
 ids <- read_csv(file.path(DIR_PROCESSED, "ageb_ids.csv"), show_col_types = FALSE,
-                 col_types = cols(ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
+                 col_types = cols(CVEGEO = "c", CVE_ENT = "c", CVE_MUN = "c",
                                   CVE_LOC = "c", CVE_AGEB = "c")) |>
   filter(CVE_ENT == ent, CVE_MUN == mun)
 
 sel <- st_read(file.path(DIR_PROCESSED, sprintf("base_ageb_%s.gpkg", ent)),
                layer = "ageb_integrada", quiet = TRUE) |>
-  inner_join(ids, by = "ID_AGEB") |>
+  inner_join(ids, by = "CVEGEO") |>
   st_transform(CRS_ANALYSIS)
 
 # Municipal outline straight from the marco, i.e. the reference the coverage QC
