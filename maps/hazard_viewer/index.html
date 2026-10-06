@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mexico — AGEB hazard indices (raw values)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@9.0.38/dist.min.js"></script>
+<style>
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1f2328; background: #fff; }
+  #app { display: flex; flex-direction: column; height: 100%; }
+  header { padding: 10px 16px 12px; border-bottom: 1px solid #d0d7de; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: flex-end; }
+  header h1 { flex-basis: 100%; margin: 0; font-size: 16px; font-weight: 600; }
+  .badge { margin-left: 8px; padding: 1px 6px; border-radius: 4px; background: #cf222e; color: #fff; font-size: 11px; font-weight: 600; vertical-align: 2px; }
+  .row { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: flex-end; }
+  .ctl { display: flex; flex-direction: column; gap: 2px; min-width: 0; max-width: 100%; }
+  .ctl label { font-size: 11px; color: #57606a; text-transform: uppercase; letter-spacing: .04em; }
+  select { font: inherit; padding: 4px 6px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; max-width: 100%; }
+  select:disabled { color: #8c959f; background: #f6f8fa; }
+  #subtitle { flex-basis: 100%; color: #57606a; }
+  #mapwrap { flex: 1; position: relative; min-height: 320px; background: #f6f8fa; }
+  #map { position: absolute; inset: 0; }
+  .panel { background: rgba(255,255,255,.95); padding: 8px 10px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.25); font: 12px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1f2328; }
+  #info { position: absolute; top: 10px; right: 10px; min-width: 210px; max-width: 300px; z-index: 5; pointer-events: none; }
+  #info .val { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #info .hz { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; }
+  #info .on { font-weight: 600; color: #bb0026; }
+  .muted { color: #57606a; }
+  #legend { position: absolute; bottom: 24px; right: 10px; max-width: 290px; z-index: 5; }
+  #legend .bar { width: 240px; max-width: 100%; height: 12px; border-radius: 2px; margin: 4px 0 2px; }
+  #legend .ticks { display: flex; justify-content: space-between; width: 240px; max-width: 100%; font-variant-numeric: tabular-nums; }
+  #legend .sw { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+  #legend .sw i { flex: none; width: 14px; height: 12px; border-radius: 2px; border: 1px solid rgba(0,0,0,.15); }
+  #legend .sw span:last-child { margin-left: auto; padding-left: 10px; color: #57606a; }
+  #loading { position: absolute; inset: 0; z-index: 9; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.75); font-size: 15px; text-align: center; padding: 0 24px; }
+  #munlist { position: absolute; top: 76px; left: 10px; bottom: 24px; width: 262px; z-index: 6; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  #munlist .head { padding: 8px 10px 6px; border-bottom: 1px solid #d0d7de; }
+  #munlist .head b { font-size: 13px; }
+  #munlist .sort { display: flex; gap: 6px; margin-top: 4px; align-items: center; }
+  #munlist .sort button { font: inherit; font-size: 11px; padding: 1px 7px; border: 1px solid #d0d7de; border-radius: 10px; background: #fff; cursor: pointer; }
+  #munlist .sort button.on { background: #1f2328; color: #fff; border-color: #1f2328; }
+  #munlist ul { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+  #munlist li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; cursor: pointer; border-bottom: 1px solid #f0f2f4; }
+  #munlist li:hover { background: #f6f8fa; }
+  #munlist li.sel { background: #ddf4ff; font-weight: 600; }
+  #munlist li .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #munlist li .m { flex: none; font-variant-numeric: tabular-nums; color: #57606a; }
+  @media (max-width: 600px) { header { padding: 8px 12px 10px; } #legend .bar, #legend .ticks { width: 160px; } #info { min-width: 0; } #munlist { width: 180px; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Mexico — AGEB hazard indices (raw values)<span class="badge">PRELIMINARY</span></h1>
+    <div class="row">
+      <div class="ctl"><label for="hazard">Hazard</label><select id="hazard"></select></div>
+      <div class="ctl"><label for="scenario">Scenario</label><select id="scenario"></select></div>
+      <div class="ctl"><label for="period">Period</label><select id="period"></select></div>
+      <div class="ctl"><label for="member">GCM</label><select id="member"></select></div>
+      <div class="ctl"><label for="mode">Display</label><select id="mode">
+        <optgroup label="Single hazard">
+          <option value="value">Value</option>
+          <option value="nati">Percentile · national</option>
+          <option value="state">Percentile · state</option>
+          <option value="mun">Percentile · municipality</option></optgroup>
+        <optgroup label="Several hazards">
+          <option value="count">Hazard count (0–4)</option>
+          <option value="expo">Exposed AGEB (≥ k hazards), sized by exposure</option></optgroup></select></div>
+      <div class="ctl"><label for="range">Color range</label><select id="range">
+        <option value="global">All scenarios (comparable)</option>
+        <option value="map">This map</option>
+        <option value="full">Min–max, all scenarios</option></select></div>
+      <div class="ctl"><label for="ent">State</label><select id="ent"></select></div>
+    </div>
+    <div class="row" id="countrow" hidden>
+      <div class="ctl"><label for="c_heat">Heat indicator</label><select id="c_heat"></select></div>
+      <div class="ctl"><label for="c_drought">Drought indicator</label><select id="c_drought"></select></div>
+      <div class="ctl"><label for="c_cold">Cold indicator</label><select id="c_cold"></select></div>
+      <div class="ctl"><label for="c_flood">Flood indicator</label><select id="c_flood"></select></div>
+      <div class="ctl"><label for="q">Exposed if in the worst…</label><select id="q">
+        <option value="0.5">50% of Mexico</option><option value="0.75">25% of Mexico</option>
+        <option value="0.9">10% of Mexico</option><option value="0.95">5% of Mexico</option></select></div>
+      <div class="ctl"><label for="basis">Threshold from</label><select id="basis">
+        <option value="ref">Fixed: 2021–2040, SSP2-4.5, ensemble</option>
+        <option value="cur">This map (relative)</option></select></div>
+      <div class="ctl" id="k-ctl"><label for="k">Min. hazards</label><select id="k">
+        <option value="1">1 or more</option><option value="2">2 or more</option>
+        <option value="3">3 or more</option><option value="4">4</option></select></div>
+      <div class="ctl" id="expo-ctl"><label for="expo">Exposure</label><select id="expo">
+        <option value="pop">Population</option><option value="den">Establishments (DENUE)</option></select></div>
+    </div>
+    <div id="subtitle"></div>
+  </header>
+  <div id="mapwrap">
+    <div id="map"></div>
+    <div id="munlist" class="panel" hidden></div>
+    <div id="info" class="panel" hidden></div>
+    <div id="legend" class="panel"></div>
+    <div id="loading">Loading geometry (~50 MB)…</div>
+  </div>
+</div>
+
+<script src="manifest.js"></script>
+<script src="geometry.js"></script>
+<script src="exposure.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const M = window.MANIFEST, GEO = window.GEO, META = window.META, EXPO = window.EXPO;
+  const N = GEO.features.length;
+  const NODATA = [211, 211, 211];
+  const fmtInt = (x) => Math.round(x).toLocaleString("en-US");
+  const fmtNum = (x) => { const a = Math.abs(x); return x.toFixed(a >= 100 ? 0 : a >= 10 ? 1 : 2); };
+
+  // ---- the four hazards of the count: one indicator per block. `dir` is the
+  // direction of harm: +1 = higher is worse, -1 = lower is worse (a drier
+  // aridity index, a colder coldest month).
+  const DIR = { heat_bio2: 1, heat_bio5: 1, heat_bio10: 1, heat_cdd: 1, drought_pet_annual: 1,
+                drought_aridity_annual: -1, cold_bio6: -1, flood_bio13: 1, flood_bio15: 1 };
+  const BLOCKS = [
+    { id: "c_heat", label: "Heat", opts: ["heat_bio2", "heat_bio5", "heat_bio10", "heat_cdd"], def: "heat_bio2" },
+    { id: "c_drought", label: "Drought", opts: ["drought_pet_annual", "drought_aridity_annual"], def: "drought_pet_annual" },
+    { id: "c_cold", label: "Cold", opts: ["cold_bio6"], def: "cold_bio6" },
+    { id: "c_flood", label: "Flood", opts: ["flood_bio13", "flood_bio15"], def: "flood_bio13" },
+  ];
+  const hazardMeta = (k) => M.hazards.find((h) => h.key === k);
+  const REF_LAYER = "ens|ssp_245|2021_2040";
+  const CNT_COLORS = [[229, 229, 229], [254, 217, 118], [253, 141, 60], [227, 26, 28], [128, 0, 38]];
+  const RAND_COLORS = [[0, 121, 60], [125, 187, 111], [244, 208, 79], [232, 164, 58], [193, 39, 45], [123, 27, 34]];
+  const RAND_LABELS = ["≤ Q25", "Q25–Q50", "Q50–Q75", "Q75–Q90", "Q90–Q95", "> Q95"];
+  const css = (c) => "rgb(" + c.join(",") + ")";
+
+  // ---- colors: matplotlib colormaps, linearly interpolated
+  const rgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const PAL = Object.fromEntries(Object.entries(M.palettes).map(([k, v]) => [k, v.map(rgb)]));
+  const LUT = {};
+  for (const [k, stops] of Object.entries(PAL)) {
+    LUT[k] = new Uint8Array(256 * 3);
+    for (let s = 0; s < 256; s++) {
+      const x = (s / 255) * (stops.length - 1), i = Math.min(Math.floor(x), stops.length - 2), f = x - i;
+      for (let c = 0; c < 3; c++) LUT[k][s * 3 + c] = Math.round(stops[i][c] + (stops[i + 1][c] - stops[i][c]) * f);
+    }
+  }
+
+  // ---- controls
+  const groups = {};
+  for (const h of M.hazards) {
+    if (!groups[h.block]) { groups[h.block] = document.createElement("optgroup"); groups[h.block].label = h.block; $("hazard").appendChild(groups[h.block]); }
+    groups[h.block].appendChild(new Option(h.label, h.key));
+  }
+  for (const s of M.ssps) $("scenario").appendChild(new Option(s.label, s.key));
+  for (const p of M.periods) $("period").appendChild(new Option(p.label, p.key));
+  for (const g of M.gcms) $("member").appendChild(new Option(g.label, g.key));
+  for (const b of BLOCKS) for (const k of b.opts) $(b.id).appendChild(new Option(hazardMeta(k).label + (DIR[k] < 0 ? " (lower = worse)" : ""), k));
+  $("ent").appendChild(new Option("All of Mexico", ""));
+  META.entCode.map((c, i) => [c, META.entName[i]]).sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .forEach(([c, n]) => $("ent").appendChild(new Option(c + " · " + n, c)));
+
+  const state = { hazard: M.hazards[0].key, scenario: "ssp_245", period: "2041_2060", member: "ens", mode: "value", range: "global",
+                  ent: "", mun: "", c_heat: "heat_bio2", c_drought: "drought_pet_annual", c_cold: "cold_bio6", c_flood: "flood_bio13",
+                  q: "0.75", basis: "ref", k: "2", expo: "pop" };
+  try {  // restore a shared view from the URL hash
+    const h = new URLSearchParams(location.hash.slice(1));
+    for (const k of Object.keys(state)) if (h.get(k) !== null) state[k] = h.get(k);
+  } catch (e) {}
+  const CONTROLS = Object.keys(state).filter((k) => k !== "mun");
+  function syncControls() {
+    for (const k of CONTROLS) $(k).value = state[k];
+    const multi = state.mode === "count" || state.mode === "expo";
+    $("countrow").hidden = !multi;
+    $("k-ctl").hidden = $("expo-ctl").hidden = state.mode !== "expo";
+    $("hazard").disabled = multi;
+    $("range").disabled = multi || state.mode !== "value";
+  }
+
+  // ---- map + deck overlay
+  const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
+  const map = new maplibregl.Map({
+    container: "map", center: [-102, 23.8], zoom: 4.2, maxZoom: 15, attributionControl: { compact: true },
+    style: { version: 8, sources: { base: { type: "raster", tileSize: 256, maxzoom: 16,
+      tiles: [ESRI + "World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"],
+      attribution: "Tiles &copy; Esri · INEGI MG 2020 · WorldClim / CMIP6" } },
+      layers: [{ id: "base", type: "raster", source: "base" }] },
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+  const overlay = new deck.MapboxOverlay({ interleaved: false, layers: [] });
+  map.addControl(overlay);
+
+  // GeoJSON features -> flat polygon list (a MultiPolygon becomes several
+  // entries that all point back to the same AGEB row).
+  const polys = [];
+  for (const f of GEO.features) {
+    const i = f.properties.i, g = f.geometry;
+    if (g.type === "Polygon") polys.push({ p: g.coordinates, i });
+    else for (const p of g.coordinates) polys.push({ p, i });
+  }
+
+  // ---- data: one script per hazard, one base64 uint16 vector per scenario
+  const loaded = {};
+  function loadHazard(key) {
+    if (window.HZ && window.HZ[key]) return Promise.resolve(window.HZ[key]);
+    if (!loaded[key]) loaded[key] = new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "data/" + key + ".js";
+      s.onload = () => res(window.HZ[key]);
+      s.onerror = () => { delete loaded[key]; rej(new Error("could not load data/" + key + ".js")); };
+      document.head.appendChild(s);
+    });
+    return loaded[key];
+  }
+  function decode(hz, layerKey) {
+    const b = atob(hz.layers[layerKey]), bytes = new Uint8Array(b.length);
+    for (let i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i);
+    const q = new Uint16Array(bytes.buffer), v = new Float32Array(q.length), k = (hz.max - hz.min) / 65534;
+    for (let i = 0; i < q.length; i++) v[i] = q[i] === 0 ? NaN : hz.min + (q[i] - 1) * k;
+    return v;
+  }
+  function pctRank(v, group) {  // percentile rank within each group
+    const order = new Uint32Array(N); for (let i = 0; i < N; i++) order[i] = i;
+    order.sort((a, b) => group[a] - group[b] || v[a] - v[b]);
+    const out = new Float32Array(N);
+    for (let s = 0; s < N; ) {
+      let e = s; while (e < N && group[order[e]] === group[order[s]]) e++;
+      const n = e - s;
+      for (let j = s; j < e; j++) out[order[j]] = n > 1 ? (j - s) / (n - 1) : 0.5;
+      s = e;
+    }
+    return out;
+  }
+  const GROUPS = { nati: new Uint8Array(N), state: Uint8Array.from(META.ent), mun: Uint16Array.from(META.mun) };
+  const quantile = (sorted, p) => sorted[Math.min(sorted.length - 1, Math.floor(p * (sorted.length - 1)))];
+
+  // which AGEB are inside the chosen state / municipality
+  const entIdx = () => (state.ent === "" ? -1 : META.entCode.indexOf(state.ent));
+  const munIdx = () => (state.mun === "" ? -1 : META.munCode.indexOf(state.mun));
+  function buildMask() {
+    const e = entIdx(), m = munIdx(), vis = new Uint8Array(N);
+    for (let i = 0; i < N; i++) vis[i] = (e < 0 || META.ent[i] === e) && (m < 0 || META.mun[i] === m) ? 1 : 0;
+    return vis;
+  }
+
+  const colors = new Uint8ClampedArray(N * 4), views = [];
+  for (let i = 0; i < N; i++) views.push(colors.subarray(i * 4, i * 4 + 4));
+  let cur = null, tick = 0, active = new Uint8Array(N);
+
+  // The "several hazards" views. One indicator per block, each with a
+  // threshold taken from the national distribution of a reference map (or of
+  // the map shown); an AGEB is exposed to a hazard when it is on the harmful
+  // side of that threshold. count = number of hazards it is exposed to.
+  async function computeCount(layerKey) {
+    const keys = BLOCKS.map((b) => state[b.id]);
+    const hzs = [];
+    for (const k of keys) hzs.push(await loadHazard(k));
+    const q = +state.q, cnt = new Uint8Array(N), on = [], vals = [], thr = [];
+    keys.forEach((k, j) => {
+      const v = decode(hzs[j], layerKey);
+      const ref = state.basis === "ref" ? decode(hzs[j], REF_LAYER) : v;
+      const sorted = Float32Array.from(ref).sort(), dir = DIR[k];
+      const t = dir > 0 ? quantile(sorted, q) : quantile(sorted, 1 - q);
+      const flag = new Uint8Array(N);
+      for (let i = 0; i < N; i++) { const hit = dir > 0 ? v[i] >= t : v[i] <= t; if (hit) { flag[i] = 1; cnt[i]++; } }
+      on.push(flag); vals.push(v); thr.push(t);
+    });
+    return { cnt, on, vals, thr, keys };
+  }
+
+  async function render() {
+    syncControls();
+    const multi = state.mode === "count" || state.mode === "expo";
+    $("loading").textContent = multi ? "Loading the 4 hazards (~55 MB each)…" : "Loading " + state.hazard + " (~55 MB)…";
+    $("loading").hidden = false;
+    const layerKey = [state.member, state.scenario, state.period].join("|");
+    const vis = buildMask();
+    let legendFn, metric, metricLabel, metricFmt;
+    try {
+      if (!multi) {
+        const hz = await loadHazard(state.hazard);
+        await new Promise((r) => setTimeout(r, 10));  // let the message paint
+        const hmeta = hazardMeta(state.hazard), values = decode(hz, layerKey);
+        let shown = values, lo, hi;
+        if (state.mode !== "value") { shown = pctRank(values, GROUPS[state.mode]); lo = 0; hi = 1; }
+        else if (state.range === "global") { lo = hz.lo; hi = hz.hi; }
+        else if (state.range === "full") { lo = hz.min; hi = hz.max; }
+        else {
+          const sub = []; for (let i = 0; i < N; i++) if (vis[i] && !Number.isNaN(values[i])) sub.push(values[i]);
+          const s = Float32Array.from(sub).sort(); lo = quantile(s, 0.02); hi = quantile(s, 0.98);
+        }
+        if (!(hi > lo)) hi = lo + 1e-9;
+        const lut = LUT[hmeta.palette];
+        for (let i = 0; i < N; i++) {
+          const v = shown[i];
+          active[i] = vis[i];
+          let r = NODATA[0], g = NODATA[1], b = NODATA[2];
+          if (!Number.isNaN(v)) {
+            const s = Math.max(0, Math.min(255, Math.round(((v - lo) / (hi - lo)) * 255)));
+            r = lut[s * 3]; g = lut[s * 3 + 1]; b = lut[s * 3 + 2];
+          }
+          colors[i * 4] = r; colors[i * 4 + 1] = g; colors[i * 4 + 2] = b; colors[i * 4 + 3] = vis[i] ? 235 : 0;
+        }
+        cur = { mode: "value", values, shown, lo, hi, hmeta };
+        metric = shown; metricFmt = state.mode === "value" ? fmtNum : (x) => Math.round(x * 100) + "%";
+        metricLabel = state.mode === "value" ? "mean value" : "mean percentile";
+        legendFn = () => drawValueLegend(vis);
+      } else {
+        const res = await computeCount(layerKey);
+        const k = +state.k, cnt = res.cnt;
+        if (state.mode === "count") {
+          for (let i = 0; i < N; i++) {
+            const c = CNT_COLORS[cnt[i]]; active[i] = vis[i];
+            colors[i * 4] = c[0]; colors[i * 4 + 1] = c[1]; colors[i * 4 + 2] = c[2]; colors[i * 4 + 3] = vis[i] ? 235 : 0;
+          }
+          cur = { mode: "count", ...res };
+          metric = cnt; metricFmt = (x) => x.toFixed(2); metricLabel = "mean no. of hazards";
+          legendFn = () => drawCountLegend(vis, cnt);
+        } else {
+          const ev = state.expo === "pop" ? EXPO.pop : EXPO.den, sub = [];
+          for (let i = 0; i < N; i++) { active[i] = vis[i] && cnt[i] >= k ? 1 : 0; if (active[i]) sub.push(ev[i]); }
+          const s = Float32Array.from(sub).sort();
+          const br = [0.25, 0.5, 0.75, 0.9, 0.95].map((p) => quantile(s, p));
+          br.push(s.length ? s[s.length - 1] : 0);
+          for (let i = 0; i < N; i++) {
+            if (!active[i]) { colors[i * 4 + 3] = 0; continue; }
+            let c = 5; for (let j = 0; j < 5; j++) if (ev[i] <= br[j]) { c = j; break; }
+            const col = RAND_COLORS[c];
+            colors[i * 4] = col[0]; colors[i * 4 + 1] = col[1]; colors[i * 4 + 2] = col[2]; colors[i * 4 + 3] = 235;
+          }
+          cur = { mode: "expo", ...res, ev, br };
+          metric = Float32Array.from(cnt, (c, i) => (c >= k ? ev[i] : 0));
+          metricFmt = fmtInt; metricLabel = state.expo === "pop" ? "people in exposed AGEB" : "establishments in exposed AGEB";
+          metric.isSum = true;
+          legendFn = () => drawExpoLegend(vis, cnt, br, s.length);
+        }
+      }
+    } catch (e) { $("loading").textContent = e.message + " — open the viewer from its own folder."; return; }
+    tick++;
+    overlay.setProps({ layers: [new deck.PolygonLayer({
+      id: "ageb", data: polys, getPolygon: (d) => d.p, getFillColor: (d) => views[d.i],
+      stroked: false, filled: true, pickable: true, autoHighlight: true, highlightColor: [31, 35, 40, 160],
+      updateTriggers: { getFillColor: tick },
+      onHover: (info) => showInfo(info.object && active[info.object.i] ? info.object.i : null),
+    })] });
+    $("loading").hidden = true;
+    const sc = M.ssps.find((s) => s.key === state.scenario).label, per = M.periods.find((p) => p.key === state.period).label;
+    const gm = M.gcms.find((g) => g.key === state.member).label;
+    let extra = "";
+    if (state.mode === "value") extra = "";
+    else if (multi) {
+      const thrTxt = "exposed = worst " + Math.round((1 - +state.q) * 100) + "% of Mexico" + (state.basis === "ref" ? " in 2021–2040" : " in this map");
+      extra = " · " + thrTxt + (state.mode === "expo" ? " · " + state.k + "+ hazards · by " + (state.expo === "pop" ? "population" : "establishments") : "");
+    } else extra = " · percentile within " + $("mode").selectedOptions[0].text.split("· ")[1];
+    const where = state.mun ? META.munName[munIdx()] + ", " + META.entName[entIdx()] : state.ent ? META.entName[entIdx()] : "";
+    $("subtitle").textContent = sc + " · " + per + " · " + gm + extra + (where ? " · " + where : "");
+    legendFn();
+    buildMunList(metric, metricLabel, metricFmt);
+    try { history.replaceState(null, "", "#" + new URLSearchParams(state).toString()); } catch (e) {}
+  }
+
+  // ---- legends
+  function legendBase() { const el = $("legend"); el.replaceChildren(); return el; }
+  function addDiv(el, cls, text) { const d = document.createElement("div"); if (cls) d.className = cls; d.textContent = text; el.appendChild(d); return d; }
+  function addSwatch(el, color, label, right) {
+    const d = document.createElement("div"); d.className = "sw";
+    const i = document.createElement("i"); i.style.background = css(color); d.appendChild(i);
+    const a = document.createElement("span"); a.textContent = label; d.appendChild(a);
+    const b = document.createElement("span"); b.textContent = right || ""; d.appendChild(b);
+    el.appendChild(d);
+  }
+  function drawValueLegend(vis) {
+    const { lo, hi, hmeta } = cur, el = legendBase(), stops = M.palettes[hmeta.palette], pct = state.mode !== "value";
+    addDiv(el, "", hmeta.label + (pct ? " — percentile rank" : (hmeta.unit ? ", " + hmeta.unit : "")) + (hmeta.note ? " — " + hmeta.note : ""));
+    const bar = document.createElement("div"); bar.className = "bar";
+    bar.style.background = "linear-gradient(to right," + stops.join(",") + ")"; el.appendChild(bar);
+    const ticks = document.createElement("div"); ticks.className = "ticks muted";
+    for (const x of [lo, (lo + hi) / 2, hi]) { const s = document.createElement("span"); s.textContent = pct ? Math.round(x * 100) + "%" : fmtNum(x); ticks.appendChild(s); }
+    el.appendChild(ticks);
+    if (!pct && state.range !== "full") addDiv(el, "muted", "values beyond the ends use the end colors");
+  }
+  function thresholdLines(el) {
+    cur.keys.forEach((k, j) => {
+      const h = hazardMeta(k), op = DIR[k] > 0 ? "≥" : "≤";
+      addDiv(el, "muted", h.block + ": " + op + " " + fmtNum(cur.thr[j]) + (h.unit ? " " + h.unit.split(" ")[0] : ""));
+    });
+  }
+  function drawCountLegend(vis, cnt) {
+    const el = legendBase(), n = new Array(5).fill(0), pop = new Array(5).fill(0); let tot = 0;
+    for (let i = 0; i < N; i++) if (vis[i]) { n[cnt[i]]++; pop[cnt[i]] += EXPO.pop[i]; tot += EXPO.pop[i]; }
+    addDiv(el, "", "Number of hazards the AGEB is exposed to");
+    for (let c = 4; c >= 0; c--) addSwatch(el, CNT_COLORS[c], c + (c === 1 ? " hazard" : " hazards"),
+      fmtInt(n[c]) + " AGEB · " + (tot ? (100 * pop[c] / tot).toFixed(1) : "0") + "% pop.");
+    thresholdLines(el);
+  }
+  function drawExpoLegend(vis, cnt, br, nShown) {
+    const el = legendBase(), k = +state.k, what = state.expo === "pop" ? "inhabitants" : "establishments";
+    let sum = 0, all = 0;
+    const ev = cur.ev;
+    for (let i = 0; i < N; i++) if (vis[i]) { all += EXPO.pop[i]; if (cnt[i] >= k) sum += EXPO.pop[i]; }
+    addDiv(el, "", "AGEB exposed to " + k + "+ hazard" + (k > 1 ? "s" : "") + " — " + what + " per AGEB");
+    const lo = [0, ...br.slice(0, 5)];
+    for (let c = 5; c >= 0; c--) addSwatch(el, RAND_COLORS[c], RAND_LABELS[c], c === 5 ? "max " + fmtInt(br[5]) : "≤ " + fmtInt(br[c]));
+    addDiv(el, "muted", fmtInt(nShown) + " AGEB · " + fmtInt(sum) + " people (" + (all ? (100 * sum / all).toFixed(1) : "0") + "% of the area shown)");
+    thresholdLines(el);
+  }
+
+  // ---- hover
+  function showInfo(i) {
+    const el = $("info");
+    if (i === null || !cur) { el.hidden = true; return; }
+    el.hidden = false; el.replaceChildren();
+    if (cur.mode === "value") {
+      const v = cur.values[i];
+      addDiv(el, "val", Number.isNaN(v) ? "No data" : fmtNum(v));
+      if (!Number.isNaN(v) && cur.hmeta.unit) addDiv(el, "muted", cur.hmeta.unit);
+      if (state.mode !== "value") addDiv(el, "", "Percentile: " + Math.round(cur.shown[i] * 100) + "%");
+    } else {
+      addDiv(el, "val", cur.cnt[i] + " of 4 hazards");
+      cur.keys.forEach((k, j) => {
+        const h = hazardMeta(k), d = document.createElement("div"); d.className = "hz" + (cur.on[j][i] ? " on" : "");
+        const a = document.createElement("span"); a.textContent = h.block + (cur.on[j][i] ? " ●" : " ○"); d.appendChild(a);
+        const b = document.createElement("span"); b.textContent = fmtNum(cur.vals[j][i]) + (h.unit ? " " + h.unit.split(" ")[0] : ""); d.appendChild(b);
+        el.appendChild(d);
+      });
+    }
+    addDiv(el, "", META.munName[META.mun[i]] + ", " + META.entName[META.ent[i]]);
+    const loc = META.locName[META.loc[i]];
+    addDiv(el, "muted", (META.amb[i] ? "Rural AGEB" : "Urban AGEB") + (loc && loc !== "(varias localidades)" ? " · " + loc : ""));
+    addDiv(el, "muted", fmtInt(EXPO.pop[i]) + " people · " + fmtInt(EXPO.den[i]) + " establishments");
+    addDiv(el, "muted", META.id[i] + " · " + META.area[i] + " km²");
+  }
+
+  // ---- municipality list (when a state is chosen)
+  let munSort = "name", munRows = [];
+  function buildMunList(metric, label, fmt) {
+    const el = $("munlist"), e = entIdx();
+    if (e < 0) { el.hidden = true; return; }
+    const sum = new Map(), n = new Map();
+    for (let i = 0; i < N; i++) if (META.ent[i] === e) {
+      const m = META.mun[i], v = metric[i];
+      n.set(m, (n.get(m) || 0) + 1);
+      sum.set(m, (sum.get(m) || 0) + (Number.isNaN(v) ? 0 : v));
+    }
+    munRows = [...n.keys()].map((m) => ({ m, name: META.munName[m], code: META.munCode[m], n: n.get(m),
+      val: metric.isSum ? sum.get(m) : sum.get(m) / n.get(m) }));
+    el.hidden = false; el.dataset.label = label; el._fmt = fmt;
+    renderMunList();
+  }
+  function renderMunList() {
+    const el = $("munlist"), fmt = el._fmt, label = el.dataset.label;
+    const rows = [...munRows].sort(munSort === "name" ? (a, b) => a.name.localeCompare(b.name, "es") : (a, b) => b.val - a.val);
+    el.replaceChildren();
+    const head = document.createElement("div"); head.className = "head";
+    const b = document.createElement("b"); b.textContent = META.entName[entIdx()] + " · " + rows.length + " municipalities"; head.appendChild(b);
+    const sort = document.createElement("div"); sort.className = "sort";
+    sort.appendChild(Object.assign(document.createElement("span"), { className: "muted", textContent: "Sort:" }));
+    for (const [k, t] of [["name", "name"], ["val", label]]) {
+      const btn = document.createElement("button"); btn.textContent = t; btn.className = munSort === k ? "on" : "";
+      btn.onclick = () => { munSort = k; renderMunList(); }; sort.appendChild(btn);
+    }
+    head.appendChild(sort); el.appendChild(head);
+    const ul = document.createElement("ul");
+    const li0 = document.createElement("li"); li0.className = state.mun === "" ? "sel" : "";
+    li0.innerHTML = '<span class="n">All municipalities</span><span class="m"></span>';
+    li0.onclick = () => { state.mun = ""; fitView(); render(); }; ul.appendChild(li0);
+    for (const r of rows) {
+      const li = document.createElement("li"); li.className = state.mun === r.code ? "sel" : "";
+      const nm = document.createElement("span"); nm.className = "n"; nm.textContent = r.name; nm.title = r.name + " · " + r.n + " AGEB";
+      const mv = document.createElement("span"); mv.className = "m"; mv.textContent = Number.isNaN(r.val) ? "–" : fmt(r.val);
+      li.appendChild(nm); li.appendChild(mv);
+      li.onclick = () => { state.mun = r.code; fitView(); render(); };
+      ul.appendChild(li);
+    }
+    el.appendChild(ul);
+    const sel = ul.querySelector("li.sel"); if (sel && state.mun) sel.scrollIntoView({ block: "nearest" });
+  }
+
+  // ---- navigation
+  function fitView() {
+    const m = munIdx(), e = entIdx();
+    if (m >= 0) { const b = META.munBbox[m]; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 40, duration: 700, maxZoom: 13 }); }
+    else if (e >= 0) { const b = META.entBbox[e]; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: { top: 30, bottom: 30, right: 30, left: 290 }, duration: 800 }); }
+    else map.flyTo({ center: [-102, 23.8], zoom: 4.2 });
+  }
+  for (const k of CONTROLS) {
+    $(k).addEventListener("change", (e) => {
+      state[k] = e.target.value;
+      if (k === "ent") { state.mun = ""; fitView(); }
+      render();
+    });
+  }
+  syncControls();
+  map.once("load", () => { render(); if (state.ent) fitView(); });
+})();
+</script>
+</body>
+</html>

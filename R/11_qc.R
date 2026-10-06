@@ -66,11 +66,11 @@ build_qc <- function(ent) {
 
   # --- keys and ambit ---
   res[[length(res) + 1]] <- qc_check(
-    "id_ageb_unique", !anyDuplicated(df$ID_AGEB),
-    sprintf("%d rows, %d distinct", nrow(df), length(unique(df$ID_AGEB))))
+    "id_ageb_unique", !anyDuplicated(df$CVEGEO),
+    sprintf("%d rows, %d distinct", nrow(df), length(unique(df$CVEGEO))))
   res[[length(res) + 1]] <- qc_check(
-    "id_ageb_13_chars", all(nchar(df$ID_AGEB) == 13),
-    paste("lengths:", paste(sort(unique(nchar(df$ID_AGEB))), collapse = ",")))
+    "id_ageb_13_chars", all(nchar(df$CVEGEO) == 13),
+    paste("lengths:", paste(sort(unique(nchar(df$CVEGEO))), collapse = ",")))
   res[[length(res) + 1]] <- qc_check(
     "ambito_valid", all(df$AMBITO %in% c("Urbana", "Rural")),
     sprintf("%d urban, %d rural", sum(df$AMBITO == "Urbana"),

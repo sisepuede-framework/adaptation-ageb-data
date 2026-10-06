@@ -184,7 +184,7 @@ build_census_urban <- function(ent) {
   out <- raw |>
     filter(MZA == "000", AGEB != "0000") |>
     transmute(
-      ID_AGEB = build_ageb_id(ENTIDAD, MUN, LOC, AGEB),
+      CVEGEO = build_ageb_id(ENTIDAD, MUN, LOC, AGEB),
       ID_LOC  = build_loc_id(ENTIDAD, MUN, LOC),
       # A wholly suppressed AGEB (1-2 dwellings) blanks every characteristic,
       # averages included; averages are never blanked otherwise, so GRAPROES
@@ -198,7 +198,7 @@ build_census_urban <- function(ent) {
       across(all_of(CENSUS_AVG_VARS), to_num_suppressed)
     ) |>
     rename(!!!CENSUS_VARS) |>
-    distinct(ID_AGEB, .keep_all = TRUE) |>
+    distinct(CVEGEO, .keep_all = TRUE) |>
     census_avg_to_totals() |>
     # There is nothing to aggregate in an urban AGEB, so every group divides by
     # the full population. POB_REPORTADA is zero only for a wholly suppressed
@@ -216,15 +216,15 @@ build_census_urban <- function(ent) {
     select(-ID_LOC)
 
   spine <- readRDS(interim_path("ageb_attrs", ent))
-  urban_spine <- spine$ID_AGEB[spine$AMBITO == "Urbana"]
-  orphan <- out |> filter(!ID_AGEB %in% urban_spine)
+  urban_spine <- spine$CVEGEO[spine$AMBITO == "Urbana"]
+  orphan <- out |> filter(!CVEGEO %in% urban_spine)
   if (nrow(orphan) > 0) {
     log_msg("  note: ", nrow(orphan), " census AGEB have no MG urban polygon (pop ",
             format(sum(orphan$POB_TOTAL, na.rm = TRUE), big.mark = ","),
             "); counted via ITER on the rural side, dropped here")
   }
 
-  kept <- out |> filter(ID_AGEB %in% urban_spine)
+  kept <- out |> filter(CVEGEO %in% urban_spine)
   log_msg("  urban AGEB rows: ", nrow(kept),
           " | population: ", format(sum(kept$POB_TOTAL, na.rm = TRUE), big.mark = ","),
           " | cells imputed as ", URBAN_SUPPRESSED_VALUE, ": ",

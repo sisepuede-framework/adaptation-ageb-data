@@ -51,7 +51,7 @@ load_coneval_national <- function() {
   raw <- readxl::read_excel(path, sheet = 1, skip = 5, col_names = FALSE,
                             col_types = "text", .name_repair = "minimal")
 
-  out <- tibble(ID_AGEB = as.character(raw[[CONEVAL_COL_KEY]]))
+  out <- tibble(CVEGEO = as.character(raw[[CONEVAL_COL_KEY]]))
   for (i in seq_along(CONEVAL_COL_IND)) {
     out[[RZ_NAMES[i]]] <- to_num_suppressed(raw[[CONEVAL_COL_IND[i]]])
   }
@@ -59,8 +59,8 @@ load_coneval_national <- function() {
   out$GRS_NUM   <- match(out$GRS_GRADO, GRS_LEVELS)
 
   out <- out |>
-    filter(!is.na(ID_AGEB), nchar(ID_AGEB) == 13) |>
-    distinct(ID_AGEB, .keep_all = TRUE)
+    filter(!is.na(CVEGEO), nchar(CVEGEO) == 13) |>
+    distinct(CVEGEO, .keep_all = TRUE)
 
   log_msg("  national urban AGEB with GRS: ", nrow(out))
   saveRDS(out, cache)
@@ -69,7 +69,7 @@ load_coneval_national <- function() {
 
 build_coneval <- function(ent) {
   log_step("CONEVAL ", ent)
-  out <- load_coneval_national() |> filter(substr(ID_AGEB, 1, 2) == ent)
+  out <- load_coneval_national() |> filter(substr(CVEGEO, 1, 2) == ent)
   log_msg("  rows: ", nrow(out))
   saveRDS(out, interim_path("coneval", ent))
   invisible(out)

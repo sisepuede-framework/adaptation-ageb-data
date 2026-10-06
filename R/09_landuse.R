@@ -32,30 +32,30 @@ build_landuse <- function(ent) {
   inter <- suppressWarnings(st_intersection(ageb, usv))
 
   detail_sf <- inter |>
-    group_by(ID_AGEB, USO_CLASE) |>
+    group_by(CVEGEO, USO_CLASE) |>
     summarise(.groups = "drop")
 
   detail <- detail_sf |>
     mutate(CLASS_AREA_KM2 = area_km2(detail_sf)) |>
     st_drop_geometry() |>
-    left_join(attrs |> select(ID_AGEB, AREA_KM2), by = "ID_AGEB") |>
+    left_join(attrs |> select(CVEGEO, AREA_KM2), by = "CVEGEO") |>
     mutate(CLASS_PCT = pmin(100, safe_pct(CLASS_AREA_KM2, AREA_KM2)))
 
   dominant <- detail |>
-    group_by(ID_AGEB) |>
+    group_by(CVEGEO) |>
     slice_max(CLASS_AREA_KM2, n = 1, with_ties = FALSE) |>
     ungroup() |>
-    transmute(ID_AGEB, USO_DOM = USO_CLASE, USO_PCT = CLASS_PCT)
+    transmute(CVEGEO, USO_DOM = USO_CLASE, USO_PCT = CLASS_PCT)
 
   urban_share <- detail |>
     filter(grepl(URBAN_CLASS_PATTERN, toupper(USO_CLASE))) |>
-    group_by(ID_AGEB) |>
+    group_by(CVEGEO) |>
     summarise(PCT_URB = pmin(100, sum(CLASS_PCT)), .groups = "drop")
 
   out <- attrs |>
-    select(ID_AGEB) |>
-    left_join(dominant, by = "ID_AGEB") |>
-    left_join(urban_share, by = "ID_AGEB") |>
+    select(CVEGEO) |>
+    left_join(dominant, by = "CVEGEO") |>
+    left_join(urban_share, by = "CVEGEO") |>
     mutate(PCT_URB = coalesce(PCT_URB, 0))
 
   log_msg("  AGEB with a dominant class: ", sum(!is.na(out$USO_DOM)),

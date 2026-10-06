@@ -98,22 +98,22 @@ build_complete <- function(ent) {
   income   <- readRDS(interim_path("income", ent))
 
   census <- bind_rows(census_u, census_r)
-  if (anyDuplicated(census$ID_AGEB)) {
+  if (anyDuplicated(census$CVEGEO)) {
     stop("an AGEB received both urban and rural census rows in entity ", ent,
          call. = FALSE)
   }
 
   df <- attrs |>
     left_join(mun, by = "CVE_MUN_FULL") |>
-    left_join(census, by = "ID_AGEB") |>
-    left_join(coneval, by = "ID_AGEB") |>
-    left_join(denue, by = "ID_AGEB") |>
-    left_join(hydro, by = "ID_AGEB") |>
-    left_join(landuse, by = "ID_AGEB") |>
-    left_join(health, by = "ID_AGEB") |>
-    left_join(terrain, by = "ID_AGEB") |>
-    left_join(hazard, by = "ID_AGEB") |>
-    left_join(income, by = "ID_AGEB") |>
+    left_join(census, by = "CVEGEO") |>
+    left_join(coneval, by = "CVEGEO") |>
+    left_join(denue, by = "CVEGEO") |>
+    left_join(hydro, by = "CVEGEO") |>
+    left_join(landuse, by = "CVEGEO") |>
+    left_join(health, by = "CVEGEO") |>
+    left_join(terrain, by = "CVEGEO") |>
+    left_join(hazard, by = "CVEGEO") |>
+    left_join(income, by = "CVEGEO") |>
     mutate(
       NOM_ENT = unname(ENTITY_NAMES[ent]),
       NOM_LOC = NOM_LOC_CENSUS,
@@ -133,7 +133,7 @@ build_complete <- function(ent) {
       # that). It is applied to the whole row at once, so the zeroed counts
       # stay internally consistent. Urban AGEB are never zero-filled -- there
       # NA really does mean suppressed.
-      UNINHABITED = AMBITO == "Rural" & !ID_AGEB %in% census_r$ID_AGEB,
+      UNINHABITED = AMBITO == "Rural" & !CVEGEO %in% census_r$CVEGEO,
       across(all_of(c(names(CENSUS_VARS), CENSUS_TOTAL_VARS, "POB_REPORTADA",
                       CENSUS_DEN_COLS, "N_CELDAS_IMPUTADAS")),
              ~ if_else(UNINHABITED, 0, .x)),

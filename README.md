@@ -148,7 +148,7 @@ diccionarios, o si alguno tiene columnas de más o en otro orden.
 | `base_ageb_{ENT}.gpkg` | **Base integrada** de la entidad: todas las tablas en un solo GeoPackage (ver abajo) |
 | `ageb_ids.csv` | **Tabla de relación**, única y nacional: una fila por AGEB del país con todos sus identificadores |
 | `fuentes.csv` | **Tabla de fuentes**, única y nacional: una fila por fuente con la edición que leyó el pipeline |
-| `ageb_integrada_{ENT}.csv` | La capa `ageb_integrada` sin geometría: `ID_AGEB` más 197 indicadores |
+| `ageb_integrada_{ENT}.csv` | La capa `ageb_integrada` sin geometría: `CVEGEO` más 197 indicadores |
 | `detail/{tabla}_{ENT}.csv` | Las tres tablas de detalle, planas, para consulta sin GIS |
 | `qc/quality_control_report_{ENT}.csv`, `qc/_MX.csv` | 33 controles por entidad |
 | `qc/qc_municipal_coverage_{ENT}.csv` | Detalle de cobertura por municipio |
@@ -163,7 +163,7 @@ una tabla de identificadores y todo lo demás colgando de su llave. Donde la
 ENIGH tiene `VIVIENDAS`, `HOGARES` y `POBLACION`, aquí hay una sola tabla,
 `ageb_ids`, porque la AGEB es un único nivel.
 
-`ID_AGEB` es la única columna de identificación que llevan las tablas de datos.
+`CVEGEO` es la única columna de identificación que llevan las tablas de datos.
 Quién es la AGEB — entidad, municipio, localidad, ámbito, superficie y punto
 interior — se dice **una sola vez en todo el proyecto**, en `ageb_ids.csv`, y se
 recupera uniendo por esa clave. Ese archivo es nacional y no se copia dentro de
@@ -177,18 +177,18 @@ están los nombres.
 Por la misma razón salió `fuentes.csv`. El año de cada fuente vivía en doce
 columnas `YEAR_*` de `ageb_integrada` con el mismo valor en las 81,451 filas:
 es una propiedad de la fuente, no de la AGEB, así que ahora se dice doce veces
-en total y no doce veces por AGEB. No lleva `ID_AGEB` y no se une a nada; se
+en total y no doce veces por AGEB. No lleva `CVEGEO` y no se une a nada; se
 consulta.
 
 ```mermaid
 erDiagram
-    ageb_ids ||--|| ageb_integrada       : ID_AGEB
-    ageb_ids ||--o{ denue_establishments : ID_AGEB
-    ageb_ids ||--o{ denue_ageb_sector    : ID_AGEB
-    ageb_ids ||--o{ ageb_landuse_detail  : ID_AGEB
+    ageb_ids ||--|| ageb_integrada       : CVEGEO
+    ageb_ids ||--o{ denue_establishments : CVEGEO
+    ageb_ids ||--o{ denue_ageb_sector    : CVEGEO
+    ageb_ids ||--o{ ageb_landuse_detail  : CVEGEO
 
     ageb_ids {
-        text     ID_AGEB PK
+        text     CVEGEO PK
         text     AMBITO
         text     CVE_ENT_NOM_ENT
         text     CVE_MUN_NOM_MUN
@@ -198,7 +198,7 @@ erDiagram
         decimal  CENTROIDE_LON_LAT
     }
     ageb_integrada {
-        text     ID_AGEB FK
+        text     CVEGEO FK
         decimal  indicadores_197
         geometry geom
     }
@@ -208,17 +208,17 @@ erDiagram
         text     DESCRIPCION
     }
     denue_establishments {
-        text     ID_AGEB FK
+        text     CVEGEO FK
         text     NOM_ESTAB_SCIAN_SECTOR
         geometry geom
     }
     denue_ageb_sector {
-        text     ID_AGEB FK
+        text     CVEGEO FK
         text     SECTOR
         integer  N_UNITS
     }
     ageb_landuse_detail {
-        text     ID_AGEB FK
+        text     CVEGEO FK
         text     USO_CLASE
         decimal  CLASS_AREA_KM2_PCT
     }
@@ -232,13 +232,13 @@ Lee **siempre** las claves como texto, o se pierden los ceros a la izquierda:
 
 ```r
 ids  <- readr::read_csv("data/processed/ageb_ids.csv",
-                        col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
+                        col_types = readr::cols(CVEGEO = "c", CVE_ENT = "c",
                                                 CVE_MUN = "c", CVE_LOC = "c",
                                                 CVE_AGEB = "c"))
 ageb <- readr::read_csv("data/processed/ageb_integrada_20.csv",
-                        col_types = readr::cols(ID_AGEB = "c"))
+                        col_types = readr::cols(CVEGEO = "c"))
 
-dplyr::left_join(ageb, ids, by = "ID_AGEB")
+dplyr::left_join(ageb, ids, by = "CVEGEO")
 ```
 
 ## Base integrada
@@ -250,7 +250,7 @@ cliente SQL.
 
 | Capa | Geometría | Contenido |
 |---|---|---|
-| `ageb_integrada` | Polígono | Una fila por AGEB: `ID_AGEB` más los indicadores, entre ellos 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
+| `ageb_integrada` | Polígono | Una fila por AGEB: `CVEGEO` más los indicadores, entre ellos 20 `DEN_SCIAN_*` (unidades económicas por sector SCIAN, suman `DENUE_TOT`) y 12 `USV_PCT_*` (porcentaje de la AGEB por formación de uso de suelo) |
 | `denue_establishments` | Punto | Un registro por establecimiento del DENUE |
 | `denue_ageb_sector` | — | AGEB × sector SCIAN, formato largo |
 | `ageb_landuse_detail` | — | AGEB × clase de uso de suelo, formato largo |
@@ -265,7 +265,7 @@ No hay versión nacional a propósito: las 32 entidades en un solo GeoPackage so
 entidad por entidad. Para un análisis nacional, lee los 32
 `ageb_integrada_{ENT}.csv` y concaténalos; los identificadores ya vienen juntos
 en `ageb_ids.csv`, que es nacional justamente porque es lo que se une contra
-cualquier tabla cuya única clave es `ID_AGEB`.
+cualquier tabla cuya única clave es `CVEGEO`.
 
 Cada entidad se reconstruye solo si alguna de sus propias entradas cambió, así
 que `Rscript run_all.R 20` toca Oaxaca y deja los otros 31 archivos intactos.
@@ -273,11 +273,11 @@ que `Rscript run_all.R 20` toca Oaxaca y deja los otros 31 archivos intactos.
 ```r
 ageb <- sf::st_read("data/processed/base_ageb_20.gpkg", layer = "ageb_integrada")
 ids  <- readr::read_csv("data/processed/ageb_ids.csv",
-                        col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
+                        col_types = readr::cols(CVEGEO = "c", CVE_ENT = "c",
                                                 CVE_MUN = "c", CVE_LOC = "c",
                                                 CVE_AGEB = "c"))
 
-dplyr::left_join(ageb, ids, by = "ID_AGEB")
+dplyr::left_join(ageb, ids, by = "CVEGEO")
 ```
 
 ## Contenido del CSV
@@ -287,8 +287,8 @@ diccionario de datos: cada bloque es un tramo contiguo de columnas.
 
 | # | Bloque | Cols | Columnas | Ámbito |
 |---|---|---|---|---|
-| — | Identificación y geometría | 12 | En `ageb_ids.csv`: `ID_AGEB`, claves y nombres, `AREA_KM2`, punto representativo | Ambos |
-| 1 | Identificación | 1 | `ID_AGEB`, la llave que une con `ageb_ids` | Ambos |
+| — | Identificación y geometría | 12 | En `ageb_ids.csv`: `CVEGEO`, claves y nombres, `AREA_KM2`, punto representativo | Ambos |
+| 1 | Identificación | 1 | `CVEGEO`, la llave que une con `ageb_ids` | Ambos |
 | 2 | Población base | 7 | `POB_TOTAL`, `POB_HOMBRES`, `POB_MUJERES`, `PCT_HOMBRES`, `PCT_MUJERES`, `DENS_POB_KM2`, `POB_POR_VIV` | Ambos |
 | 3 | Confiabilidad | 3 | `POB_REPORTADA`, `PCT_POB_REPORTADA`, `N_CELDAS_IMPUTADAS` | Ambos |
 | 4 | Vivienda | 12 | `VIV_PART_HAB`, `VIV_CARACT`, `VIV_DRENAJE`, `VIV_ELECTRICIDAD`, `PCT_DRENAJE`, `PCT_ELECTRIC`, `PCT_VIV_SIN_DRENAJE`, `PCT_VIV_SIN_ELECTRIC`, `PCT_VIV_SIN_AGUA`, `PCT_VIV_PISO_TIERRA`, `PCT_VIV_1CUARTO`, `PCT_VIV_SIN_SANITARIO` | Ambos |

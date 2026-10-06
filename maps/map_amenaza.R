@@ -145,13 +145,13 @@ log_step("metro zoom ", zoom_ent, " ", paste(zoom_mun, collapse = " "))
 # the cut is by entity and municipality together: the three-digit CVE_MUN
 # repeats across entities.
 tab <- read_csv(file.path(DIR_PROCESSED, "ageb_ids.csv"), show_col_types = FALSE,
-                 col_types = cols(ID_AGEB = "c", CVE_ENT = "c", CVE_MUN = "c",
+                 col_types = cols(CVEGEO = "c", CVE_ENT = "c", CVE_MUN = "c",
                                   CVE_LOC = "c", CVE_AGEB = "c")) |>
   filter(CVE_ENT == zoom_ent, CVE_MUN %in% zoom_mun)
 
 sel <- st_read(file.path(DIR_PROCESSED, sprintf("base_ageb_%s.gpkg", zoom_ent)),
                layer = "ageb_integrada", quiet = TRUE) |>
-  inner_join(tab, by = "ID_AGEB") |>
+  inner_join(tab, by = "CVEGEO") |>
   st_transform(CRS_ANALYSIS)
 
 mun_zoom <- mun |> filter(CVE_MUN_FULL %in% build_mun_id(zoom_ent, zoom_mun))

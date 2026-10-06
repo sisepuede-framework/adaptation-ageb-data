@@ -132,7 +132,7 @@ build_health <- function(ent) {
   ageb <- st_read(interim_path("ageb_geom", ent, "gpkg"), quiet = TRUE) |>
     st_transform(CRS_ANALYSIS)
   attrs <- readRDS(interim_path("ageb_attrs", ent))
-  rural_ids <- attrs$ID_AGEB[attrs$AMBITO == "Rural"]
+  rural_ids <- attrs$CVEGEO[attrs$AMBITO == "Rural"]
 
   loc_pts <- inhabited_locality_points(ent, rural_ids) |>
     mutate(DIST_ORIGEN = "Localidades")
@@ -140,8 +140,8 @@ build_health <- function(ent) {
   # Everything else -- urban AGEB and uninhabited rural ones -- from the
   # interior point, which always falls inside its own polygon.
   interior <- suppressWarnings(st_point_on_surface(ageb)) |>
-    filter(!ID_AGEB %in% loc_pts$ID_AGEB) |>
-    transmute(ID_AGEB, W = 1, DIST_ORIGEN = "Punto interior")
+    filter(!CVEGEO %in% loc_pts$CVEGEO) |>
+    transmute(CVEGEO, W = 1, DIST_ORIGEN = "Punto interior")
   st_geometry(interior) <- "geometry"
 
   origins <- rbind(loc_pts, interior)
@@ -151,19 +151,19 @@ build_health <- function(ent) {
 
   out <- origins |>
     st_drop_geometry() |>
-    group_by(ID_AGEB, DIST_ORIGEN) |>
+    group_by(CVEGEO, DIST_ORIGEN) |>
     summarise(across(all_of(names(HEALTH_DIST_COLS)), ~ weighted.mean(.x, W)),
               .groups = "drop")
 
-  if (anyDuplicated(out$ID_AGEB) || !setequal(out$ID_AGEB, attrs$ID_AGEB)) {
+  if (anyDuplicated(out$CVEGEO) || !setequal(out$CVEGEO, attrs$CVEGEO)) {
     stop("health distances do not map one-to-one onto the AGEB spine in entity ",
          ent, call. = FALSE)
   }
 
   log_msg("  origins: ", nrow(loc_pts), " rural localities + ", nrow(interior),
           " interior points | median km to hospital: urban ",
-          round(median(out$DIST_HOSP_KM[!out$ID_AGEB %in% rural_ids]), 1),
-          ", rural ", round(median(out$DIST_HOSP_KM[out$ID_AGEB %in% rural_ids]), 1))
+          round(median(out$DIST_HOSP_KM[!out$CVEGEO %in% rural_ids]), 1),
+          ", rural ", round(median(out$DIST_HOSP_KM[out$CVEGEO %in% rural_ids]), 1))
   saveRDS(out, interim_path("health", ent))
   invisible(out)
 }

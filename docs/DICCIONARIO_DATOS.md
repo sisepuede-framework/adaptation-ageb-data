@@ -38,7 +38,7 @@ fuentes en [FUENTES.md](FUENTES.md).
 
 **Advertencias generales**
 
-- Lee `ID_AGEB`, `CVE_ENT`, `CVE_MUN`, `CVE_LOC` y `CVE_AGEB` **como texto**.
+- Lee `CVEGEO`, `CVE_ENT`, `CVE_MUN`, `CVE_LOC` y `CVE_AGEB` **como texto**.
 - Una AGEB rural deshabitada tiene `POB_TOTAL = 0` y sus conteos en 0; sus porcentajes quedan vacíos (`D0`).
 - En AGEB con universos minúsculos los porcentajes son ruido (K-01 en DECISIONES.md). Filtra o pondera por `POB_TOTAL`, `VIV_CARACT` o `PCT_POB_REPORTADA`.
 - Para reagregar a otra geografía suma **conteos**, nunca promedies porcentajes (D-25).
@@ -46,22 +46,22 @@ fuentes en [FUENTES.md](FUENTES.md).
 
 ```r
 ids  <- readr::read_csv("data/processed/ageb_ids.csv",
-                        col_types = readr::cols(ID_AGEB = "c", CVE_ENT = "c",
+                        col_types = readr::cols(CVEGEO = "c", CVE_ENT = "c",
                                                 CVE_MUN = "c", CVE_LOC = "c",
                                                 CVE_AGEB = "c"))
 ageb <- readr::read_csv("data/processed/ageb_integrada_20.csv",
-                        col_types = readr::cols(ID_AGEB = "c"))
+                        col_types = readr::cols(CVEGEO = "c"))
 
-dplyr::left_join(ageb, ids, by = "ID_AGEB")
+dplyr::left_join(ageb, ids, by = "CVEGEO")
 ```
 
 ## Tablas
 
 | Tabla | Archivo | Columnas |
 |---|---|---|
-| [ageb_ids](#tabla-ageb-ids) | `data/processed/ageb_ids.csv`, un solo archivo para todo el país: una fila por AGEB, y la única copia que existe. Es la tabla de relación de toda la base. `ID_AGEB` es la clave primaria y las demás tablas traen solo esa columna: entidad, municipio, localidad, ámbito, superficie y punto interior se obtienen uniendo aquí. | 12 |
+| [ageb_ids](#tabla-ageb-ids) | `data/processed/ageb_ids.csv`, un solo archivo para todo el país: una fila por AGEB, y la única copia que existe. Es la tabla de relación de toda la base. `CVEGEO` es la clave primaria y las demás tablas traen solo esa columna: entidad, municipio, localidad, ámbito, superficie y punto interior se obtienen uniendo aquí. | 12 |
 | [fuentes](#tabla-fuentes) | `data/processed/fuentes.csv`, un solo archivo para todo el país: una fila por fuente y la edición de ella que leyó el pipeline. Aparte de la base porque no varía por AGEB; antes eran las columnas `YEAR_*` de `ageb_integrada`, con el mismo valor en las 81,451 filas. | 3 |
-| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `ID_AGEB` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario. | 204 |
+| [ageb_integrada](#tabla-ageb-integrada) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `CVEGEO` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario. | 204 |
 | [denue_establishments](#tabla-denue-establishments) | `data/processed/base_ageb_{ENT}.gpkg`, capa `denue_establishments`, y `data/processed/detail/denue_establishments_{ENT}.csv`. Una fila por establecimiento del DENUE. | 8 |
 | [denue_ageb_sector](#tabla-denue-ageb-sector) | `data/processed/base_ageb_{ENT}.gpkg`, capa `denue_ageb_sector`, y `data/processed/detail/denue_ageb_sector_{ENT}.csv`. Una fila por AGEB × sector SCIAN. | 3 |
 | [ageb_landuse_detail](#tabla-ageb-landuse-detail) | `data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_landuse_detail`, y `data/processed/detail/ageb_landuse_detail_{ENT}.csv`. Una fila por AGEB × clase de uso de suelo. | 4 |
@@ -69,7 +69,7 @@ dplyr::left_join(ageb, ids, by = "ID_AGEB")
 <a id="tabla-ageb-integrada"></a>
 ## Tabla ageb_integrada
 
-`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `ID_AGEB` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.
+`data/processed/base_ageb_{ENT}.gpkg`, capa `ageb_integrada` (EPSG:4326), y `ageb_integrada_{ENT}.csv`, una por entidad. Una fila por AGEB, con `CVEGEO` como único identificador; `ORDEN` es la posición de la columna en la capa. El GeoPackage también trae, como capas, las tres tablas de detalle y este diccionario.
 
 Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,451 AGEB, generado el 2026-10-01). La cobertura se mide sobre AGEB **habitadas**, como % de AGEB con valor y como % de su población; la mediana y el rango también se miden sobre AGEB habitadas.
 
@@ -77,7 +77,7 @@ Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,
 
 | # | Variable | Descripción | Unidad | Ámbito | Variable fuente | % AGEB con dato (urb / rur) | % población con dato (urb / rur) | Mediana | Sentido |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | [`ID_AGEB`](#id_ageb) | Clave de la AGEB. | clave | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
+| 1 | [`CVEGEO`](#id_ageb) | Clave de la AGEB. | clave | Ambos |  | 100.0 / 100.0 | 100.0 / 100.0 |  | n/a |
 
 ### Población base
 
@@ -382,7 +382,7 @@ Cobertura y mediana medidas sobre `data/processed/ageb_integrada_{ENT}.csv` (81,
 Una ficha por columna, en el orden del CSV.
 
 <a id="id_ageb"></a>
-#### 1. `ID_AGEB`
+#### 1. `CVEGEO`
 
 Clave de la AGEB.
 
@@ -5361,11 +5361,11 @@ Polígono o multipolígono de la AGEB.
 <a id="tabla-ageb-ids"></a>
 ## Tabla ageb_ids
 
-`data/processed/ageb_ids.csv`, un solo archivo para todo el país: una fila por AGEB, y la única copia que existe. Es la tabla de relación de toda la base. `ID_AGEB` es la clave primaria y las demás tablas traen solo esa columna: entidad, municipio, localidad, ámbito, superficie y punto interior se obtienen uniendo aquí.
+`data/processed/ageb_ids.csv`, un solo archivo para todo el país: una fila por AGEB, y la única copia que existe. Es la tabla de relación de toda la base. `CVEGEO` es la clave primaria y las demás tablas traen solo esa columna: entidad, municipio, localidad, ámbito, superficie y punto interior se obtienen uniendo aquí.
 
 | # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | Clave única de la AGEB: entidad (2) + municipio (3) + localidad (4) + AGEB (4). | texto | clave | MG2020 | Urbana: CVEGEO de 13 caracteres. Rural: CVE_ENT + CVE_MUN + '0000' + CVE_AGEB. | Clave primaria de la base: toda tabla se une a ageb_ids por esta columna. Leer siempre como texto: tiene ceros a la izquierda y CVE_AGEB es alfanumérica. Ver D-03. |
+| 1 | `CVEGEO` | Clave única de la AGEB: entidad (2) + municipio (3) + localidad (4) + AGEB (4). | texto | clave | MG2020 | Urbana: CVEGEO de 13 caracteres. Rural: CVE_ENT + CVE_MUN + '0000' + CVE_AGEB. | Clave primaria de la base: toda tabla se une a ageb_ids por esta columna. Leer siempre como texto: tiene ceros a la izquierda y CVE_AGEB es alfanumérica. Ver D-03. |
 | 2 | `AMBITO` | Ámbito de la AGEB según la capa del Marco Geoestadístico de la que proviene. | categórica |  | MG2020 | 'Urbana' si viene de {ENT}a.shp; 'Rural' si viene de {ENT}ar.shp. | Valores: Urbana, Rural. Las fuentes de población difieren por ámbito (D-11). |
 | 3 | `CVE_ENT` | Clave de entidad federativa. | texto | clave | MG2020 |  | 01 a 32. |
 | 4 | `NOM_ENT` | Nombre de la entidad federativa. | texto |  | PIPELINE | Catálogo fijo en 00_config.R. | Sin acentos (p. ej. 'Ciudad de Mexico', 'Nuevo Leon'). |
@@ -5396,7 +5396,7 @@ Polígono o multipolígono de la AGEB.
 
 | # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | AGEB a la que se asignó el establecimiento. | texto | clave | DENUE | Primero se prueba la clave urbana; si no existe en el MG, la rural (CVE_LOC = '0000'). | Puede no existir en el MG (se registra en el log). |
+| 1 | `CVEGEO` | AGEB a la que se asignó el establecimiento. | texto | clave | DENUE | Primero se prueba la clave urbana; si no existe en el MG, la rural (CVE_LOC = '0000'). | Puede no existir en el MG (se registra en el log). |
 | 2 | `NOM_ESTAB` | Nombre del establecimiento. | texto |  | DENUE |  |  |
 | 3 | `SCIAN` | Código de actividad SCIAN a 6 dígitos. | texto | clave | DENUE |  |  |
 | 4 | `SECTOR` | Sector SCIAN (2 primeros dígitos). | texto | clave | PIPELINE | substr(codigo_act, 1, 2). |  |
@@ -5412,7 +5412,7 @@ Polígono o multipolígono de la AGEB.
 
 | # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | Clave de la AGEB. | texto | clave | DENUE |  | Formato largo: una fila por AGEB × sector con al menos un establecimiento. |
+| 1 | `CVEGEO` | Clave de la AGEB. | texto | clave | DENUE |  | Formato largo: una fila por AGEB × sector con al menos un establecimiento. |
 | 2 | `SECTOR` | Sector SCIAN (2 dígitos). | texto | clave | DENUE |  |  |
 | 3 | `N_UNITS` | Unidades económicas del sector en la AGEB. | entero | establecimientos | PIPELINE | Conteo. |  |
 
@@ -5423,7 +5423,7 @@ Polígono o multipolígono de la AGEB.
 
 | # | Variable | Descripción | Tipo | Unidad | Fuente | Derivación | Notas |
 |---|---|---|---|---|---|---|---|
-| 1 | `ID_AGEB` | Clave de la AGEB. | texto | clave | MG2020 |  | Formato largo: una fila por AGEB × clase de uso de suelo presente. |
+| 1 | `CVEGEO` | Clave de la AGEB. | texto | clave | MG2020 |  | Formato largo: una fila por AGEB × clase de uso de suelo presente. |
 | 2 | `USO_CLASE` | Clase de uso de suelo y vegetación. | categórica |  | INEGI_USV7 |  |  |
 | 3 | `CLASS_AREA_KM2` | Superficie de la clase dentro de la AGEB. | decimal | km² | PIPELINE | Área (EPSG:6372) de la intersección AGEB ∩ USV, disuelta por AGEB y clase. | Disolver antes de medir evita contar dos veces polígonos traslapados (D-28). |
 | 4 | `CLASS_PCT` | Porcentaje de la AGEB cubierto por la clase. | decimal | % | PIPELINE | min(100, 100 × CLASS_AREA_KM2 / AREA_KM2). | Las clases de una AGEB pueden sumar menos de 100 si la capa USV no la cubre completa. |
